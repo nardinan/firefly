@@ -1,823 +1,722 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <interface>
-  <requires lib="gtk+" version="2.24"/>
-  <!-- interface-naming-policy project-wide -->
-  <object class="GtkAdjustment" id="v_calibration_time_model">
-    <property name="lower">60</property>
-    <property name="upper">86400</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="v_channel_model">
-    <property name="upper">191</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="v_dac_model">
-    <property name="lower">10</property>
-    <property name="upper">100</property>
-    <property name="value">10</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="v_delay_model">
-    <property name="lower">3</property>
-    <property name="upper">10</property>
-    <property name="value">6.6</property>
-    <property name="step_increment">0.1</property>
-    <property name="page_increment">1</property>
-  </object>
-  <object class="GtkListStore" id="v_kind_model">
-    <columns>
-      <!-- column-name code -->
-      <column type="gchar"/>
-      <!-- column-name description -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkListStore" id="v_location_model">
-    <columns>
-      <!-- column-name code -->
-      <column type="gchar"/>
-      <!-- column-name description -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkRadioButton" id="v_mode_group">
-    <property name="label" translatable="yes">radiobutton</property>
-    <property name="visible">True</property>
-    <property name="can_focus">True</property>
-    <property name="receives_default">False</property>
-    <property name="active">True</property>
-    <property name="draw_indicator">True</property>
-  </object>
-  <object class="GtkAdjustment" id="v_test_time_model">
-    <property name="lower">60</property>
-    <property name="upper">86400</property>
-    <property name="value">60</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-  </object>
-  <object class="GtkListStore" id="v_trigger_model">
-    <columns>
-      <!-- column-name value -->
-      <column type="guchar"/>
-      <!-- column-name description -->
-      <column type="gchararray"/>
-    </columns>
-    <data>
-      <row>
-        <col id="0"/>
-        <col id="1" translatable="yes">Self trigger (50Hz)</col>
-      </row>
-      <row>
-        <col id="0"/>
-        <col id="1" translatable="yes">External trigger</col>
-      </row>
-    </data>
-  </object>
-  <object class="GtkWindow" id="v_main_interface">
-    <property name="can_focus">False</property>
-    <child>
-      <object class="GtkVBox" id="v_main_interface_grid">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <child>
-          <object class="GtkTable" id="v_parameters_grid">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="n_rows">3</property>
-            <property name="n_columns">2</property>
-            <child>
-              <object class="GtkToggleButton" id="v_public">
-                <property name="label" translatable="yes">Public test</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-              </object>
-              <packing>
-                <property name="right_attach">2</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="v_location_label">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Location</property>
-              </object>
-              <packing>
-                <property name="top_attach">1</property>
-                <property name="bottom_attach">2</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="v_kind_label">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Kind</property>
-              </object>
-              <packing>
-                <property name="top_attach">2</property>
-                <property name="bottom_attach">3</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkComboBox" id="v_kind">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="model">v_kind_model</property>
-                <child>
-                  <object class="GtkCellRendererText" id="v_kind_render"/>
-                  <attributes>
-                    <attribute name="text">1</attribute>
-                  </attributes>
-                </child>
-              </object>
-              <packing>
-                <property name="left_attach">1</property>
-                <property name="right_attach">2</property>
-                <property name="top_attach">2</property>
-                <property name="bottom_attach">3</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkComboBox" id="v_location">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="model">v_location_model</property>
-                <child>
-                  <object class="GtkCellRendererText" id="v_location_render"/>
-                  <attributes>
-                    <attribute name="text">1</attribute>
-                  </attributes>
-                </child>
-              </object>
-              <packing>
-                <property name="left_attach">1</property>
-                <property name="right_attach">2</property>
-                <property name="top_attach">1</property>
-                <property name="bottom_attach">2</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkFrame" id="v_mode_frame">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="label_xalign">0</property>
-            <property name="shadow_type">none</property>
-            <child>
-              <object class="GtkAlignment" id="v_mode_alignment">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="left_padding">2</property>
-                <property name="right_padding">2</property>
-                <child>
-                  <object class="GtkVBox" id="v_mode_grid">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <child>
-                      <object class="GtkVBox" id="v_mode_value_grid">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <child>
-                          <object class="GtkRadioButton" id="v_mode_normal">
-                            <property name="label" translatable="yes">Normal</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">False</property>
-                            <property name="active">True</property>
-                            <property name="draw_indicator">True</property>
-                            <property name="group">v_mode_group</property>
-                          </object>
-                          <packing>
-                            <property name="expand">True</property>
-                            <property name="fill">True</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkRadioButton" id="v_mode_calibration">
-                            <property name="label" translatable="yes">Calibration</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">False</property>
-                            <property name="active">True</property>
-                            <property name="draw_indicator">True</property>
-                            <property name="group">v_mode_group</property>
-                          </object>
-                          <packing>
-                            <property name="expand">True</property>
-                            <property name="fill">True</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkRadioButton" id="v_mode_calibration_debug">
-                            <property name="label" translatable="yes">Calibration (debug)</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">False</property>
-                            <property name="active">True</property>
-                            <property name="draw_indicator">True</property>
-                            <property name="group">v_mode_group</property>
-                          </object>
-                          <packing>
-                            <property name="expand">True</property>
-                            <property name="fill">True</property>
-                            <property name="position">2</property>
-                          </packing>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkHSeparator" id="v_mode_separator">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                      <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">False</property>
-                        <property name="padding">5</property>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkTable" id="v_mode_parameters_grid">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="n_rows">2</property>
-                        <property name="n_columns">2</property>
-                        <child>
-                          <object class="GtkLabel" id="v_dac_label">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">DAC (mV)</property>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="v_channel_label">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">Channel</property>
-                          </object>
-                          <packing>
-                            <property name="top_attach">1</property>
-                            <property name="bottom_attach">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkSpinButton" id="v_dac">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="primary_icon_activatable">False</property>
-                            <property name="secondary_icon_activatable">False</property>
-                            <property name="primary_icon_sensitive">True</property>
-                            <property name="secondary_icon_sensitive">True</property>
-                            <property name="adjustment">v_dac_model</property>
-                            <property name="numeric">True</property>
-                          </object>
-                          <packing>
-                            <property name="left_attach">1</property>
-                            <property name="right_attach">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkSpinButton" id="v_channel">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="primary_icon_activatable">False</property>
-                            <property name="secondary_icon_activatable">False</property>
-                            <property name="primary_icon_sensitive">True</property>
-                            <property name="secondary_icon_sensitive">True</property>
-                            <property name="adjustment">v_channel_model</property>
-                            <property name="numeric">True</property>
-                          </object>
-                          <packing>
-                            <property name="left_attach">1</property>
-                            <property name="right_attach">2</property>
-                            <property name="top_attach">1</property>
-                            <property name="bottom_attach">2</property>
-                          </packing>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
-                        <property name="position">2</property>
-                      </packing>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child type="label">
-              <object class="GtkLabel" id="v_mode_label">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">&lt;b&gt;mode&lt;/b&gt;</property>
-                <property name="use_markup">True</property>
-              </object>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkFrame" id="v_trigger_frame">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="label_xalign">0</property>
-            <property name="shadow_type">none</property>
-            <child>
-              <object class="GtkAlignment" id="v_trigger_alignment">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="left_padding">2</property>
-                <property name="right_padding">2</property>
-                <child>
-                  <object class="GtkTable" id="v_trigger_grid">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="n_rows">2</property>
-                    <property name="n_columns">2</property>
-                    <child>
-                      <object class="GtkLabel" id="v_delay_label">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Hold delay time (us)</property>
-                      </object>
-                      <packing>
-                        <property name="top_attach">1</property>
-                        <property name="bottom_attach">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkSpinButton" id="v_delay">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
-                        <property name="adjustment">v_delay_model</property>
-                        <property name="digits">1</property>
-                        <property name="numeric">True</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">1</property>
-                        <property name="right_attach">2</property>
-                        <property name="top_attach">1</property>
-                        <property name="bottom_attach">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkComboBox" id="v_mode_trigger">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="model">v_trigger_model</property>
-                        <property name="active">1</property>
-                        <property name="entry_text_column">0</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="v_trigger_render"/>
-                          <attributes>
-                            <attribute name="text">1</attribute>
-                          </attributes>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="right_attach">2</property>
-                      </packing>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child type="label">
-              <object class="GtkLabel" id="v_trigger_label">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">&lt;b&gt;trigger&lt;/b&gt;</property>
-                <property name="use_markup">True</property>
-              </object>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">2</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkFrame" id="v_configuration_frame">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="label_xalign">0</property>
-            <property name="shadow_type">none</property>
-            <child>
-              <object class="GtkAlignment" id="v_configuration_alignment">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="left_padding">2</property>
-                <property name="right_padding">2</property>
-                <child>
-                  <object class="GtkVBox" id="v_configuration_grid">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <child>
-                      <object class="GtkTable" id="v_configuration_automatic_grid">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="n_rows">2</property>
-                        <property name="n_columns">2</property>
-                        <property name="homogeneous">True</property>
-                        <child>
-                          <object class="GtkToggleButton" id="v_automatic">
-                            <property name="label" translatable="yes">Automatic test</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">True</property>
-                          </object>
-                          <packing>
-                            <property name="right_attach">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="v_automatic_time_label">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="xalign">0.95</property>
-                            <property name="label" translatable="yes">Time (secs)</property>
-                          </object>
-                          <packing>
-                            <property name="top_attach">1</property>
-                            <property name="bottom_attach">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkSpinButton" id="v_automatic_time">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="primary_icon_activatable">False</property>
-                            <property name="secondary_icon_activatable">False</property>
-                            <property name="primary_icon_sensitive">True</property>
-                            <property name="secondary_icon_sensitive">True</property>
-                            <property name="adjustment">v_test_time_model</property>
-                            <property name="numeric">True</property>
-                          </object>
-                          <packing>
-                            <property name="left_attach">1</property>
-                            <property name="right_attach">2</property>
-                            <property name="top_attach">1</property>
-                            <property name="bottom_attach">2</property>
-                          </packing>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkHSeparator" id="v_configuration_separator">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                      <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
-                        <property name="padding">5</property>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkVBox" id="v_configuration_calibration_grid">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <child>
-                          <object class="GtkToggleButton" id="v_calibration">
-                            <property name="label" translatable="yes">Get calibration data</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">True</property>
-                          </object>
-                          <packing>
-                            <property name="expand">True</property>
-                            <property name="fill">True</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkHBox" id="v_configuration_calibration_time_grid">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="homogeneous">True</property>
-                            <child>
-                              <object class="GtkLabel" id="v_calibration_time_label">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="xalign">0.95</property>
-                                <property name="label" translatable="yes">Time (secs)</property>
-                              </object>
-                              <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkSpinButton" id="v_calibration_time">
-                                <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="primary_icon_activatable">False</property>
-                                <property name="secondary_icon_activatable">False</property>
-                                <property name="primary_icon_sensitive">True</property>
-                                <property name="secondary_icon_sensitive">True</property>
-                                <property name="adjustment">v_calibration_time_model</property>
-                                <property name="numeric">True</property>
-                              </object>
-                              <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">True</property>
-                            <property name="fill">True</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkHBox" id="v_configuration_calibration_file_grid">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="homogeneous">True</property>
-                            <child>
-                              <object class="GtkLabel" id="v_calibration_file_label">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="xalign">0.95</property>
-                                <property name="label" translatable="yes">(or) Calibration file</property>
-                              </object>
-                              <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkFileChooserButton" id="v_calibration_file">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="title" translatable="yes">Select a Calibration DAT file</property>
-                              </object>
-                              <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">True</property>
-                            <property name="fill">True</property>
-                            <property name="position">2</property>
-                          </packing>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
-                        <property name="position">2</property>
-                      </packing>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child type="label">
-              <object class="GtkLabel" id="v_configuration_label">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">&lt;b&gt;parameters&lt;/b&gt;</property>
-                <property name="use_markup">True</property>
-              </object>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">3</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkLabel" id="v_action_label">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="label" translatable="yes">&lt;b&gt;&lt;i&gt;Current Action&lt;/i&gt;&lt;/b&gt;</property>
-            <property name="use_markup">True</property>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">4</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkFrame" id="v_stats_frame">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="label_xalign">0</property>
-            <property name="shadow_type">none</property>
-            <child>
-              <object class="GtkAlignment" id="v_stats_alignment">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="left_padding">2</property>
-                <property name="right_padding">2</property>
-                <child>
-                  <object class="GtkTable" id="v_stats_grid">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="n_rows">5</property>
-                    <property name="n_columns">2</property>
-                    <child>
-                      <object class="GtkLabel" id="v_events_label">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="xpad">1</property>
-                        <property name="label" translatable="yes">events</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="v_events">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">?</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">1</property>
-                        <property name="right_attach">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="v_size_label">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">size</property>
-                      </object>
-                      <packing>
-                        <property name="top_attach">1</property>
-                        <property name="bottom_attach">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="v_size">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">?</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">1</property>
-                        <property name="right_attach">2</property>
-                        <property name="top_attach">1</property>
-                        <property name="bottom_attach">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="v_start_time_label">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">start time</property>
-                      </object>
-                      <packing>
-                        <property name="top_attach">2</property>
-                        <property name="bottom_attach">3</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="v_start_time">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">?</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">1</property>
-                        <property name="right_attach">2</property>
-                        <property name="top_attach">2</property>
-                        <property name="bottom_attach">3</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="v_current_time_label">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">current time</property>
-                      </object>
-                      <packing>
-                        <property name="top_attach">3</property>
-                        <property name="bottom_attach">4</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="v_output_label">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">output</property>
-                      </object>
-                      <packing>
-                        <property name="top_attach">4</property>
-                        <property name="bottom_attach">5</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="v_current_time">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">?</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">1</property>
-                        <property name="right_attach">2</property>
-                        <property name="top_attach">3</property>
-                        <property name="bottom_attach">4</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="v_output">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">?</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">1</property>
-                        <property name="right_attach">2</property>
-                        <property name="top_attach">4</property>
-                        <property name="bottom_attach">5</property>
-                      </packing>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child type="label">
-              <object class="GtkLabel" id="v_stats_label">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">&lt;b&gt;statistics&lt;/b&gt;</property>
-                <property name="use_markup">True</property>
-              </object>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">5</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkHSeparator" id="v_main_separator">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">False</property>
-            <property name="padding">7</property>
-            <property name="position">6</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkButton" id="v_action">
-            <property name="label" translatable="yes">Start</property>
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">7</property>
-          </packing>
-        </child>
-      </object>
-    </child>
-  </object>
+	<requires lib="gtk+" version="2.24"/>
+	<!-- interface-naming-policy project-wide -->
+	<object class="GtkAdjustment" id="v_calibration_time_model">
+		<property name="lower">60</property>
+		<property name="upper">86400</property>
+		<property name="step_increment">1</property>
+		<property name="page_increment">10</property>
+	</object>
+	<object class="GtkAdjustment" id="v_channel_model">
+		<property name="upper">191</property>
+		<property name="step_increment">1</property>
+		<property name="page_increment">10</property>
+	</object>
+	<object class="GtkAdjustment" id="v_dac_model">
+		<property name="value">10</property>
+		<property name="lower">10</property>
+		<property name="upper">100</property>
+		<property name="step_increment">1</property>
+		<property name="page_increment">10</property>
+	</object>
+	<object class="GtkAdjustment" id="v_delay_model">
+		<property name="value">6.5999999999999996</property>
+		<property name="lower">3</property>
+		<property name="upper">10</property>
+		<property name="step_increment">0.10000000000000001</property>
+		<property name="page_increment">1</property>
+	</object>
+	<object class="GtkListStore" id="v_kind_model">
+		<columns>
+			<!-- column-name code -->
+			<column type="gchar"/>
+			<!-- column-name description -->
+			<column type="gchararray"/>
+		</columns>
+	</object>
+	<object class="GtkListStore" id="v_location_model">
+		<columns>
+			<!-- column-name code -->
+			<column type="gchar"/>
+			<!-- column-name description -->
+			<column type="gchararray"/>
+		</columns>
+	</object>
+	<object class="GtkRadioButton" id="v_mode_group">
+		<property name="label" translatable="yes">radiobutton</property>
+		<property name="visible">True</property>
+		<property name="can_focus">True</property>
+		<property name="receives_default">False</property>
+		<property name="active">True</property>
+		<property name="draw_indicator">True</property>
+	</object>
+	<object class="GtkAdjustment" id="v_test_time_model">
+		<property name="value">60</property>
+		<property name="lower">60</property>
+		<property name="upper">86400</property>
+		<property name="step_increment">1</property>
+		<property name="page_increment">10</property>
+	</object>
+	<object class="GtkListStore" id="v_trigger_model">
+		<columns>
+			<!-- column-name value -->
+			<column type="guchar"/>
+			<!-- column-name description -->
+			<column type="gchararray"/>
+		</columns>
+		<data>
+			<row>
+				<col id="0"/>
+				<col id="1" translatable="yes">Self trigger (50Hz)</col>
+			</row>
+			<row>
+				<col id="0"/>
+				<col id="1" translatable="yes">External trigger</col>
+			</row>
+		</data>
+	</object>
+	<object class="GtkWindow" id="v_main_interface">
+		<child>
+			<object class="GtkVBox" id="v_main_interface_grid">
+				<property name="visible">True</property>
+				<property name="orientation">vertical</property>
+				<child>
+					<object class="GtkTable" id="v_parameters_grid">
+						<property name="visible">True</property>
+						<property name="n_rows">3</property>
+						<property name="n_columns">2</property>
+						<child>
+							<object class="GtkToggleButton" id="v_public">
+								<property name="label" translatable="yes">Public test</property>
+								<property name="visible">True</property>
+								<property name="can_focus">True</property>
+								<property name="receives_default">True</property>
+							</object>
+							<packing>
+								<property name="right_attach">2</property>
+							</packing>
+						</child>
+						<child>
+							<object class="GtkLabel" id="v_location_label">
+								<property name="visible">True</property>
+								<property name="label" translatable="yes">Location</property>
+							</object>
+							<packing>
+								<property name="top_attach">1</property>
+								<property name="bottom_attach">2</property>
+							</packing>
+						</child>
+						<child>
+							<object class="GtkLabel" id="v_kind_label">
+								<property name="visible">True</property>
+								<property name="label" translatable="yes">Kind</property>
+							</object>
+							<packing>
+								<property name="top_attach">2</property>
+								<property name="bottom_attach">3</property>
+							</packing>
+						</child>
+						<child>
+							<object class="GtkComboBox" id="v_kind">
+								<property name="visible">True</property>
+								<property name="model">v_kind_model</property>
+								<child>
+									<object class="GtkCellRendererText" id="v_kind_render"/>
+									<attributes>
+										<attribute name="text">1</attribute>
+									</attributes>
+								</child>
+							</object>
+							<packing>
+								<property name="left_attach">1</property>
+								<property name="right_attach">2</property>
+								<property name="top_attach">2</property>
+								<property name="bottom_attach">3</property>
+							</packing>
+						</child>
+						<child>
+							<object class="GtkComboBox" id="v_location">
+								<property name="visible">True</property>
+								<property name="model">v_location_model</property>
+								<child>
+									<object class="GtkCellRendererText" id="v_location_render"/>
+									<attributes>
+										<attribute name="text">1</attribute>
+									</attributes>
+								</child>
+							</object>
+							<packing>
+								<property name="left_attach">1</property>
+								<property name="right_attach">2</property>
+								<property name="top_attach">1</property>
+								<property name="bottom_attach">2</property>
+							</packing>
+						</child>
+					</object>
+					<packing>
+						<property name="position">0</property>
+					</packing>
+				</child>
+				<child>
+					<object class="GtkFrame" id="v_mode_frame">
+						<property name="visible">True</property>
+						<property name="label_xalign">0</property>
+						<property name="shadow_type">none</property>
+						<child>
+							<object class="GtkAlignment" id="v_mode_alignment">
+								<property name="visible">True</property>
+								<property name="left_padding">2</property>
+								<property name="right_padding">2</property>
+								<child>
+									<object class="GtkVBox" id="v_mode_grid">
+										<property name="visible">True</property>
+										<property name="orientation">vertical</property>
+										<child>
+											<object class="GtkVBox" id="v_mode_value_grid">
+												<property name="visible">True</property>
+												<property name="orientation">vertical</property>
+												<child>
+													<object class="GtkRadioButton" id="v_mode_normal">
+														<property name="label" translatable="yes">Normal</property>
+														<property name="visible">True</property>
+														<property name="can_focus">True</property>
+														<property name="receives_default">False</property>
+														<property name="active">True</property>
+														<property name="draw_indicator">True</property>
+														<property name="group">v_mode_group</property>
+													</object>
+													<packing>
+														<property name="position">0</property>
+													</packing>
+												</child>
+												<child>
+													<object class="GtkRadioButton" id="v_mode_calibration">
+														<property name="label" translatable="yes">Calibration</property>
+														<property name="visible">True</property>
+														<property name="can_focus">True</property>
+														<property name="receives_default">False</property>
+														<property name="active">True</property>
+														<property name="draw_indicator">True</property>
+														<property name="group">v_mode_group</property>
+													</object>
+													<packing>
+														<property name="position">1</property>
+													</packing>
+												</child>
+												<child>
+													<object class="GtkRadioButton" id="v_mode_calibration_debug">
+														<property name="label" translatable="yes">Calibration (debug)</property>
+														<property name="visible">True</property>
+														<property name="can_focus">True</property>
+														<property name="receives_default">False</property>
+														<property name="active">True</property>
+														<property name="draw_indicator">True</property>
+														<property name="group">v_mode_group</property>
+													</object>
+													<packing>
+														<property name="position">2</property>
+													</packing>
+												</child>
+											</object>
+											<packing>
+												<property name="position">0</property>
+											</packing>
+										</child>
+										<child>
+											<object class="GtkHSeparator" id="v_mode_separator">
+												<property name="visible">True</property>
+											</object>
+											<packing>
+												<property name="fill">False</property>
+												<property name="padding">5</property>
+												<property name="position">1</property>
+											</packing>
+										</child>
+										<child>
+											<object class="GtkTable" id="v_mode_parameters_grid">
+												<property name="visible">True</property>
+												<property name="n_rows">2</property>
+												<property name="n_columns">2</property>
+												<child>
+													<object class="GtkLabel" id="v_dac_label">
+														<property name="visible">True</property>
+														<property name="label" translatable="yes">DAC (mV)</property>
+													</object>
+												</child>
+												<child>
+													<object class="GtkLabel" id="v_channel_label">
+														<property name="visible">True</property>
+														<property name="label" translatable="yes">Channel</property>
+													</object>
+													<packing>
+														<property name="top_attach">1</property>
+														<property name="bottom_attach">2</property>
+													</packing>
+												</child>
+												<child>
+													<object class="GtkSpinButton" id="v_dac">
+														<property name="visible">True</property>
+														<property name="can_focus">True</property>
+														<property name="primary_icon_sensitive">True</property>
+														<property name="secondary_icon_sensitive">True</property>
+														<property name="adjustment">v_dac_model</property>
+														<property name="numeric">True</property>
+													</object>
+													<packing>
+														<property name="left_attach">1</property>
+														<property name="right_attach">2</property>
+													</packing>
+												</child>
+												<child>
+													<object class="GtkSpinButton" id="v_channel">
+														<property name="visible">True</property>
+														<property name="can_focus">True</property>
+														<property name="primary_icon_sensitive">True</property>
+														<property name="secondary_icon_sensitive">True</property>
+														<property name="adjustment">v_channel_model</property>
+														<property name="numeric">True</property>
+													</object>
+													<packing>
+														<property name="left_attach">1</property>
+														<property name="right_attach">2</property>
+														<property name="top_attach">1</property>
+														<property name="bottom_attach">2</property>
+													</packing>
+												</child>
+											</object>
+											<packing>
+												<property name="position">2</property>
+											</packing>
+										</child>
+									</object>
+								</child>
+							</object>
+						</child>
+						<child type="label">
+							<object class="GtkLabel" id="v_mode_label">
+								<property name="visible">True</property>
+								<property name="label" translatable="yes">&lt;b&gt;mode&lt;/b&gt;</property>
+								<property name="use_markup">True</property>
+							</object>
+						</child>
+					</object>
+					<packing>
+						<property name="position">1</property>
+					</packing>
+				</child>
+				<child>
+					<object class="GtkFrame" id="v_trigger_frame">
+						<property name="visible">True</property>
+						<property name="label_xalign">0</property>
+						<property name="shadow_type">none</property>
+						<child>
+							<object class="GtkAlignment" id="v_trigger_alignment">
+								<property name="visible">True</property>
+								<property name="left_padding">2</property>
+								<property name="right_padding">2</property>
+								<child>
+									<object class="GtkTable" id="v_trigger_grid">
+										<property name="visible">True</property>
+										<property name="n_rows">2</property>
+										<property name="n_columns">2</property>
+										<property name="homogeneous">True</property>
+										<child>
+											<object class="GtkLabel" id="v_delay_label">
+												<property name="visible">True</property>
+												<property name="label" translatable="yes">Hold delay time (us)</property>
+											</object>
+											<packing>
+												<property name="top_attach">1</property>
+												<property name="bottom_attach">2</property>
+											</packing>
+										</child>
+										<child>
+											<object class="GtkSpinButton" id="v_delay">
+												<property name="visible">True</property>
+												<property name="can_focus">True</property>
+												<property name="primary_icon_sensitive">True</property>
+												<property name="secondary_icon_sensitive">True</property>
+												<property name="adjustment">v_delay_model</property>
+												<property name="digits">1</property>
+												<property name="numeric">True</property>
+											</object>
+											<packing>
+												<property name="left_attach">1</property>
+												<property name="right_attach">2</property>
+												<property name="top_attach">1</property>
+												<property name="bottom_attach">2</property>
+											</packing>
+										</child>
+										<child>
+											<object class="GtkComboBox" id="v_mode_trigger">
+												<property name="visible">True</property>
+												<property name="model">v_trigger_model</property>
+												<property name="active">1</property>
+												<child>
+													<object class="GtkCellRendererText" id="v_trigger_render"/>
+													<attributes>
+														<attribute name="text">1</attribute>
+													</attributes>
+												</child>
+											</object>
+											<packing>
+												<property name="right_attach">2</property>
+											</packing>
+										</child>
+									</object>
+								</child>
+							</object>
+						</child>
+						<child type="label">
+							<object class="GtkLabel" id="v_trigger_label">
+								<property name="visible">True</property>
+								<property name="label" translatable="yes">&lt;b&gt;trigger&lt;/b&gt;</property>
+								<property name="use_markup">True</property>
+							</object>
+						</child>
+					</object>
+					<packing>
+						<property name="position">2</property>
+					</packing>
+				</child>
+				<child>
+					<object class="GtkFrame" id="v_configuration_frame">
+						<property name="visible">True</property>
+						<property name="label_xalign">0</property>
+						<property name="shadow_type">none</property>
+						<child>
+							<object class="GtkAlignment" id="v_configuration_alignment">
+								<property name="visible">True</property>
+								<property name="left_padding">2</property>
+								<property name="right_padding">2</property>
+								<child>
+									<object class="GtkVBox" id="v_configuration_grid">
+										<property name="visible">True</property>
+										<property name="orientation">vertical</property>
+										<child>
+											<object class="GtkTable" id="v_configuration_automatic_grid">
+												<property name="visible">True</property>
+												<property name="n_rows">2</property>
+												<property name="n_columns">2</property>
+												<property name="homogeneous">True</property>
+												<child>
+													<object class="GtkToggleButton" id="v_automatic">
+														<property name="label" translatable="yes">Automatic test</property>
+														<property name="visible">True</property>
+														<property name="can_focus">True</property>
+														<property name="receives_default">True</property>
+													</object>
+													<packing>
+														<property name="right_attach">2</property>
+													</packing>
+												</child>
+												<child>
+													<object class="GtkLabel" id="v_automatic_time_label">
+														<property name="visible">True</property>
+														<property name="xalign">0.94999998807907104</property>
+														<property name="label" translatable="yes">Time (secs)</property>
+													</object>
+													<packing>
+														<property name="top_attach">1</property>
+														<property name="bottom_attach">2</property>
+													</packing>
+												</child>
+												<child>
+													<object class="GtkSpinButton" id="v_automatic_time">
+														<property name="visible">True</property>
+														<property name="can_focus">True</property>
+														<property name="primary_icon_sensitive">True</property>
+														<property name="secondary_icon_sensitive">True</property>
+														<property name="adjustment">v_test_time_model</property>
+														<property name="numeric">True</property>
+													</object>
+													<packing>
+														<property name="left_attach">1</property>
+														<property name="right_attach">2</property>
+														<property name="top_attach">1</property>
+														<property name="bottom_attach">2</property>
+													</packing>
+												</child>
+											</object>
+											<packing>
+												<property name="position">0</property>
+											</packing>
+										</child>
+										<child>
+											<object class="GtkHSeparator" id="v_configuration_separator">
+												<property name="visible">True</property>
+											</object>
+											<packing>
+												<property name="padding">5</property>
+												<property name="position">1</property>
+											</packing>
+										</child>
+										<child>
+											<object class="GtkVBox" id="v_configuration_calibration_grid">
+												<property name="visible">True</property>
+												<property name="orientation">vertical</property>
+												<child>
+													<object class="GtkToggleButton" id="v_calibration">
+														<property name="label" translatable="yes">Get calibration data</property>
+														<property name="visible">True</property>
+														<property name="can_focus">True</property>
+														<property name="receives_default">True</property>
+													</object>
+													<packing>
+														<property name="position">0</property>
+													</packing>
+												</child>
+												<child>
+													<object class="GtkHBox" id="v_configuration_calibration_time_grid">
+														<property name="visible">True</property>
+														<property name="homogeneous">True</property>
+														<child>
+															<object class="GtkLabel" id="v_calibration_time_label">
+																<property name="visible">True</property>
+																<property name="xalign">0.94999998807907104</property>
+																<property name="label" translatable="yes">Time (secs)</property>
+															</object>
+															<packing>
+																<property name="position">0</property>
+															</packing>
+														</child>
+														<child>
+															<object class="GtkSpinButton" id="v_calibration_time">
+																<property name="visible">True</property>
+																<property name="can_focus">True</property>
+																<property name="primary_icon_sensitive">True</property>
+																<property name="secondary_icon_sensitive">True</property>
+																<property name="adjustment">v_calibration_time_model</property>
+																<property name="numeric">True</property>
+															</object>
+															<packing>
+																<property name="position">1</property>
+															</packing>
+														</child>
+													</object>
+													<packing>
+														<property name="position">1</property>
+													</packing>
+												</child>
+												<child>
+													<object class="GtkHBox" id="v_configuration_calibration_file_grid">
+														<property name="visible">True</property>
+														<property name="homogeneous">True</property>
+														<child>
+															<object class="GtkLabel" id="v_calibration_file_label">
+																<property name="visible">True</property>
+																<property name="xalign">0.94999998807907104</property>
+																<property name="label" translatable="yes">(or) Calibration file</property>
+															</object>
+															<packing>
+																<property name="position">0</property>
+															</packing>
+														</child>
+														<child>
+															<object class="GtkFileChooserButton" id="v_calibration_file">
+																<property name="visible">True</property>
+																<property name="title" translatable="yes">Select a Calibration DAT file</property>
+															</object>
+															<packing>
+																<property name="position">1</property>
+															</packing>
+														</child>
+													</object>
+													<packing>
+														<property name="position">2</property>
+													</packing>
+												</child>
+											</object>
+											<packing>
+												<property name="position">2</property>
+											</packing>
+										</child>
+									</object>
+								</child>
+							</object>
+						</child>
+						<child type="label">
+							<object class="GtkLabel" id="v_configuration_label">
+								<property name="visible">True</property>
+								<property name="label" translatable="yes">&lt;b&gt;parameters&lt;/b&gt;</property>
+								<property name="use_markup">True</property>
+							</object>
+						</child>
+					</object>
+					<packing>
+						<property name="position">3</property>
+					</packing>
+				</child>
+				<child>
+					<object class="GtkLabel" id="v_action_label">
+						<property name="visible">True</property>
+						<property name="label" translatable="yes">&lt;b&gt;&lt;i&gt;Current Action&lt;/i&gt;&lt;/b&gt;</property>
+						<property name="use_markup">True</property>
+					</object>
+					<packing>
+						<property name="position">4</property>
+					</packing>
+				</child>
+				<child>
+					<object class="GtkFrame" id="v_stats_frame">
+						<property name="visible">True</property>
+						<property name="label_xalign">0</property>
+						<property name="shadow_type">none</property>
+						<child>
+							<object class="GtkAlignment" id="v_stats_alignment">
+								<property name="visible">True</property>
+								<property name="left_padding">2</property>
+								<property name="right_padding">2</property>
+								<child>
+									<object class="GtkTable" id="v_stats_grid">
+										<property name="visible">True</property>
+										<property name="n_rows">5</property>
+										<property name="n_columns">2</property>
+										<property name="homogeneous">True</property>
+										<child>
+											<object class="GtkLabel" id="v_events_label">
+												<property name="visible">True</property>
+												<property name="xpad">1</property>
+												<property name="label" translatable="yes">events</property>
+											</object>
+										</child>
+										<child>
+											<object class="GtkLabel" id="v_events">
+												<property name="visible">True</property>
+												<property name="label" translatable="yes">?</property>
+											</object>
+											<packing>
+												<property name="left_attach">1</property>
+												<property name="right_attach">2</property>
+											</packing>
+										</child>
+										<child>
+											<object class="GtkLabel" id="v_size_label">
+												<property name="visible">True</property>
+												<property name="label" translatable="yes">size</property>
+											</object>
+											<packing>
+												<property name="top_attach">1</property>
+												<property name="bottom_attach">2</property>
+											</packing>
+										</child>
+										<child>
+											<object class="GtkLabel" id="v_size">
+												<property name="visible">True</property>
+												<property name="label" translatable="yes">?</property>
+											</object>
+											<packing>
+												<property name="left_attach">1</property>
+												<property name="right_attach">2</property>
+												<property name="top_attach">1</property>
+												<property name="bottom_attach">2</property>
+											</packing>
+										</child>
+										<child>
+											<object class="GtkLabel" id="v_start_time_label">
+												<property name="visible">True</property>
+												<property name="label" translatable="yes">start time</property>
+											</object>
+											<packing>
+												<property name="top_attach">2</property>
+												<property name="bottom_attach">3</property>
+											</packing>
+										</child>
+										<child>
+											<object class="GtkLabel" id="v_start_time">
+												<property name="visible">True</property>
+												<property name="label" translatable="yes">?</property>
+											</object>
+											<packing>
+												<property name="left_attach">1</property>
+												<property name="right_attach">2</property>
+												<property name="top_attach">2</property>
+												<property name="bottom_attach">3</property>
+											</packing>
+										</child>
+										<child>
+											<object class="GtkLabel" id="v_current_time_label">
+												<property name="visible">True</property>
+												<property name="label" translatable="yes">current time</property>
+											</object>
+											<packing>
+												<property name="top_attach">3</property>
+												<property name="bottom_attach">4</property>
+											</packing>
+										</child>
+										<child>
+											<object class="GtkLabel" id="v_output_label">
+												<property name="visible">True</property>
+												<property name="label" translatable="yes">output</property>
+											</object>
+											<packing>
+												<property name="top_attach">4</property>
+												<property name="bottom_attach">5</property>
+											</packing>
+										</child>
+										<child>
+											<object class="GtkLabel" id="v_current_time">
+												<property name="visible">True</property>
+												<property name="label" translatable="yes">?</property>
+											</object>
+											<packing>
+												<property name="left_attach">1</property>
+												<property name="right_attach">2</property>
+												<property name="top_attach">3</property>
+												<property name="bottom_attach">4</property>
+											</packing>
+										</child>
+										<child>
+											<object class="GtkLabel" id="v_output">
+												<property name="visible">True</property>
+												<property name="label" translatable="yes">?</property>
+											</object>
+											<packing>
+												<property name="left_attach">1</property>
+												<property name="right_attach">2</property>
+												<property name="top_attach">4</property>
+												<property name="bottom_attach">5</property>
+											</packing>
+										</child>
+									</object>
+								</child>
+							</object>
+						</child>
+						<child type="label">
+							<object class="GtkLabel" id="v_stats_label">
+								<property name="visible">True</property>
+								<property name="label" translatable="yes">&lt;b&gt;statistics&lt;/b&gt;</property>
+								<property name="use_markup">True</property>
+							</object>
+						</child>
+					</object>
+					<packing>
+						<property name="position">5</property>
+					</packing>
+				</child>
+				<child>
+					<object class="GtkHSeparator" id="v_main_separator">
+						<property name="visible">True</property>
+					</object>
+					<packing>
+						<property name="fill">False</property>
+						<property name="padding">7</property>
+						<property name="position">6</property>
+					</packing>
+				</child>
+				<child>
+					<object class="GtkButton" id="v_action">
+						<property name="label" translatable="yes">Start</property>
+						<property name="visible">True</property>
+						<property name="can_focus">True</property>
+						<property name="receives_default">True</property>
+					</object>
+					<packing>
+						<property name="position">7</property>
+					</packing>
+				</child>
+			</object>
+		</child>
+	</object>
 </interface>
