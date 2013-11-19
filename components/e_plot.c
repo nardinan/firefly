@@ -47,7 +47,7 @@ void p_plot_style_int(struct o_dictionary *dictionary, const char *key, const ch
 }
 
 void p_plot_style_axis(struct o_dictionary *dictionary, const char postfix, struct s_plot_axis *axis) {
-	p_plot_style_int(dictionary, "segments", postfix, &(axis->segments));
+	p_plot_style_int(dictionary, "segments", postfix, (int *)&(axis->segments));
 	p_plot_style_int(dictionary, "show_negative", postfix, &(axis->show_negative));
 	p_plot_style_int(dictionary, "show_positive", postfix, &(axis->show_positive));
 	p_plot_style_int(dictionary, "show_grid", postfix, &(axis->show_grid));

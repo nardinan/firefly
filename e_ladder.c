@@ -199,7 +199,7 @@ int f_ladder_device(struct s_ladder *ladder, struct o_trb *device) { d_FP;
 }
 
 void f_ladder_configure_device(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
-	unsigned char trigger = d_ladder_trigger_internal, dac, channel;
+	unsigned char trigger = d_ladder_trigger_internal, dac = 0x00, channel = 0x00;
 	enum e_trb_mode mode = e_trb_mode_normal;
 	float hold_delay;
 	struct o_string *name, *extension;
