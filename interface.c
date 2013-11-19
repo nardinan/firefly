@@ -1,5 +1,5 @@
 /*
- * miranda
+ * firefly
  * Copyright (C) 2013 Andrea Nardinocchi (andrea@nardinan.it)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "e_interface.h"
+#include "interface.h"
 const char *interface_labels[] = {
 	"v_events",
 	"v_size",
@@ -67,7 +67,7 @@ const char *interface_labels[] = {
 	"styles/adc.keys",
 	"styles/adc_pedestal.keys",
 	"styles/adc_pedestal_cn.keys",
-	"styles/calibration.keys", /* TODO: create histogram style */
+	"styles/calibration.keys",
 	"styles/calibration.keys",
 	"styles/calibration.keys"
 };
@@ -104,18 +104,18 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *in
 		d_assert(result->files[index] = GTK_FILE_CHOOSER_BUTTON(gtk_builder_get_object(interface, interface_files[index])));
 	for (index = 0; interface_alignments[index]; index++) {
 		d_assert(result->alignments[index] = GTK_ALIGNMENT(gtk_builder_get_object(interface, interface_alignments[index])));
-		d_assert(result->plots[index] = f_plot_new(NULL));
+		d_assert(result->charts[index] = f_chart_new(NULL));
 		d_try {
 			if ((path = d_string_pure("styles/base_graph.keys"))) {
 				if ((stream = f_stream_new_file(NULL, path, "r", 0777))) {
-					f_plot_style(result->plots[index], stream);
+					f_chart_style(result->charts[index], stream);
 					d_release(stream);
 				}
 				d_release(path);
 			}
 			if ((path = d_string_pure(interface_styles[index]))) {
 				if ((stream = f_stream_new_file(NULL, path, "r", 0777))) {
-					f_plot_style(result->plots[index], stream);
+					f_chart_style(result->charts[index], stream);
 					d_release(stream);
 				}
 				d_release(path);
@@ -124,7 +124,7 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *in
 			d_exception_dump(stderr, exception);
 			d_raise;
 		} d_endtry;
-		gtk_container_add(GTK_CONTAINER(result->alignments[index]), result->plots[index]->plane);
+		gtk_container_add(GTK_CONTAINER(result->alignments[index]), result->charts[index]->plane);
 	}
 	d_assert(result->progress_bar = GTK_PROGRESS_BAR(gtk_builder_get_object(interface, "v_action_bar")));
 	return result;

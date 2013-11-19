@@ -1,5 +1,5 @@
 /*
- * miranda
+ * firefly
  * Copyright (C) 2013 Andrea Nardinocchi (andrea@nardinan.it)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,10 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "e_loop.h"
+#include "loop.h"
 struct s_loop_call steps[] = {
 	{"read data from miniTRB", 0, 1000, f_step_read},
-	{"analyze readed data and update plots", 0, 200000, f_step_analyze},
+	{"analyze readed data and update charts", 0, 200000, f_step_analyze},
 	{"update stats on interface", 0, 500000, f_step_interface},
 	{"update progress bar", 0, 100000, f_step_progress},
 	{ NULL, 0, 0, NULL }
@@ -51,7 +51,7 @@ int f_step_read(struct s_environment *environment, time_t current_time) { d_FP;
 }
 
 int f_step_analyze(struct s_environment *environment, time_t current_time) { d_FP;
-	f_ladder_analyze_plots(environment->ladders[environment->current], environment->interface->plots);
+	f_ladder_analyze_charts(environment->ladders[environment->current], environment->interface->charts);
 	return 0;
 }
 

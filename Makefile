@@ -1,4 +1,4 @@
-objects = e_plot.o e_interface.o e_ladder.o e_environment.o e_loop.o e_firefly.o
+objects = chart.o interface.o ladder.o environment.o loop.o firefly.o
 cc = gcc -g
 cflags = -Wall `libusb-legacy-config --cflags` `pkg-config --cflags gtk+-2.0` -Wno-variadic-macros -Wno-missing-braces -std=c99 -c -pedantic
 lflags = -Wall
@@ -8,23 +8,23 @@ exec = firefly.bin
 all: $(objects)
 	$(cc) $(lflags) $(objects) -o $(exec) $(liblink)
 
-e_plot.o: components/e_plot.c components/e_plot.h
-	$(cc) $(cflags) components/e_plot.c
+chart.o: components/chart.c components/chart.h
+	$(cc) $(cflags) components/chart.c
 
-e_interface.o: e_interface.c e_interface.h components/e_plot.h
-	$(cc) $(cflags) e_interface.c
+interface.o: interface.c interface.h components/chart.h
+	$(cc) $(cflags) interface.c
 
-e_ladder.o: e_ladder.c e_ladder.h e_interface.h
-	$(cc) $(cflags) e_ladder.c
+ladder.o: ladder.c ladder.h interface.h
+	$(cc) $(cflags) ladder.c
 
-e_environment.o: e_environment.c e_environment.h e_ladder.h
-	$(cc) $(cflags) e_environment.c
+environment.o: environment.c environment.h ladder.h
+	$(cc) $(cflags) environment.c
 
-e_loop.o: e_loop.c e_loop.h e_environment.h
-	$(cc) $(cflags) e_loop.c
+loop.o: loop.c loop.h environment.h
+	$(cc) $(cflags) loop.c
 
-e_firefly.o: e_firefly.c e_loop.h
-	$(cc) $(cflags) e_firefly.c
+firefly.o: firefly.c loop.h
+	$(cc) $(cflags) firefly.c
 
 clean:
 	rm -f *.o

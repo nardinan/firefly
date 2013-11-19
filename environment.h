@@ -1,5 +1,5 @@
 /*
- * miranda
+ * firefly
  * Copyright (C) 2013 Andrea Nardinocchi (andrea@nardinan.it)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,16 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef miranda_environment_h
-#define miranda_environment_h
-#include "e_ladder.h"
+#ifndef firefly_environment_h
+#define firefly_environment_h
+#include "ladder.h"
 #define d_environment_ladders 1
 typedef enum e_environment_iterations {
 	e_environment_iteration_update = 0,
 	e_environment_iteration_interface_update,
 	e_environment_iteration_analyze_update,
 	e_environment_iteration_read_update,
-	e_environment_iteration_plot_update,
+	e_environment_iteration_chart_update,
 	e_environment_iteration_NULL
 } e_environment_iterations;
 typedef struct s_environment {

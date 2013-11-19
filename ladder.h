@@ -1,5 +1,5 @@
 /*
- * miranda
+ * firefly
  * Copyright (C) 2013 Andrea Nardinocchi (andrea@nardinan.it)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,9 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef miranda_ladder_h
-#define miranda_ladder_h
-#include "e_interface.h"
+#ifndef firefly_ladder_h
+#define firefly_ladder_h
+#include "interface.h"
 #define d_ladder_calibration_events 512
 #define d_ladder_calibration_sigma 10.0
 #define d_ladder_trigger_internal 0x22
@@ -54,7 +54,7 @@ extern void f_ladder_prepare(struct s_ladder *ladder, struct s_interface *interf
 extern void f_ladder_read(struct s_ladder *ladder, time_t timeout);
 extern void p_ladder_analyze_finished(struct s_ladder *ladder);
 extern void p_ladder_analyze_calibrate(struct s_ladder *ladder);
-extern void f_ladder_analyze_plots(struct s_ladder *ladder, struct s_plot **plot);
+extern void f_ladder_analyze_charts(struct s_ladder *ladder, struct s_chart **chart);
 extern int f_ladder_device(struct s_ladder *ladder, struct o_trb *device);
 extern void f_ladder_configure_device(struct s_ladder *ladder, struct s_interface *interface);
 #endif

@@ -1,5 +1,5 @@
 /*
- * miranda
+ * firefly
  * Copyright (C) 2013 Andrea Nardinocchi (andrea@nardinan.it)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "e_environment.h"
+#include "environment.h"
 struct s_environment *f_environment_new(struct s_environment *supplied, const char *builder_path) { d_FP;
 	GtkBuilder *builder;
 	struct s_environment *result = supplied;

@@ -1,5 +1,5 @@
 /*
- * miranda
+ * firefly
  * Copyright (C) 2013 Andrea Nardinocchi (andrea@nardinan.it)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,10 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef miranda_interface_h
-#define miranda_interface_h
-#include "components/e_plot.h"
-#include "e_common.h"
+#ifndef firefly_interface_h
+#define firefly_interface_h
+#include "components/chart.h"
+#include "common.h"
 typedef enum e_interface_labels {
 	e_interface_label_events = 0,
 	e_interface_label_size,
@@ -79,7 +79,7 @@ typedef struct s_interface {
 	GtkComboBox *combos[e_interface_combo_NULL];
 	GtkFileChooserButton *files[e_interface_file_NULL];
 	GtkAlignment *alignments[e_interface_alignment_NULL];
-	struct s_plot *plots[e_interface_alignment_NULL];
+	struct s_chart *charts[e_interface_alignment_NULL];
 	GtkProgressBar *progress_bar;
 } s_interface;
 extern struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *builder);

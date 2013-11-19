@@ -1,5 +1,5 @@
 /*
- * miranda
+ * firefly
  * Copyright (C) 2013 Andrea Nardinocchi (andrea@nardinan.it)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,20 +15,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "e_loop.h"
-int main (int argc, char *argv[]) {
-	struct s_environment *environment;
-	int index;
-	gtk_init(&argc, &argv);
-	environment = f_environment_new(NULL, "UI/UI_main.glade");
-	gtk_widget_show_all(GTK_WIDGET(environment->interface->window));
-	for (index = 1; index < argc; index++) {
-		if (argv[index][0] == 'M')
-			gtk_window_maximize(environment->interface->window);
-		if (argv[index][0] == 'F')
-			gtk_window_fullscreen(environment->interface->window);
-	}
-	g_idle_add(f_loop_iteration, (void *)environment);
-	gtk_main();
-	return 0;
-}
+#ifndef firefly_loop_h
+#define firefly_loop_h
+#include <sys/time.h>
+#include "environment.h"
+typedef int (t_callback_function)(struct s_environment *, time_t);
+typedef struct s_loop_call {
+	char *description;
+	long long last_execution;
+	time_t timeout;
+	t_callback_function *function;
+} s_loop_call;
+extern struct s_loop_call steps[];
+int f_loop_iteration(struct s_environment *environment);
+int f_step_read(struct s_environment *environment, time_t current_time);
+int f_step_analyze(struct s_environment *environment, time_t current_time);
+int f_step_interface(struct s_environment *environment, time_t current_time);
+int f_step_progress(struct s_environment *environment, time_t current_time);
+#endif
+

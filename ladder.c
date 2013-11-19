@@ -1,5 +1,5 @@
 /*
- * miranda
+ * firefly
  * Copyright (C) 2013 Andrea Nardinocchi (andrea@nardinan.it)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "e_ladder.h"
+#include "ladder.h"
 struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) { d_FP;
 	struct s_ladder *result = supplied;
 	int index;
@@ -119,7 +119,7 @@ void p_ladder_analyze_calibrate(struct s_ladder *ladder) { d_FP;
 	d_object_unlock(ladder->lock);
 }
 
-void f_ladder_analyze_plots(struct s_ladder *ladder, struct s_plot **plot) { d_FP;
+void f_ladder_analyze_charts(struct s_ladder *ladder, struct s_chart **chart) { d_FP;
 	int index, channel, va, startup, entries, calibration_updated = (!ladder->calibration.calibrated);
 	float common_noise[d_trb_event_vas], common_noise_on_va, value;
 	p_ladder_analyze_finished(ladder);
@@ -127,23 +127,23 @@ void f_ladder_analyze_plots(struct s_ladder *ladder, struct s_plot **plot) { d_F
 	d_object_lock(ladder->lock);
 	if (ladder->calibration.calibrated)
 		if (calibration_updated) {
-			f_plot_flush(plot[e_interface_alignment_pedestal]);
-			f_plot_flush(plot[e_interface_alignment_sigma_raw]);
-			f_plot_flush(plot[e_interface_alignment_sigma]);
+			f_chart_flush(chart[e_interface_alignment_pedestal]);
+			f_chart_flush(chart[e_interface_alignment_sigma_raw]);
+			f_chart_flush(chart[e_interface_alignment_sigma]);
 			for (index = 0; index < d_trb_event_channels; index++) {
-				f_plot_append(plot[e_interface_alignment_pedestal], index, ladder->calibration.pedestal[index]);
-				f_plot_append(plot[e_interface_alignment_sigma_raw], index, ladder->calibration.sigma_raw[index]);
-				f_plot_append(plot[e_interface_alignment_sigma], index, ladder->calibration.sigma[index]);
+				f_chart_append(chart[e_interface_alignment_pedestal], index, ladder->calibration.pedestal[index]);
+				f_chart_append(chart[e_interface_alignment_sigma_raw], index, ladder->calibration.sigma_raw[index]);
+				f_chart_append(chart[e_interface_alignment_sigma], index, ladder->calibration.sigma[index]);
 			}
 		}
 	if (ladder->evented) {
 		/* compute CN */
-		f_plot_flush(plot[e_interface_alignment_adc]);
+		f_chart_flush(chart[e_interface_alignment_adc]);
 		for (index = 0; index < d_trb_event_channels; index++)
-			f_plot_append(plot[e_interface_alignment_adc], index, ladder->last_event.values[index]);
+			f_chart_append(chart[e_interface_alignment_adc], index, ladder->last_event.values[index]);
 		if ((ladder->command == e_ladder_command_data) || (ladder->command == e_ladder_command_automatic)) {
-			f_plot_flush(plot[e_interface_alignment_adc_pedestal]);
-			f_plot_flush(plot[e_interface_alignment_adc_pedestal_cn]);
+			f_chart_flush(chart[e_interface_alignment_adc_pedestal]);
+			f_chart_flush(chart[e_interface_alignment_adc_pedestal_cn]);
 			if (ladder->calibration.calibrated) {
 				for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
 					common_noise[va] = 0;
@@ -163,19 +163,19 @@ void f_ladder_analyze_plots(struct s_ladder *ladder, struct s_plot **plot) { d_F
 				memset(ladder->calibration.histogram_sigma, 0, (sizeof(struct s_ladder_histogram_value)*d_trb_event_channels));
 				for (index = 0; index < d_trb_event_channels; index++) {
 					va = (index/d_trb_event_channels_on_va);
-					f_plot_append(plot[e_interface_alignment_adc_pedestal], index,
+					f_chart_append(chart[e_interface_alignment_adc_pedestal], index,
 							ladder->last_event.values[index]-ladder->calibration.pedestal[index]);
-					f_plot_append(plot[e_interface_alignment_adc_pedestal_cn], index,
+					f_chart_append(chart[e_interface_alignment_adc_pedestal_cn], index,
 							ladder->last_event.values[index]-ladder->calibration.pedestal[index]-common_noise[va]);
 				}
 			}
 		} else {
-			f_plot_flush(plot[e_interface_alignment_adc_pedestal]);
-			f_plot_flush(plot[e_interface_alignment_adc_pedestal_cn]);
+			f_chart_flush(chart[e_interface_alignment_adc_pedestal]);
+			f_chart_flush(chart[e_interface_alignment_adc_pedestal_cn]);
 		}
 	}
 	for (index = 0; index < e_interface_alignment_NULL; index++)
-		f_plot_redraw(plot[index]);
+		f_chart_redraw(chart[index]);
 	d_object_unlock(ladder->lock);
 }
 
