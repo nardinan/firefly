@@ -1,4 +1,4 @@
-objects = e_plot.o e_interface.o e_ladder.o e_environment.o e_loop.o e_miranda.o
+objects = e_plot.o e_interface.o e_ladder.o e_environment.o e_loop.o e_firefly.o
 cc = gcc -g
 cflags = -Wall `pkg-config --cflags gtk+-2.0` -Wno-variadic-macros -std=c99 -c -pedantic
 lflags = -Wall
