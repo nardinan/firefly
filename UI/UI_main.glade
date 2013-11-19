@@ -503,19 +503,23 @@
                         <property name="visible">True</property>
                         <property name="n_rows">5</property>
                         <property name="n_columns">2</property>
-                        <property name="homogeneous">True</property>
                         <child>
                           <object class="GtkLabel" id="v_events_label">
                             <property name="visible">True</property>
+                            <property name="xpad">5</property>
                             <property name="label" translatable="yes">events</property>
                             <attributes>
                               <attribute name="scale" value="0.800000"/>
                             </attributes>
                           </object>
+                          <packing>
+                            <property name="x_options"></property>
+                          </packing>
                         </child>
                         <child>
                           <object class="GtkLabel" id="v_size_label">
                             <property name="visible">True</property>
+                            <property name="xpad">5</property>
                             <property name="label" translatable="yes">size</property>
                             <attributes>
                               <attribute name="scale" value="0.800000"/>
@@ -524,11 +528,13 @@
                           <packing>
                             <property name="top_attach">1</property>
                             <property name="bottom_attach">2</property>
+                            <property name="x_options"></property>
                           </packing>
                         </child>
                         <child>
                           <object class="GtkLabel" id="v_current_time_label">
                             <property name="visible">True</property>
+                            <property name="xpad">5</property>
                             <property name="label" translatable="yes">current time</property>
                             <attributes>
                               <attribute name="scale" value="0.800000"/>
@@ -537,11 +543,13 @@
                           <packing>
                             <property name="top_attach">3</property>
                             <property name="bottom_attach">4</property>
+                            <property name="x_options"></property>
                           </packing>
                         </child>
                         <child>
                           <object class="GtkLabel" id="v_start_time_label">
                             <property name="visible">True</property>
+                            <property name="xpad">5</property>
                             <property name="label" translatable="yes">starting time</property>
                             <attributes>
                               <attribute name="scale" value="0.800000"/>
@@ -550,11 +558,13 @@
                           <packing>
                             <property name="top_attach">2</property>
                             <property name="bottom_attach">3</property>
+                            <property name="x_options"></property>
                           </packing>
                         </child>
                         <child>
                           <object class="GtkLabel" id="v_output_label">
                             <property name="visible">True</property>
+                            <property name="xpad">5</property>
                             <property name="label" translatable="yes">output</property>
                             <attributes>
                               <attribute name="scale" value="0.800000"/>
@@ -563,6 +573,7 @@
                           <packing>
                             <property name="top_attach">4</property>
                             <property name="bottom_attach">5</property>
+                            <property name="x_options"></property>
                           </packing>
                         </child>
                         <child>
