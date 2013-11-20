@@ -89,6 +89,7 @@ void f_chart_append(struct s_chart *chart, float x, float y) {
 
 void f_chart_append_histogram(struct s_chart *chart, float value) {
 	int index, inserted = d_false;
+	chart->histogram = d_true;
 	for (index = 0; (!inserted) && (index < chart->head); index++) {
 		if (chart->values[index].x == value) {
 			chart->values[index].y++;
