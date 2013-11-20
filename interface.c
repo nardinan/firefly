@@ -67,7 +67,7 @@ const char *interface_labels[] = {
 	"styles/adc.keys",
 	"styles/adc_pedestal.keys",
 	"styles/adc_pedestal_cn.keys",
-	"styles/calibration.keys",
+	"styles/histogram_adc.keys",
 	"styles/calibration.keys",
 	"styles/calibration.keys"
 };

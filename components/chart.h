@@ -44,7 +44,10 @@ typedef struct s_chart_axis {
 } s_chart_axis;
 typedef struct s_chart {
 	GtkWidget *plane;
-	int head, elements, last_width, last_height;
+	int head, elements, last_width, last_height, histogram;
+	struct {
+		float x_axis, y_axis;
+	} normalized;
 	struct s_chart_axis axis_x, axis_y;
 	struct {
 		float dot_size, line_size;
@@ -58,6 +61,7 @@ extern void p_chart_style_int(struct o_dictionary *dictionary, const char *key, 
 extern void p_chart_style_axis(struct o_dictionary *dictionary, const char postfix, struct s_chart_axis *axis);
 extern void f_chart_style(struct s_chart *chart, struct o_stream *configuration);
 extern void f_chart_append(struct s_chart *chart, float x, float y);
+extern void f_chart_append_histogram(struct s_chart *chart, float value);
 extern void f_chart_flush(struct s_chart *chart);
 extern void f_chart_redraw(struct s_chart *chart);
 extern void p_chart_redraw_axis_x(cairo_t *cr, struct s_chart *chart, float full_h, float full_w, unsigned int width, unsigned int height);

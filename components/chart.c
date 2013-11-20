@@ -72,6 +72,7 @@ void f_chart_style(struct s_chart *chart, struct o_stream *configuration) {
 		p_chart_style_float(dictionary, "color_R", 'z', &(chart->data.color.R));
 		p_chart_style_float(dictionary, "color_G", 'z', &(chart->data.color.G));
 		p_chart_style_float(dictionary, "color_B", 'z', &(chart->data.color.B));
+		p_chart_style_int(dictionary, "histogram", 'z', &(chart->histogram));
 	}
 	d_release(dictionary);
 }
@@ -82,7 +83,26 @@ void f_chart_append(struct s_chart *chart, float x, float y) {
 		chart->values[chart->head].y = y;
 		chart->values[chart->head].normalized.done = d_false;
 		chart->head++;
+	} else
+		d_log(d_log_level_default, "[WARNING] - d_chart_bucket too small");
+}
+
+void f_chart_append_histogram(struct s_chart *chart, float value) {
+	int index, inserted = d_false;
+	for (index = 0; (!inserted) && (index < chart->head); index++) {
+		if (chart->values[index].x == value) {
+			chart->values[index].y++;
+			chart->values[index].normalized.done = d_false;
+			inserted = d_true;
+		}
 	}
+	if ((!inserted) && (chart->head < d_chart_bucket)) {
+		chart->values[chart->head].x = value;
+		chart->values[chart->head].y = 1;
+		chart->values[chart->head].normalized.done = d_false;
+		chart->head++;
+	} else
+		d_log(d_log_level_default, "[WARNING] - d_chart_bucket too small");
 }
 
 void f_chart_flush(struct s_chart *chart) {
@@ -102,6 +122,7 @@ void p_chart_redraw_axis_x(cairo_t *cr, struct s_chart *chart, float full_h, flo
 	cairo_set_line_width(cr, chart->axis_x.size);
 	if (!d_same_sign(chart->axis_y.range[0], chart->axis_y.range[1]))
 		x_axis_position = height-((abs(chart->axis_y.range[0])*height)/full_h);
+	chart->normalized.x_axis = x_axis_position;
 	cairo_move_to(cr, 0.0, x_axis_position);
 	cairo_line_to(cr, width, x_axis_position);
 	for (current_value = chart->axis_x.range[0], current_position = 0, last_label = 0; current_value < chart->axis_x.range[1]; current_value += value_step,
@@ -138,6 +159,7 @@ void p_chart_redraw_axis_y(cairo_t *cr, struct s_chart *chart, float full_h, flo
 	cairo_set_line_width(cr, chart->axis_y.size);
 	if (!d_same_sign(chart->axis_x.range[0], chart->axis_x.range[1]))
 		y_axis_position = (abs(chart->axis_x.range[0])*width)/full_w;
+	chart->normalized.y_axis = y_axis_position;
 	cairo_move_to(cr, y_axis_position, 0.0);
 	cairo_move_to(cr, y_axis_position, height);
 	for (current_value = chart->axis_y.range[0], current_position = height, last_label = height; current_value < chart->axis_y.range[1];
@@ -269,12 +291,16 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 			cairo_set_dash(cr, NULL, 0, 0);
 			for (index = 0; index < chart->head; index++)
 				if (chart->values[index].normalized.done) {
-					if (!first) {
-						cairo_set_line_width(cr, chart->data.line_size);
+					cairo_set_line_width(cr, chart->data.line_size);
+					if (chart->histogram) {
+						cairo_move_to(cr, chart->values[index].normalized.x, chart->normalized.x_axis);
 						cairo_line_to(cr, chart->values[index].normalized.x, chart->values[index].normalized.y);
-					} else
-						first = d_false;
+					} else {
+						if (!first)
+							cairo_line_to(cr, chart->values[index].normalized.x, chart->values[index].normalized.y);
+					}
 					cairo_arc(cr, chart->values[index].normalized.x, chart->values[index].normalized.y, chart->data.dot_size, 0, arc_size);
+					first = d_false;
 				}
 			cairo_stroke(cr);
 		}

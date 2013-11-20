@@ -139,8 +139,10 @@ void f_ladder_analyze_charts(struct s_ladder *ladder, struct s_chart **chart) { 
 	if (ladder->evented) {
 		/* compute CN */
 		f_chart_flush(chart[e_interface_alignment_adc]);
-		for (index = 0; index < d_trb_event_channels; index++)
+		for (index = 0; index < d_trb_event_channels; index++) {
 			f_chart_append(chart[e_interface_alignment_adc], index, ladder->last_event.values[index]);
+			f_chart_append_histogram(chart[e_interface_alignment_histogram_adc], ladder->last_event.values[index]);
+		}
 		if ((ladder->command == e_ladder_command_data) || (ladder->command == e_ladder_command_automatic)) {
 			f_chart_flush(chart[e_interface_alignment_adc_pedestal]);
 			f_chart_flush(chart[e_interface_alignment_adc_pedestal_cn]);
@@ -158,9 +160,6 @@ void f_ladder_analyze_charts(struct s_ladder *ladder, struct s_chart **chart) { 
 					if (entries > 0)
 						common_noise[va] = (common_noise_on_va/(float)entries);
 				}
-				memset(ladder->calibration.histogram_pedestal, 0, (sizeof(struct s_ladder_histogram_value)*d_trb_event_channels));
-				memset(ladder->calibration.histogram_sigma_raw, 0, (sizeof(struct s_ladder_histogram_value)*d_trb_event_channels));
-				memset(ladder->calibration.histogram_sigma, 0, (sizeof(struct s_ladder_histogram_value)*d_trb_event_channels));
 				for (index = 0; index < d_trb_event_channels; index++) {
 					va = (index/d_trb_event_channels_on_va);
 					f_chart_append(chart[e_interface_alignment_adc_pedestal], index,
