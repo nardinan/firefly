@@ -86,7 +86,7 @@ int f_step_interface(struct s_environment *environment, time_t current_time) { d
 		strftime(buffer, d_string_buffer_size, d_common_interface_time_format,
 				localtime(&(environment->ladders[environment->current]->starting_time)));
 		gtk_label_set_text(environment->interface->labels[e_interface_label_start_time], buffer);
-		snprintf(buffer, d_string_buffer_size, "%d (~%fHz)", environment->ladders[environment->current]->readed_events, rate);
+		snprintf(buffer, d_string_buffer_size, "%d (~%.01fHz)", environment->ladders[environment->current]->readed_events, rate);
 		gtk_label_set_text(environment->interface->labels[e_interface_label_events], buffer);
 		if (strlen(environment->ladders[environment->current]->output) > 0) {
 			gtk_label_set_text(environment->interface->labels[e_interface_label_output], environment->ladders[environment->current]->output);
