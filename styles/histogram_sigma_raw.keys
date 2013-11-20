@@ -7,5 +7,4 @@ range_top_y=384.0
 color_R_z=0.0
 color_G_z=0.0
 color_B_z=0.8
-line_size=1.0
-histogram_z=1.0
+line_size=0.3
