@@ -1,0 +1,11 @@
+segments_x=20.0
+segments_y=10.0
+range_bottom_x=0.0
+range_top_x=1000.0
+range_bottom_y=0.0
+range_top_y=384.0
+color_R_z=0.0
+color_G_z=0.0
+color_B_z=1.0
+line_size=1.0
+histogram_z=1.0

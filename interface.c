@@ -67,9 +67,9 @@ const char *interface_labels[] = {
 	"styles/adc.keys",
 	"styles/adc_pedestal.keys",
 	"styles/adc_pedestal_cn.keys",
-	"styles/histogram_adc.keys",
-	"styles/calibration.keys",
-	"styles/calibration.keys"
+	"styles/histogram_pedestal.keys",
+	"styles/histogram_sigma_raw.keys",
+	"styles/histogram_sigma.keys"
 };
 struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *interface) { d_FP;
 	struct s_interface *result = supplied;

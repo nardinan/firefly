@@ -65,9 +65,9 @@ typedef enum e_interface_alignments {
 	e_interface_alignment_adc,
 	e_interface_alignment_adc_pedestal,
 	e_interface_alignment_adc_pedestal_cn,
-	e_interface_alignment_histogram_adc,
-	e_interface_alignment_histogram_adc_pedestal,
-	e_interface_alignment_histogram_adc_pedestal_cn,
+	e_interface_alignment_histogram_pedestal,
+	e_interface_alignment_histogram_sigma_raw,
+	e_interface_alignment_histogram_sigma,
 	e_interface_alignment_NULL
 } e_interface_alignments;
 typedef struct s_interface {

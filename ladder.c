@@ -130,19 +130,23 @@ void f_ladder_analyze_charts(struct s_ladder *ladder, struct s_chart **chart) { 
 			f_chart_flush(chart[e_interface_alignment_pedestal]);
 			f_chart_flush(chart[e_interface_alignment_sigma_raw]);
 			f_chart_flush(chart[e_interface_alignment_sigma]);
+			f_chart_flush(chart[e_interface_alignment_histogram_pedestal]);
+			f_chart_flush(chart[e_interface_alignment_histogram_sigma_raw]);
+			f_chart_flush(chart[e_interface_alignment_histogram_sigma]);
 			for (index = 0; index < d_trb_event_channels; index++) {
 				f_chart_append(chart[e_interface_alignment_pedestal], index, ladder->calibration.pedestal[index]);
+				f_chart_append_histogram(chart[e_interface_alignment_pedestal], ladder->calibration.pedestal[index]);
 				f_chart_append(chart[e_interface_alignment_sigma_raw], index, ladder->calibration.sigma_raw[index]);
+				f_chart_append_histogram(chart[e_interface_alignment_sigma_raw], ladder->calibration.sigma_raw[index]);
 				f_chart_append(chart[e_interface_alignment_sigma], index, ladder->calibration.sigma[index]);
+				f_chart_append_histogram(chart[e_interface_alignment_sigma], ladder->calibration.sigma[index]);
 			}
 		}
 	if (ladder->evented) {
 		/* compute CN */
 		f_chart_flush(chart[e_interface_alignment_adc]);
-		for (index = 0; index < d_trb_event_channels; index++) {
+		for (index = 0; index < d_trb_event_channels; index++)
 			f_chart_append(chart[e_interface_alignment_adc], index, ladder->last_event.values[index]);
-			f_chart_append_histogram(chart[e_interface_alignment_histogram_adc], ladder->last_event.values[index]);
-		}
 		if ((ladder->command == e_ladder_command_data) || (ladder->command == e_ladder_command_automatic)) {
 			f_chart_flush(chart[e_interface_alignment_adc_pedestal]);
 			f_chart_flush(chart[e_interface_alignment_adc_pedestal_cn]);
