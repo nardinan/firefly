@@ -44,7 +44,7 @@ int f_loop_iteration(struct s_environment *environment) {
 		}
 		d_object_unlock(environment->lock);
 	}
-	return d_true;
+	return 0;
 }
 
 int f_step_check_device(struct s_environment *environment, time_t current_time) { d_FP;
@@ -60,7 +60,7 @@ int f_step_check_device(struct s_environment *environment, time_t current_time) 
 			environment->ladders[environment->current]->calibration.next = 0;
 		}
 	d_object_unlock(environment->ladders[environment->current]->lock);
-	return d_true;
+	return 0;
 }
 
 int f_step_check_hertz(struct s_environment *environment, time_t current_time) { d_FP;
@@ -80,7 +80,7 @@ int f_step_check_hertz(struct s_environment *environment, time_t current_time) {
 		environment->ladders[environment->current]->last_readed_events = environment->ladders[environment->current]->readed_events;
 	}
 	d_object_unlock(environment->ladders[environment->current]->lock);
-	return d_true;
+	return 0;
 }
 
 int f_step_read(struct s_environment *environment, time_t current_time) { d_FP;
