@@ -107,13 +107,28 @@ void p_ladder_analyze_finished(struct s_ladder *ladder) { d_FP;
 }
 
 void p_ladder_analyze_calibrate(struct s_ladder *ladder) { d_FP;
+	float pedestal = 0, rms, total = 0, total_square = 0, fraction = (1.0/(float)d_trb_event_channels);
+	int index;
 	d_object_lock(ladder->lock);
 	if (ladder->calibration.next == d_ladder_calibration_events)
 		if (!ladder->calibration.calibrated) {
 			d_assert(p_trb_event_pedestal(ladder->calibration.events, d_ladder_calibration_events, ladder->calibration.pedestal));
 			d_assert(p_trb_event_sigma_raw(ladder->calibration.events, d_ladder_calibration_events, ladder->calibration.sigma_raw));
-			d_assert(p_trb_event_sigma(ladder->calibration.events, d_ladder_calibration_events, d_ladder_calibration_sigma,
-						ladder->calibration.sigma_raw, ladder->calibration.pedestal, ladder->calibration.sigma));
+			for (index = 0; index < d_trb_event_channels; index++) {
+				total += ladder->calibration.sigma_raw[index];
+				total_square += ladder->calibration.sigma_raw[index]+ladder->calibration.sigma_raw[index];
+			}
+			pedestal = total/(float)d_trb_event_channels;
+			total *= fraction;
+			total_square *= fraction;
+			rms = sqrt(fabs((total_square-(total*total))));
+			for (index = 0; index < d_trb_event_channels; index++) {
+				ladder->calibration.flags[index] = 0;
+				if ((ladder->calibration.sigma_raw[index] > pedestal+rms) || (ladder->calibration.sigma_raw[index] < pedestal-rms))
+					ladder->calibration.flags[index] |= e_trb_event_channel_damaged;
+			}
+			d_assert(p_trb_event_sigma(ladder->calibration.events, d_ladder_calibration_events, d_common_sigma_k, ladder->calibration.sigma_raw,
+						ladder->calibration.pedestal, ladder->calibration.flags, ladder->calibration.sigma));
 			ladder->calibration.calibrated = d_true;
 		}
 	d_object_unlock(ladder->lock);
