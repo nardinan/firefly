@@ -159,7 +159,6 @@ void f_ladder_analyze_charts(struct s_ladder *ladder, struct s_chart **chart) { 
 			}
 		}
 	if (ladder->evented) {
-		/* compute CN */
 		f_chart_flush(chart[e_interface_alignment_adc]);
 		for (index = 0; index < d_trb_event_channels; index++)
 			f_chart_append(chart[e_interface_alignment_adc], index, ladder->last_event.values[index]);

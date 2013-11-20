@@ -17,10 +17,11 @@
  */
 #include "loop.h"
 struct s_loop_call steps[] = {
-	{"check the presence of miniTRB", 0, 500000, f_step_check_device},
-	{"read data from miniTRB", 0, 1000, f_step_read},
-	{"analyze readed data and update charts", 0, 200000, f_step_analyze},
-	{"update stats on interface", 0, 500000, f_step_interface},
+	{"verify that miniTRB is still connected to the system", 0, 500000, f_step_check_device},
+	{"compute the speed of miniTRB incoming data (in Herz)", 0, 1000000, f_step_check_hertz},
+	{"read an event from miniTRB", 0, 1000, f_step_read},
+	{"analyze store readed data and redraw plots", 0, 200000, f_step_analyze},
+	{"update 'statistics' panel and refresh other components", 0, 500000, f_step_interface},
 	{"update progress bar", 0, 100000, f_step_progress},
 	{ NULL, 0, 0, NULL }
 };
@@ -62,6 +63,26 @@ int f_step_check_device(struct s_environment *environment, time_t current_time) 
 	return d_true;
 }
 
+int f_step_check_hertz(struct s_environment *environment, time_t current_time) { d_FP;
+	struct timeval current_raw_time;
+	float elpased_events, elpased_time;
+	long long usecs;
+	d_object_lock(environment->ladders[environment->current]->lock);
+	if (environment->ladders[environment->current]->command != e_ladder_command_stop) {
+		gettimeofday(&current_raw_time, NULL);
+		usecs = (1000000l*(long long)current_raw_time.tv_sec)+current_raw_time.tv_usec;
+		if ((elpased_time = ((float)(usecs-environment->ladders[environment->current]->last_readed_time)/1000000.0)) > 0) {
+			elpased_events = (environment->ladders[environment->current]->readed_events-
+					environment->ladders[environment->current]->last_readed_events);
+			environment->ladders[environment->current]->hertz = (elpased_events/elpased_time);
+		}
+		environment->ladders[environment->current]->last_readed_time = usecs;
+		environment->ladders[environment->current]->last_readed_events = environment->ladders[environment->current]->readed_events;
+	}
+	d_object_unlock(environment->ladders[environment->current]->lock);
+	return d_true;
+}
+
 int f_step_read(struct s_environment *environment, time_t current_time) { d_FP;
 	f_ladder_read(environment->ladders[environment->current], d_common_timeout);
 	return 0;
@@ -73,7 +94,6 @@ int f_step_analyze(struct s_environment *environment, time_t current_time) { d_F
 }
 
 int f_step_interface(struct s_environment *environment, time_t current_time) { d_FP;
-	struct timeval current_raw_time;
 	char buffer[d_string_buffer_size], *unity[] = {
 		"Bytes",
 		"Kb",
@@ -83,27 +103,17 @@ int f_step_interface(struct s_environment *environment, time_t current_time) { d
 		"Pb",
 		NULL
 	};
-	int index = 0, elpased_events;
-	float bytes, elpased_time, rate;
-	long long usecs;
+	int index = 0;
+	float bytes;
 	strftime(buffer, d_string_buffer_size, d_common_interface_time_format, localtime(&current_time));
 	gtk_label_set_text(environment->interface->labels[e_interface_label_current_time], buffer);
 	d_object_lock(environment->ladders[environment->current]->lock);
 	if (environment->ladders[environment->current]->command != e_ladder_command_stop) {
-		gettimeofday(&current_raw_time, NULL);
-		usecs = (1000000l*(long long)current_raw_time.tv_sec)+current_raw_time.tv_usec;
-		if ((elpased_time = ((float)(usecs-environment->ladders[environment->current]->last_readed_time)/1000000.0)) > 0) {
-			elpased_events = (environment->ladders[environment->current]->readed_events-
-					environment->ladders[environment->current]->last_readed_events);
-			rate = ((float)elpased_events/elpased_time);
-		} else
-			rate = 0;
-		environment->ladders[environment->current]->last_readed_time = usecs;
-		environment->ladders[environment->current]->last_readed_events = environment->ladders[environment->current]->readed_events;
 		strftime(buffer, d_string_buffer_size, d_common_interface_time_format,
 				localtime(&(environment->ladders[environment->current]->starting_time)));
 		gtk_label_set_text(environment->interface->labels[e_interface_label_start_time], buffer);
-		snprintf(buffer, d_string_buffer_size, "%d (~%.01fHz)", environment->ladders[environment->current]->readed_events, rate);
+		snprintf(buffer, d_string_buffer_size, "%d (~%.01fHz)", environment->ladders[environment->current]->readed_events,
+				environment->ladders[environment->current]->hertz);
 		gtk_label_set_text(environment->interface->labels[e_interface_label_events], buffer);
 		if (strlen(environment->ladders[environment->current]->output) > 0) {
 			gtk_label_set_text(environment->interface->labels[e_interface_label_output], environment->ladders[environment->current]->output);

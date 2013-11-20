@@ -40,6 +40,7 @@ typedef struct s_ladder {
 	long long last_readed_time;
 	unsigned int last_readed_events, readed_events, event_size;
 	int evented, deviced, update_interface;
+	float hertz;
 	struct {
 		unsigned int next;
 		struct o_trb_event events[d_ladder_calibration_events];

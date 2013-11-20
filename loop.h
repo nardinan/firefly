@@ -29,6 +29,7 @@ typedef struct s_loop_call {
 extern struct s_loop_call steps[];
 int f_loop_iteration(struct s_environment *environment);
 int f_step_check_device(struct s_environment *environment, time_t current_time);
+int f_step_check_hertz(struct s_environment *environment, time_t current_time);
 int f_step_read(struct s_environment *environment, time_t current_time);
 int f_step_analyze(struct s_environment *environment, time_t current_time);
 int f_step_interface(struct s_environment *environment, time_t current_time);
