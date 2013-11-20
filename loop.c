@@ -54,6 +54,9 @@ int f_step_check_device(struct s_environment *environment, time_t current_time) 
 			environment->ladders[environment->current]->deviced = d_false;
 			environment->ladders[environment->current]->command = e_ladder_command_stop;
 			environment->ladders[environment->current]->update_interface = d_true;
+			environment->ladders[environment->current]->evented = d_false;
+			environment->ladders[environment->current]->calibration.calibrated = d_false;
+			environment->ladders[environment->current]->calibration.next = 0;
 		}
 	d_object_unlock(environment->ladders[environment->current]->lock);
 	return d_true;

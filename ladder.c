@@ -199,20 +199,17 @@ void f_ladder_analyze_charts(struct s_ladder *ladder, struct s_chart **chart) { 
 }
 
 int f_ladder_device(struct s_ladder *ladder, struct o_trb *device) { d_FP;
-	d_object_lock(ladder->lock);
-	if (ladder->device)
-		d_release(ladder->device);
-	ladder->device = device;
-	ladder->deviced = d_true;
-	ladder->command = e_ladder_command_stop;
-	ladder->calibration.next = 0;
-	ladder->calibration.calibrated = d_false;
-	ladder->evented = d_false;
-	ladder->readed_events = 0;
-	ladder->last_readed_events = 0;
-	ladder->update_interface = d_true;
-	d_object_unlock(ladder->lock);
-	return d_true;
+	int result = d_false;
+	while ((!result) && (usleep(d_common_timeout_device) == 0)) {
+		d_object_lock(ladder->lock);
+		if (!ladder->deviced) {
+			ladder->device = device;
+			ladder->deviced = d_true;
+			result = d_true;
+		}
+		d_object_unlock(ladder->lock);
+	}
+	return result;
 }
 
 void f_ladder_configure_device(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
