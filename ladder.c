@@ -40,6 +40,7 @@ void f_ladder_prepare(struct s_ladder *ladder, struct s_interface *interface) { 
 	if (gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_action])) {
 		ladder->evented = d_false;
 		ladder->readed_events = 0;
+		ladder->last_readed_events = 0;
 		ladder->starting_time = time(NULL);
 		if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_public])) {
 			if ((location = gtk_combo_box_get_active_text(interface->combos[e_interface_combo_location])))
@@ -208,6 +209,7 @@ int f_ladder_device(struct s_ladder *ladder, struct o_trb *device) { d_FP;
 			ladder->calibration.calibrated = d_false;
 			ladder->evented = d_false;
 			ladder->readed_events = 0;
+			ladder->last_readed_events = 0;
 			ladder->update_interface = d_true;
 			result = d_true;
 		}

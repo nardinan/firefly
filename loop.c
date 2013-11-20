@@ -56,6 +56,7 @@ int f_step_analyze(struct s_environment *environment, time_t current_time) { d_F
 }
 
 int f_step_interface(struct s_environment *environment, time_t current_time) { d_FP;
+	struct timeval current_raw_time;
 	char buffer[d_string_buffer_size], *unity[] = {
 		"Bytes",
 		"Kb",
@@ -65,16 +66,27 @@ int f_step_interface(struct s_environment *environment, time_t current_time) { d
 		"Pb",
 		NULL
 	};
-	int index = 0;
-	float bytes;
+	int index = 0, elpased_events;
+	float bytes, elpased_time, rate;
+	long long usecs;
 	strftime(buffer, d_string_buffer_size, d_common_interface_time_format, localtime(&current_time));
 	gtk_label_set_text(environment->interface->labels[e_interface_label_current_time], buffer);
 	d_object_lock(environment->ladders[environment->current]->lock);
 	if (environment->ladders[environment->current]->command != e_ladder_command_stop) {
+		gettimeofday(&current_raw_time, NULL);
+		usecs = (1000000l*(long long)current_raw_time.tv_sec)+current_raw_time.tv_usec;
+		if ((elpased_time = ((float)(usecs-environment->ladders[environment->current]->last_readed_time)/1000000.0)) > 0) {
+			elpased_events = (environment->ladders[environment->current]->readed_events-
+					environment->ladders[environment->current]->last_readed_events);
+			rate = ((float)elpased_events/elpased_time);
+		} else
+			rate = 0;
+		environment->ladders[environment->current]->last_readed_time = usecs;
+		environment->ladders[environment->current]->last_readed_events = environment->ladders[environment->current]->readed_events;
 		strftime(buffer, d_string_buffer_size, d_common_interface_time_format,
 				localtime(&(environment->ladders[environment->current]->starting_time)));
 		gtk_label_set_text(environment->interface->labels[e_interface_label_start_time], buffer);
-		snprintf(buffer, d_string_buffer_size, "%d", environment->ladders[environment->current]->readed_events);
+		snprintf(buffer, d_string_buffer_size, "%d (~%fHz)", environment->ladders[environment->current]->readed_events, rate);
 		gtk_label_set_text(environment->interface->labels[e_interface_label_events], buffer);
 		if (strlen(environment->ladders[environment->current]->output) > 0) {
 			gtk_label_set_text(environment->interface->labels[e_interface_label_output], environment->ladders[environment->current]->output);

@@ -37,7 +37,8 @@ typedef struct s_ladder {
 	struct o_trb_event last_event;
 	enum e_ladder_commands command;
 	time_t starting_time, finish_time;
-	unsigned int readed_events, event_size;
+	long long last_readed_time;
+	unsigned int last_readed_events, readed_events, event_size;
 	int evented, deviced, update_interface;
 	struct {
 		unsigned int next;
