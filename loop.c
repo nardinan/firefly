@@ -17,6 +17,7 @@
  */
 #include "loop.h"
 struct s_loop_call steps[] = {
+	{"check the presence of miniTRB", 0, 500000, f_step_check_device},
 	{"read data from miniTRB", 0, 1000, f_step_read},
 	{"analyze readed data and update charts", 0, 200000, f_step_analyze},
 	{"update stats on interface", 0, 500000, f_step_interface},
@@ -42,6 +43,19 @@ int f_loop_iteration(struct s_environment *environment) {
 		}
 		d_object_unlock(environment->lock);
 	}
+	return d_true;
+}
+
+int f_step_check_device(struct s_environment *environment, time_t current_time) { d_FP;
+	d_object_lock(environment->ladders[environment->current]->lock);
+	if ((environment->ladders[environment->current]->deviced) && (environment->ladders[environment->current]->device))
+		if (!p_trb_check(environment->ladders[environment->current]->device->device, environment->ladders[environment->current]->device->handler)) {
+			d_release(environment->ladders[environment->current]->device);
+			environment->ladders[environment->current]->deviced = d_false;
+			environment->ladders[environment->current]->command = e_ladder_command_stop;
+			environment->ladders[environment->current]->update_interface = d_true;
+		}
+	d_object_unlock(environment->ladders[environment->current]->lock);
 	return d_true;
 }
 
