@@ -97,13 +97,15 @@ void f_chart_append_histogram(struct s_chart *chart, float value) {
 			inserted = d_true;
 		}
 	}
-	if ((!inserted) && (chart->head < d_chart_bucket)) {
-		chart->values[chart->head].x = value;
-		chart->values[chart->head].y = 1;
-		chart->values[chart->head].normalized.done = d_false;
-		chart->head++;
-	} else
-		d_log(d_log_level_default, "[WARNING] - d_chart_bucket too small");
+	if (!inserted) {
+		if (chart->head < d_chart_bucket) {
+			chart->values[chart->head].x = value;
+			chart->values[chart->head].y = 1;
+			chart->values[chart->head].normalized.done = d_false;
+			chart->head++;
+		} else
+			d_log(d_log_level_default, "[WARNING] - d_chart_bucket too small");
+	}
 }
 
 void f_chart_flush(struct s_chart *chart) {
