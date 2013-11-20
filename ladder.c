@@ -205,6 +205,7 @@ int f_ladder_device(struct s_ladder *ladder, struct o_trb *device) { d_FP;
 		if (!ladder->deviced) {
 			ladder->device = device;
 			ladder->deviced = d_true;
+			ladder->update_interface = d_true;
 			result = d_true;
 		}
 		d_object_unlock(ladder->lock);
