@@ -49,12 +49,12 @@ typedef struct s_ladder {
 	} calibration;
 } s_ladder;
 extern struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device);
-extern void f_ladder_prepare(struct s_ladder *ladder, struct s_interface *interface);
 extern void f_ladder_read(struct s_ladder *ladder, time_t timeout);
 extern void p_ladder_analyze_finished(struct s_ladder *ladder);
 extern void p_ladder_analyze_calibrate(struct s_ladder *ladder);
-extern void f_ladder_analyze_charts(struct s_ladder *ladder, struct s_chart **chart);
+extern void f_ladder_analyze(struct s_ladder *ladder, struct s_chart **chart);
 extern int f_ladder_device(struct s_ladder *ladder, struct o_trb *device);
-extern void f_ladder_configure_device(struct s_ladder *ladder, struct s_interface *interface);
+extern void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *interface);
+extern void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface);
 #endif
 

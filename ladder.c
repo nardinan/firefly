@@ -33,39 +33,6 @@ struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) {
 	return result;
 }
 
-void f_ladder_prepare(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
-	char *location, *kind;
-	size_t written = 0;
-	d_object_lock(ladder->lock);
-	if (gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_action])) {
-		ladder->evented = d_false;
-		ladder->readed_events = 0;
-		ladder->last_readed_events = 0;
-		ladder->starting_time = time(NULL);
-		if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_public])) {
-			if ((location = gtk_combo_box_get_active_text(interface->combos[e_interface_combo_location])))
-				ladder->output[written++] = location[0];
-			if ((kind = gtk_combo_box_get_active_text(interface->combos[e_interface_combo_kind])))
-				ladder->output[written++] = kind[0];
-			written += strftime((ladder->output+written), (d_string_buffer_size-written), d_common_file_time_format,
-					localtime(&(ladder->starting_time)));
-		} else
-			memset(ladder->output, 0, d_string_buffer_size);
-		if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_calibration])) {
-			ladder->calibration.next = 0;
-			ladder->calibration.calibrated = d_false;
-			ladder->command = e_ladder_command_calibration;
-			ladder->finish_time = ladder->starting_time+gtk_spin_button_get_value_as_int(interface->spins[e_interface_spin_calibration_time]);
-		} else if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_automatic])) {
-			ladder->command = e_ladder_command_automatic;
-			ladder->finish_time = ladder->starting_time+gtk_spin_button_get_value_as_int(interface->spins[e_interface_spin_automatic_time]);
-		} else
-			ladder->command = e_ladder_command_data;
-	} else
-		ladder->command = e_ladder_command_stop;
-	d_object_unlock(ladder->lock);
-}
-
 void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 	d_object_lock(ladder->lock);
 	if ((ladder->deviced) && (ladder->device))
@@ -135,7 +102,7 @@ void p_ladder_analyze_calibrate(struct s_ladder *ladder) { d_FP;
 	d_object_unlock(ladder->lock);
 }
 
-void f_ladder_analyze_charts(struct s_ladder *ladder, struct s_chart **chart) { d_FP;
+void f_ladder_analyze(struct s_ladder *ladder, struct s_chart **chart) { d_FP;
 	int index, channel, va, startup, entries, calibration_updated = (!ladder->calibration.calibrated);
 	float common_noise[d_trb_event_vas], common_noise_on_va, value;
 	p_ladder_analyze_finished(ladder);
@@ -212,11 +179,46 @@ int f_ladder_device(struct s_ladder *ladder, struct o_trb *device) { d_FP;
 	return result;
 }
 
-void f_ladder_configure_device(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
+void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
+	char *location, *kind;
+	size_t written = 0;
+	d_object_lock(ladder->lock);
+	ladder->evented = d_false;
+	ladder->readed_events = 0;
+	ladder->last_readed_events = 0;
+	ladder->starting_time = time(NULL);
+	ladder->last_readed_time = time(NULL);
+	if (gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_action])) {
+		if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_public])) {
+			if ((location = gtk_combo_box_get_active_text(interface->combos[e_interface_combo_location])))
+				ladder->output[written++] = location[0];
+			if ((kind = gtk_combo_box_get_active_text(interface->combos[e_interface_combo_kind])))
+				ladder->output[written++] = kind[0];
+			written += strftime((ladder->output+written), (d_string_buffer_size-written), d_common_file_time_format,
+					localtime(&(ladder->starting_time)));
+		} else
+			memset(ladder->output, 0, d_string_buffer_size);
+		if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_calibration])) {
+			ladder->calibration.next = 0;
+			ladder->calibration.calibrated = d_false;
+			ladder->command = e_ladder_command_calibration;
+			ladder->finish_time = ladder->starting_time+gtk_spin_button_get_value_as_int(interface->spins[e_interface_spin_calibration_time]);
+		} else if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_automatic])) {
+			ladder->command = e_ladder_command_automatic;
+			ladder->finish_time = ladder->starting_time+gtk_spin_button_get_value_as_int(interface->spins[e_interface_spin_automatic_time]);
+		} else
+			ladder->command = e_ladder_command_data;
+	} else
+		ladder->command = e_ladder_command_stop;
+	d_object_unlock(ladder->lock);
+}
+
+void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
 	unsigned char trigger = d_ladder_trigger_internal, dac = 0x00, channel = 0x00;
 	enum e_trb_mode mode = e_trb_mode_normal;
 	float hold_delay;
 	struct o_string *name, *extension;
+	p_ladder_configure_setup(ladder, interface);
 	d_object_lock(ladder->lock);
 	if ((ladder->deviced) && (ladder->device)) {
 		if (ladder->command != e_ladder_command_stop) {

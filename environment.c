@@ -64,13 +64,12 @@ void p_callback_refresh(GtkWidget *widget, struct s_environment *environment) { 
 }
 
 void p_callback_action(GtkWidget *widget, struct s_environment *environment) { d_FP;
-	f_ladder_prepare(environment->ladders[environment->current], environment->interface);
 	if (!gtk_toggle_button_get_active(environment->interface->toggles[e_interface_toggle_action])) {
 		f_interface_lock(environment->interface, d_false);
 		f_interface_update_configuration(environment->interface, environment->ladders[environment->current]->deviced);
 	} else {
 		f_interface_lock(environment->interface, d_true);
-		f_ladder_configure_device(environment->ladders[environment->current], environment->interface);
+		f_ladder_configure(environment->ladders[environment->current], environment->interface);
 	}
 }
 
@@ -113,7 +112,6 @@ void p_callback_calibration(GtkWidget *widget, struct s_environment *environment
 			d_release(stream);
 			d_release(string_path);
 		}
-
 	} d_catch(exception) {
 		d_exception_dump(stderr, exception);
 		d_raise;
