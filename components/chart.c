@@ -278,10 +278,6 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 	cairo_t *cr;
 	if ((cr = gdk_cairo_create(chart->plane->window))) {
 		gtk_widget_get_allocation(GTK_WIDGET(chart->plane), &dimension);
-		p_chart_redraw_axis_x(cr, chart, full_h, full_w, dimension.width, dimension.height);
-		p_chart_redraw_axis_y(cr, chart, full_h, full_w, dimension.width, dimension.height);
-		p_chart_redraw_grid_x(cr, chart, full_h, full_w, dimension.width, dimension.height);
-		p_chart_redraw_grid_y(cr, chart, full_h, full_w, dimension.width, dimension.height);
 		if ((dimension.width != chart->last_width) || (dimension.height != chart->last_height)) {
 			for (index = 0; index < chart->head; index++)
 				chart->values[index].normalized.done = d_false;
@@ -307,6 +303,10 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 				}
 			cairo_stroke(cr);
 		}
+		p_chart_redraw_axis_x(cr, chart, full_h, full_w, dimension.width, dimension.height);
+		p_chart_redraw_axis_y(cr, chart, full_h, full_w, dimension.width, dimension.height);
+		p_chart_redraw_grid_x(cr, chart, full_h, full_w, dimension.width, dimension.height);
+		p_chart_redraw_grid_y(cr, chart, full_h, full_w, dimension.width, dimension.height);
 		cairo_destroy(cr);
 	}
 	return d_true;
