@@ -108,7 +108,7 @@ void f_ladder_analyze(struct s_ladder *ladder, struct s_chart **chart) { d_FP;
 	p_ladder_analyze_finished(ladder);
 	p_ladder_analyze_calibrate(ladder);
 	d_object_lock(ladder->lock);
-	if (ladder->calibration.calibrated)
+	if (ladder->calibration.calibrated) {
 		if (calibration_updated) {
 			f_chart_flush(chart[e_interface_alignment_pedestal]);
 			f_chart_flush(chart[e_interface_alignment_sigma_raw]);
@@ -125,6 +125,14 @@ void f_ladder_analyze(struct s_ladder *ladder, struct s_chart **chart) { d_FP;
 				f_chart_append_histogram(chart[e_interface_alignment_histogram_sigma], ladder->calibration.sigma[index]);
 			}
 		}
+	} else {
+		f_chart_flush(chart[e_interface_alignment_pedestal]);
+		f_chart_flush(chart[e_interface_alignment_sigma_raw]);
+		f_chart_flush(chart[e_interface_alignment_sigma]);
+		f_chart_flush(chart[e_interface_alignment_histogram_pedestal]);
+		f_chart_flush(chart[e_interface_alignment_histogram_sigma_raw]);
+		f_chart_flush(chart[e_interface_alignment_histogram_sigma]);
+	}
 	if (ladder->evented) {
 		f_chart_flush(chart[e_interface_alignment_adc]);
 		for (index = 0; index < d_trb_event_channels; index++)
