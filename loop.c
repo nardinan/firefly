@@ -17,12 +17,12 @@
  */
 #include "loop.h"
 struct s_loop_call steps[] = {
-	{"verify that miniTRB is still connected to the system", 0, 500000, f_step_check_device},
+	{"verify that miniTRB is still connected to the system", 0, 2000000, f_step_check_device},
 	{"compute the speed of miniTRB incoming data (in Herz)", 0, 1000000, f_step_check_hertz},
 	{"read an event from miniTRB", 0, 1000, f_step_read},
 	{"analyze store readed data and redraw plots", 0, 200000, f_step_analyze},
 	{"update 'statistics' panel and refresh other components", 0, 500000, f_step_interface},
-	{"update progress bar", 0, 100000, f_step_progress},
+	{"update the progress bar", 0, 100000, f_step_progress},
 	{ NULL, 0, 0, NULL }
 };
 
