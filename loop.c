@@ -44,7 +44,7 @@ int f_loop_iteration(struct s_environment *environment) {
 		}
 		d_object_unlock(environment->lock);
 	}
-	return 0;
+	return d_true;
 }
 
 int f_step_check_device(struct s_environment *environment, time_t current_time) { d_FP;

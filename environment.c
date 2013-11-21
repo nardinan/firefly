@@ -64,6 +64,7 @@ void p_callback_refresh(GtkWidget *widget, struct s_environment *environment) { 
 }
 
 void p_callback_action(GtkWidget *widget, struct s_environment *environment) { d_FP;
+	p_ladder_configure_setup(environment->ladders[environment->current], environment->interface);
 	if (!gtk_toggle_button_get_active(environment->interface->toggles[e_interface_toggle_action])) {
 		f_interface_lock(environment->interface, d_false);
 		f_interface_update_configuration(environment->interface, environment->ladders[environment->current]->deviced);

@@ -218,7 +218,6 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) 
 	enum e_trb_mode mode = e_trb_mode_normal;
 	float hold_delay;
 	struct o_string *name, *extension;
-	p_ladder_configure_setup(ladder, interface);
 	d_object_lock(ladder->lock);
 	if ((ladder->deviced) && (ladder->device)) {
 		if (ladder->command != e_ladder_command_stop) {
