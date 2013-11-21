@@ -120,8 +120,8 @@ void f_ladder_analyze(struct s_ladder *ladder, struct s_chart **chart) { d_FP;
 				f_chart_append(chart[e_interface_alignment_pedestal], index, ladder->calibration.pedestal[index]);
 				f_chart_append(chart[e_interface_alignment_sigma_raw], index, ladder->calibration.sigma_raw[index]);
 				f_chart_append(chart[e_interface_alignment_sigma], index, ladder->calibration.sigma[index]);
-				f_chart_append_histogram(chart[e_interface_alignment_histogram_pedestal], ladder->calibration.sigma[index]);
-				f_chart_append_histogram(chart[e_interface_alignment_histogram_sigma_raw], ladder->calibration.sigma[index]);
+				f_chart_append_histogram(chart[e_interface_alignment_histogram_pedestal], ladder->calibration.pedestal[index]);
+				f_chart_append_histogram(chart[e_interface_alignment_histogram_sigma_raw], ladder->calibration.sigma_raw[index]);
 				f_chart_append_histogram(chart[e_interface_alignment_histogram_sigma], ladder->calibration.sigma[index]);
 			}
 		}
