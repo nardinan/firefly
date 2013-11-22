@@ -163,7 +163,6 @@ void f_interface_update_configuration(struct s_interface *interface, int deviced
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_dac]), FALSE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_channel]), FALSE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_automatic_time]), FALSE);
-			gtk_widget_set_sensitive(GTK_WIDGET(interface->switches[e_interface_switch_internal]), FALSE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->switches[e_interface_switch_automatic]), FALSE);
 		} else {
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_calibration_time]), FALSE);
@@ -171,7 +170,6 @@ void f_interface_update_configuration(struct s_interface *interface, int deviced
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[e_interface_toggle_normal]), TRUE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[e_interface_toggle_calibration]), TRUE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[e_interface_toggle_calibration_debug]), TRUE);
-			gtk_widget_set_sensitive(GTK_WIDGET(interface->switches[e_interface_switch_internal]), TRUE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->switches[e_interface_switch_automatic]), TRUE);
 		}
 	}

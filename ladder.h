@@ -19,6 +19,7 @@
 #define firefly_ladder_h
 #include "interface.h"
 #define d_ladder_calibration_events 512
+#define d_ladder_data_events 512
 #define d_ladder_trigger_internal 0x22
 #define d_ladder_trigger_external 0x11
 typedef enum e_ladder_commands {
@@ -47,11 +48,17 @@ typedef struct s_ladder {
 		float pedestal[d_trb_event_channels], sigma_raw[d_trb_event_channels], sigma[d_trb_event_channels];
 		int calibrated, flags[d_trb_event_channels];
 	} calibration;
+	struct {
+		unsigned int next;
+		struct o_trb_event events[d_ladder_data_events], mean;
+		int computed;
+	} data;
 } s_ladder;
 extern struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device);
 extern void f_ladder_read(struct s_ladder *ladder, time_t timeout);
 extern void p_ladder_analyze_finished(struct s_ladder *ladder);
 extern void p_ladder_analyze_calibrate(struct s_ladder *ladder);
+extern void p_ladder_analyze_data(struct s_ladder *ladder);
 extern void f_ladder_analyze(struct s_ladder *ladder, struct s_chart **chart);
 extern int f_ladder_device(struct s_ladder *ladder, struct o_trb *device);
 extern void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *interface);
