@@ -19,7 +19,7 @@
 #define firefly_ladder_h
 #include "interface.h"
 #define d_ladder_calibration_events 512
-#define d_ladder_data_events 512
+#define d_ladder_data_events 128
 #define d_ladder_trigger_internal 0x22
 #define d_ladder_trigger_external 0x11
 typedef enum e_ladder_commands {

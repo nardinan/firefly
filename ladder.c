@@ -209,6 +209,7 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 	d_object_lock(ladder->lock);
 	ladder->evented = d_false;
 	ladder->readed_events = 0;
+	ladder->data.next = 0;
 	ladder->last_readed_events = 0;
 	ladder->starting_time = time(NULL);
 	ladder->last_readed_time = time(NULL);
