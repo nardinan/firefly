@@ -3,7 +3,7 @@
   <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy project-wide -->
   <object class="GtkWindow" id="v_main_window">
-    <property name="title" translatable="yes">firefly - miniTRB data reader</property>
+    <property name="title" translatable="yes">firefly - miniTRB data reader - 0.01a</property>
     <child>
       <object class="GtkHBox" id="v_interface_grid">
         <property name="visible">True</property>
