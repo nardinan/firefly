@@ -73,6 +73,7 @@ void f_chart_style(struct s_chart *chart, struct o_stream *configuration) {
 		p_chart_style_float(dictionary, "color_G", 'z', &(chart->data.color.G));
 		p_chart_style_float(dictionary, "color_B", 'z', &(chart->data.color.B));
 		p_chart_style_int(dictionary, "histogram", 'z', &(chart->histogram));
+		p_chart_style_int(dictionary, "bins", 'z', &(chart->bins));
 	}
 	d_release(dictionary);
 }
@@ -89,6 +90,7 @@ void f_chart_append(struct s_chart *chart, float x, float y) {
 
 void f_chart_append_histogram(struct s_chart *chart, float value) {
 	int index, inserted = d_false, bucket_value = value;
+	float fraction = ((chart->axis_x.range[1]-chart->axis_x.range[0])/(float)chart->bins);
 	chart->histogram = d_true;
 	for (index = 0; (!inserted) && (index < chart->head); index++) {
 		if (chart->values[index].x == bucket_value) {

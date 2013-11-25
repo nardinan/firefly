@@ -50,7 +50,8 @@ typedef struct s_ladder {
 	} calibration;
 	struct {
 		unsigned int next;
-		struct o_trb_event events[d_ladder_data_events], mean;
+		struct o_trb_event events[d_ladder_data_events];
+		float mean[d_trb_event_channels], mean_no_pedestal[d_trb_event_channels];
 		int computed;
 	} data;
 } s_ladder;

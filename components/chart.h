@@ -44,7 +44,7 @@ typedef struct s_chart_axis {
 } s_chart_axis;
 typedef struct s_chart {
 	GtkWidget *plane;
-	int head, elements, last_width, last_height, histogram;
+	int head, elements, last_width, last_height, histogram, bins;
 	struct {
 		float x_axis, y_axis;
 	} normalized;

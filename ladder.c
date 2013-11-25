@@ -28,7 +28,6 @@ struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) {
 		result->deviced = d_true;
 	}
 	d_assert(f_trb_event_new(&(result->last_event)));
-	d_assert(f_trb_event_new(&(result->data.mean)));
 	for (index = 0; index < d_ladder_calibration_events; index++)
 		d_assert(f_trb_event_new(&(result->calibration.events[index])));
 	for (index = 0; index < d_ladder_data_events; index++)
@@ -115,14 +114,17 @@ void p_ladder_analyze_calibrate(struct s_ladder *ladder) { d_FP;
 
 void p_ladder_analyze_data(struct s_ladder *ladder) { d_FP;
 	int index, channel;
-	float value;
+	float value, value_no_pedestal;
 	d_object_lock(ladder->lock);
 	if (ladder->data.next == d_ladder_data_events)
 		if (!ladder->data.computed) {
 			for (channel = 0; channel < d_trb_event_channels; channel++) {
-				for (index = 0, value = 0; index < d_ladder_data_events; index++)
+				for (index = 0, value = 0, value_no_pedestal = 0; index < d_ladder_data_events; index++) {
 					value += ladder->data.events[index].values[channel];
-				ladder->data.mean.values[channel] = value/(float)d_ladder_data_events;
+					value_no_pedestal += (ladder->data.events[index].values[channel]-ladder->calibration.pedestal[channel]);
+				}
+				ladder->data.mean[channel] = value/(float)d_ladder_data_events;
+				ladder->data.mean_no_pedestal[channel] = value_no_pedestal/(float)d_ladder_data_events;
 			}
 			ladder->data.computed = d_true;
 		}
@@ -131,7 +133,7 @@ void p_ladder_analyze_data(struct s_ladder *ladder) { d_FP;
 
 void f_ladder_analyze(struct s_ladder *ladder, struct s_chart **chart) { d_FP;
 	int index, channel, va, startup, entries, calibration_updated = (!ladder->calibration.calibrated);
-	float common_noise[d_trb_event_vas], common_noise_on_va, value;
+	float common_noise[d_trb_event_vas], common_noise_on_va;
 	p_ladder_analyze_finished(ladder);
 	p_ladder_analyze_calibrate(ladder);
 	p_ladder_analyze_data(ladder);
@@ -165,9 +167,8 @@ void f_ladder_analyze(struct s_ladder *ladder, struct s_chart **chart) { d_FP;
 					common_noise[va] = 0;
 					for (channel = startup, entries = 0, common_noise_on_va = 0; channel < (startup+d_trb_event_channels_on_va);
 							channel++) {
-						value = ladder->data.mean.values[channel]-ladder->calibration.pedestal[channel];
-						if (fabs(value) < (d_common_sigma_k*ladder->calibration.sigma[channel])) {
-							common_noise_on_va += value;
+						if (fabs(ladder->data.mean_no_pedestal[channel]) < (d_common_sigma_k*ladder->calibration.sigma[channel])) {
+							common_noise_on_va += ladder->data.mean_no_pedestal[channel];
 							entries++;
 						}
 					}
@@ -177,9 +178,9 @@ void f_ladder_analyze(struct s_ladder *ladder, struct s_chart **chart) { d_FP;
 				for (index = 0; index < d_trb_event_channels; index++) {
 					va = (index/d_trb_event_channels_on_va);
 					f_chart_append(chart[e_interface_alignment_adc_pedestal], index,
-							ladder->data.mean.values[index]-ladder->calibration.pedestal[index]);
+							ladder->data.mean_no_pedestal[index]);
 					f_chart_append(chart[e_interface_alignment_adc_pedestal_cn], index,
-							ladder->data.mean.values[index]-ladder->calibration.pedestal[index]-common_noise[va]);
+							ladder->data.mean_no_pedestal[index]-common_noise[va]);
 				}
 			}
 	}
