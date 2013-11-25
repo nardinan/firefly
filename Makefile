@@ -1,8 +1,8 @@
 objects = chart.o interface.o ladder.o environment.o loop.o firefly.o
 cc = gcc -g
-cflags = -Wall `libusb-legacy-config --cflags` `pkg-config --cflags gtk+-2.0` -Wno-variadic-macros -Wno-missing-braces -Wno-gnu -std=c99 -c -pedantic
+cflags = -Wall -I/usr/include/linux `libusb-config --cflags` `pkg-config --cflags gtk+-2.0` -Wno-variadic-macros -Wno-missing-braces -Wno-gnu -std=c99 -c -pedantic
 lflags = -Wall
-liblink = -L/usr/lib64 -L../serenity -lm -lpthread `libusb-legacy-config --libs` `pkg-config --libs gtk+-2.0` -lserenity_ground -lserenity_structures -lserenity_crypto -lserenity_infn
+liblink = -L/usr/lib64 -L/usr/lib -lm -lpthread `libusb-config --libs` `pkg-config --libs gtk+-2.0` -lserenity_ground -lserenity_structures -lserenity_crypto -lserenity_infn
 exec = firefly.bin
 
 all: $(objects)
