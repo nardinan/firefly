@@ -24,6 +24,8 @@
 #include <math.h>
 #define d_chart_bucket 512
 #define d_chart_font_size 6.0
+#define d_chart_border_x 10
+#define d_chart_border_y 10
 #define d_same_sign(a,b) (((a)>=0)^((b)<0))
 #define d_positive(a) ((a)>=0)
 typedef struct s_chart_value {
@@ -44,7 +46,7 @@ typedef struct s_chart_axis {
 } s_chart_axis;
 typedef struct s_chart {
 	GtkWidget *plane;
-	int head, elements, last_width, last_height, histogram, bins;
+	int head, elements, last_width, last_height, histogram, show_borders;
 	struct {
 		float x_axis, y_axis;
 	} normalized;

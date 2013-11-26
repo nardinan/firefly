@@ -61,7 +61,6 @@ void p_chart_style_axis(struct o_dictionary *dictionary, const char postfix, str
 	p_chart_style_float(dictionary, "color_B", postfix, &(axis->color.B));
 }
 
-
 void f_chart_style(struct s_chart *chart, struct o_stream *configuration) {
 	struct o_dictionary *dictionary = f_dictionary_new(NULL);
 	if (dictionary->m_load(dictionary, configuration)) {
@@ -73,7 +72,7 @@ void f_chart_style(struct s_chart *chart, struct o_stream *configuration) {
 		p_chart_style_float(dictionary, "color_G", 'z', &(chart->data.color.G));
 		p_chart_style_float(dictionary, "color_B", 'z', &(chart->data.color.B));
 		p_chart_style_int(dictionary, "histogram", 'z', &(chart->histogram));
-		p_chart_style_int(dictionary, "bins", 'z', &(chart->bins));
+		p_chart_style_int(dictionary, "show_borders", 'z', &(chart->show_borders));
 	}
 	d_release(dictionary);
 }
@@ -90,7 +89,6 @@ void f_chart_append(struct s_chart *chart, float x, float y) {
 
 void f_chart_append_histogram(struct s_chart *chart, float value) {
 	int index, inserted = d_false, bucket_value = value;
-	float fraction = ((chart->axis_x.range[1]-chart->axis_x.range[0])/(float)chart->bins);
 	chart->histogram = d_true;
 	for (index = 0; (!inserted) && (index < chart->head); index++) {
 		if (chart->values[index].x == bucket_value) {
@@ -275,8 +273,10 @@ void p_chart_normalize(struct s_chart *chart, float full_h, float full_w, unsign
 int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 	GtkAllocation dimension;
 	struct s_chart *chart = (struct s_chart *)v_chart;
-	float full_w = fabs(chart->axis_x.range[1]-chart->axis_x.range[0]), full_h = fabs(chart->axis_y.range[1]-chart->axis_y.range[0]), arc_size = (2.0*G_PI);
+	float full_w = fabs(chart->axis_x.range[1]-chart->axis_x.range[0]), full_h = fabs(chart->axis_y.range[1]-chart->axis_y.range[0]), arc_size = (2.0*G_PI),
+	      min_value = 0, max_value = 0, min_channel = 0, max_channel = 0;
 	int index, first = d_true;
+	char buffer[d_string_buffer_size];
 	cairo_t *cr;
 	if ((cr = gdk_cairo_create(chart->plane->window))) {
 		gtk_widget_get_allocation(GTK_WIDGET(chart->plane), &dimension);
@@ -292,14 +292,24 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 			cairo_set_dash(cr, NULL, 0, 0);
 			for (index = 0; index < chart->head; index++)
 				if (chart->values[index].normalized.done) {
+					if (first) {
+						min_value = chart->values[index].y;
+						max_value = chart->values[index].y;
+						min_channel = chart->values[index].x;
+						max_channel = chart->values[index].x;
+					} else if (chart->values[index].y > max_value) {
+						max_value = chart->values[index].y;
+						max_channel = chart->values[index].x;
+					} else if (chart->values[index].y < min_value) {
+						min_value = chart->values[index].y;
+						min_channel = chart->values[index].x;
+					}
 					cairo_set_line_width(cr, chart->data.line_size);
 					if (chart->histogram) {
 						cairo_move_to(cr, chart->values[index].normalized.x, chart->normalized.x_axis);
 						cairo_line_to(cr, chart->values[index].normalized.x, chart->values[index].normalized.y);
-					} else {
-						if (!first)
-							cairo_line_to(cr, chart->values[index].normalized.x, chart->values[index].normalized.y);
-					}
+					} else if (!first)
+						cairo_line_to(cr, chart->values[index].normalized.x, chart->values[index].normalized.y);
 					cairo_arc(cr, chart->values[index].normalized.x, chart->values[index].normalized.y, chart->data.dot_size, 0, arc_size);
 					first = d_false;
 				}
@@ -309,6 +319,12 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 		p_chart_redraw_axis_y(cr, chart, full_h, full_w, dimension.width, dimension.height);
 		p_chart_redraw_grid_x(cr, chart, full_h, full_w, dimension.width, dimension.height);
 		p_chart_redraw_grid_y(cr, chart, full_h, full_w, dimension.width, dimension.height);
+		if (chart->show_borders) {
+			cairo_move_to(cr, d_chart_border_x, d_chart_border_y);
+			snprintf(buffer, d_string_buffer_size, "minimum: %.02f (ch %.0f) | maximum: %.02f (ch %.0f)", min_value, min_channel,
+					max_value, max_channel);
+			cairo_show_text(cr, buffer);
+		}
 		cairo_destroy(cr);
 	}
 	return d_true;

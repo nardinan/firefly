@@ -1159,7 +1159,7 @@
     <property name="page_increment">10</property>
   </object>
   <object class="GtkAdjustment" id="v_channel_model">
-    <property name="upper">192</property>
+    <property name="upper">191</property>
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>

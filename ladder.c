@@ -166,12 +166,11 @@ void f_ladder_analyze(struct s_ladder *ladder, struct s_chart **chart) { d_FP;
 				for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
 					common_noise[va] = 0;
 					for (channel = startup, entries = 0, common_noise_on_va = 0; channel < (startup+d_trb_event_channels_on_va);
-							channel++) {
+							channel++)
 						if (fabs(ladder->data.mean_no_pedestal[channel]) < (d_common_sigma_k*ladder->calibration.sigma[channel])) {
 							common_noise_on_va += ladder->data.mean_no_pedestal[channel];
 							entries++;
 						}
-					}
 					if (entries > 0)
 						common_noise[va] = (common_noise_on_va/(float)entries);
 				}
