@@ -78,6 +78,7 @@ void p_callback_calibration(GtkWidget *widget, struct s_environment *environment
 	char *absolute_path;
 	unsigned char buffer[d_trb_buffer_size];
 	size_t readed, offset = 0;
+	int index, damaged;
 	struct s_exception *exception = NULL;
 	struct o_string *string_path;
 	struct o_stream *stream;
@@ -94,17 +95,25 @@ void p_callback_calibration(GtkWidget *widget, struct s_environment *environment
 						if (environment->ladders[environment->current]->last_event.filled) {
 							environment->ladders[environment->current]->evented = d_true;
 							environment->ladders[environment->current]->readed_events++;
-							if (environment->ladders[environment->current]->calibration.next == d_ladder_calibration_events) {
-								memmove(&(environment->ladders[environment->current]->calibration.events[0]),
-										&(environment->ladders[environment->current]->calibration.events[1]),
-										sizeof(struct o_trb_event)*(d_ladder_calibration_events-1));
-								environment->ladders[environment->current]->calibration.next--;
-							}
-							memcpy(&(environment->ladders[environment->current]->calibration.events
-										[environment->ladders[environment->current]->calibration.next++]),
-									&(environment->ladders[environment->current]->last_event),
-									sizeof(struct o_trb_event));
-							environment->ladders[environment->current]->calibration.calibrated = d_false;
+							for (index = 0, damaged = d_false; (index < d_trb_event_channels) && (!damaged); index++)
+								if ((environment->ladders[environment->current]->last_event.values[index] == 0) ||
+										(environment->ladders[environment->current]->last_event.values[index] == 4096))
+									damaged = d_true;
+							if (!damaged) {
+								if (environment->ladders[environment->current]->calibration.next ==
+										d_ladder_calibration_events) {
+									memmove(&(environment->ladders[environment->current]->calibration.events[0]),
+											&(environment->ladders[environment->current]->calibration.events[1]),
+											sizeof(struct o_trb_event)*(d_ladder_calibration_events-1));
+									environment->ladders[environment->current]->calibration.next--;
+								}
+								memcpy(&(environment->ladders[environment->current]->calibration.events
+											[environment->ladders[environment->current]->calibration.next++]),
+										&(environment->ladders[environment->current]->last_event),
+										sizeof(struct o_trb_event));
+								environment->ladders[environment->current]->calibration.calibrated = d_false;
+							} else
+								environment->ladders[environment->current]->damaged_events++;
 						}
 					memmove(buffer, (buffer+d_trb_event_size_normal), (offset-d_trb_event_size_normal));
 					offset -= d_trb_event_size_normal;

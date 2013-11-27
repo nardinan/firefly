@@ -36,6 +36,7 @@ struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) {
 }
 
 void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
+	int index, damaged = d_false;
 	d_object_lock(ladder->lock);
 	if ((ladder->deviced) && (ladder->device))
 		if (ladder->command != e_ladder_command_stop) {
@@ -44,24 +45,31 @@ void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 				if (ladder->last_event.filled) {
 					ladder->evented = d_true;
 					ladder->readed_events++;
-					if (ladder->command == e_ladder_command_calibration) {
-						if (ladder->calibration.next == d_ladder_calibration_events) {
-							memmove(&(ladder->calibration.events[0]), &(ladder->calibration.events[1]),
-									sizeof(struct o_trb_event)*(d_ladder_calibration_events-1));
-							ladder->calibration.next--;
+					/* analyze the event */
+					for (index = 0; (index < d_trb_event_channels) && (!damaged); index++)
+						if ((ladder->last_event.values[index] == 0) || (ladder->last_event.values[index] == 4096))
+							damaged = d_true;
+					if (!damaged) {
+						if (ladder->command == e_ladder_command_calibration) {
+							if (ladder->calibration.next == d_ladder_calibration_events) {
+								memmove(&(ladder->calibration.events[0]), &(ladder->calibration.events[1]),
+										sizeof(struct o_trb_event)*(d_ladder_calibration_events-1));
+								ladder->calibration.next--;
+							}
+							memcpy(&(ladder->calibration.events[ladder->calibration.next++]), &(ladder->last_event),
+									sizeof(struct o_trb_event));
+							ladder->calibration.calibrated = d_false;
+						} else {
+							if (ladder->data.next == d_ladder_data_events) {
+								memmove(&(ladder->data.events[0]), &(ladder->data.events[1]),
+										sizeof(struct o_trb_event)*(d_ladder_data_events-1));
+								ladder->data.next--;
+							}
+							memcpy(&(ladder->data.events[ladder->data.next++]), &(ladder->last_event), sizeof(struct o_trb_event));
+							ladder->data.computed = d_false;
 						}
-						memcpy(&(ladder->calibration.events[ladder->calibration.next++]), &(ladder->last_event),
-								sizeof(struct o_trb_event));
-						ladder->calibration.calibrated = d_false;
-					} else {
-						if (ladder->data.next == d_ladder_data_events) {
-							memmove(&(ladder->data.events[0]), &(ladder->data.events[1]),
-									sizeof(struct o_trb_event)*(d_ladder_data_events-1));
-							ladder->data.next--;
-						}
-						memcpy(&(ladder->data.events[ladder->data.next++]), &(ladder->last_event), sizeof(struct o_trb_event));
-						ladder->data.computed = d_false;
-					}
+					} else
+						ladder->damaged_events++;
 				}
 			} else if (ladder->device->last_error != d_false) {
 				d_release(ladder->device);
@@ -209,6 +217,7 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 	d_object_lock(ladder->lock);
 	ladder->evented = d_false;
 	ladder->readed_events = 0;
+	ladder->damaged_events = 0;
 	ladder->data.next = 0;
 	ladder->last_readed_events = 0;
 	ladder->starting_time = time(NULL);

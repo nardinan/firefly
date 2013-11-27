@@ -39,7 +39,7 @@ typedef struct s_ladder {
 	enum e_ladder_commands command;
 	time_t starting_time, finish_time;
 	long long last_readed_time;
-	unsigned int last_readed_events, readed_events, event_size;
+	unsigned int last_readed_events, readed_events, damaged_events, event_size;
 	int evented, deviced, update_interface;
 	float hertz;
 	struct {
