@@ -92,14 +92,13 @@ void f_chart_append(struct s_chart *chart, float x, float y) {
 void f_chart_append_histogram(struct s_chart *chart, float value) {
 	int index, inserted = d_false, bucket_value = value;
 	chart->histogram = d_true;
-	for (index = 0; (!inserted) && (index < chart->head); index++) {
+	for (index = 0; (!inserted) && (index < chart->head); index++)
 		if (chart->values[index].x == bucket_value) {
 			chart->values[index].y++;
 			chart->values[index].normalized.done = d_false;
 			inserted = d_true;
 		}
-	}
-	if (!inserted) {
+	if (!inserted)
 		if (chart->head < d_chart_bucket) {
 			chart->values[chart->head].x = bucket_value;
 			chart->values[chart->head].y = 1;
@@ -107,7 +106,6 @@ void f_chart_append_histogram(struct s_chart *chart, float value) {
 			chart->head++;
 		} else
 			d_log(d_log_level_default, "[WARNING] - d_chart_bucket too small");
-	}
 }
 
 void f_chart_flush(struct s_chart *chart) {
