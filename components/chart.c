@@ -291,8 +291,7 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 	      max_channel[d_chart_max_nested] = {0};
 	int index, code, first;
 	char buffer[d_string_buffer_size];
-	cairo_t *cr;
-	if ((cr = gdk_cairo_create(chart->plane->window))) {
+	if ((chart->cairo_brush = gdk_cairo_create(chart->plane->window))) {
 		gtk_widget_get_allocation(GTK_WIDGET(chart->plane), &dimension);
 		if ((dimension.width != chart->last_width) || (dimension.height != chart->last_height)) {
 			for (code = 0; code < d_chart_max_nested; code++)
@@ -302,11 +301,11 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 			chart->last_height = dimension.height;
 		}
 		p_chart_normalize(chart, full_h, full_w, dimension.width, dimension.height);
-		cairo_set_dash(cr, NULL, 0, 0);
+		cairo_set_dash(chart->cairo_brush, NULL, 0, 0);
 		for (code = 0; code < d_chart_max_nested; code++)
 			if (chart->head[code]) {
-				cairo_set_source_rgb(cr, chart->data.color[code].R, chart->data.color[code].G, chart->data.color[code].B);
-				cairo_set_line_width(cr, chart->data.line_size[code]);
+				cairo_set_source_rgb(chart->cairo_brush, chart->data.color[code].R, chart->data.color[code].G, chart->data.color[code].B);
+				cairo_set_line_width(chart->cairo_brush, chart->data.line_size[code]);
 				for (index = 0, first = d_true; index < chart->head[code]; index++)
 					if (chart->values[code][index].normalized.done) {
 						if (first) {
@@ -322,35 +321,37 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 							min_channel[code] = chart->values[code][index].x;
 						}
 						if (chart->histogram[code]) {
-							cairo_move_to(cr, chart->values[code][index].normalized.x, chart->normalized.x_axis);
-							cairo_line_to(cr, chart->values[code][index].normalized.x, chart->values[code][index].normalized.y);
+							cairo_move_to(chart->cairo_brush, chart->values[code][index].normalized.x, chart->normalized.x_axis);
+							cairo_line_to(chart->cairo_brush, chart->values[code][index].normalized.x,
+									chart->values[code][index].normalized.y);
 						} else if (!first)
-							cairo_line_to(cr, chart->values[code][index].normalized.x, chart->values[code][index].normalized.y);
-						cairo_arc(cr, chart->values[code][index].normalized.x, chart->values[code][index].normalized.y,
+							cairo_line_to(chart->cairo_brush, chart->values[code][index].normalized.x,
+									chart->values[code][index].normalized.y);
+						cairo_arc(chart->cairo_brush, chart->values[code][index].normalized.x, chart->values[code][index].normalized.y,
 								chart->data.dot_size[code], 0, arc_size);
 						first = d_false;
 					}
-				cairo_stroke(cr);
+				cairo_stroke(chart->cairo_brush);
 				if (chart->show_borders) {
-					cairo_move_to(cr, (chart->border_x-d_chart_font_size), (chart->border_y+(code*d_chart_font_height)));
-					cairo_show_text(cr, "@");
+					cairo_move_to(chart->cairo_brush, (chart->border_x-d_chart_font_size), (chart->border_y+(code*d_chart_font_height)));
+					cairo_show_text(chart->cairo_brush, "@");
 				}
 			}
 		if (chart->show_borders) {
-			cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+			cairo_set_source_rgb(chart->cairo_brush, 0.0, 0.0, 0.0);
 			for (code = 0; code < d_chart_max_nested; code++)
 				if (chart->head[code]) {
-					cairo_move_to(cr, chart->border_x+d_chart_font_size, (chart->border_y+(code*d_chart_font_height)));
+					cairo_move_to(chart->cairo_brush, chart->border_x+d_chart_font_size, (chart->border_y+(code*d_chart_font_height)));
 					snprintf(buffer, d_string_buffer_size, "minimum: %.02f (ch %.0f) | maximum: %.02f (ch %.0f)", min_value[code],
 							min_channel[code], max_value[code], max_channel[code]);
-					cairo_show_text(cr, buffer);
+					cairo_show_text(chart->cairo_brush, buffer);
 				}
 		}
-		p_chart_redraw_axis_x(cr, chart, full_h, full_w, dimension.width, dimension.height);
-		p_chart_redraw_axis_y(cr, chart, full_h, full_w, dimension.width, dimension.height);
-		p_chart_redraw_grid_x(cr, chart, full_h, full_w, dimension.width, dimension.height);
-		p_chart_redraw_grid_y(cr, chart, full_h, full_w, dimension.width, dimension.height);
-		cairo_destroy(cr);
+		p_chart_redraw_axis_x(chart->cairo_brush, chart, full_h, full_w, dimension.width, dimension.height);
+		p_chart_redraw_axis_y(chart->cairo_brush, chart, full_h, full_w, dimension.width, dimension.height);
+		p_chart_redraw_grid_x(chart->cairo_brush, chart, full_h, full_w, dimension.width, dimension.height);
+		p_chart_redraw_grid_y(chart->cairo_brush, chart, full_h, full_w, dimension.width, dimension.height);
+		cairo_destroy(chart->cairo_brush);
 	}
 	return d_true;
 }

@@ -46,6 +46,7 @@ typedef struct s_chart_axis {
 } s_chart_axis;
 typedef struct s_chart {
 	GtkWidget *plane;
+	cairo_t *cairo_brush;
 	int head[d_chart_max_nested], histogram[d_chart_max_nested], last_width, last_height, show_borders, border_x, border_y;
 	struct {
 		float x_axis, y_axis;
