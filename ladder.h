@@ -22,6 +22,7 @@
 #define d_ladder_data_events 128
 #define d_ladder_trigger_internal 0x22
 #define d_ladder_trigger_external 0x11
+#define d_ladder_rms_constant 3.0
 typedef enum e_ladder_commands {
         e_ladder_command_stop = 0,
         e_ladder_command_calibration,

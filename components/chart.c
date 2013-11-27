@@ -63,53 +63,64 @@ void p_chart_style_axis(struct o_dictionary *dictionary, const char postfix, str
 
 void f_chart_style(struct s_chart *chart, struct o_stream *configuration) {
 	struct o_dictionary *dictionary = f_dictionary_new(NULL);
+	char buffer[d_string_buffer_size];
+	int index;
 	if (dictionary->m_load(dictionary, configuration)) {
 		p_chart_style_axis(dictionary, 'x', &(chart->axis_x));
 		p_chart_style_axis(dictionary, 'y', &(chart->axis_y));
 		p_chart_style_int(dictionary, "border", 'x', &(chart->border_x));
 		p_chart_style_int(dictionary, "border", 'y', &(chart->border_y));
 		p_chart_style_int(dictionary, "show_borders", 'z', &(chart->show_borders));
-		p_chart_style_float(dictionary, "dot_size", 'z', &(chart->data.dot_size));
-		p_chart_style_float(dictionary, "line_size", 'z', &(chart->data.line_size));
-		p_chart_style_float(dictionary, "color_R", 'z', &(chart->data.color.R));
-		p_chart_style_float(dictionary, "color_G", 'z', &(chart->data.color.G));
-		p_chart_style_float(dictionary, "color_B", 'z', &(chart->data.color.B));
-		p_chart_style_int(dictionary, "histogram", 'z', &(chart->histogram));
+		for (index = 0; index < d_chart_max_nested; index++) {
+			snprintf(buffer, d_string_buffer_size, "dot_size_%d", index);
+			p_chart_style_float(dictionary, buffer, 'z', &(chart->data.dot_size[index]));
+			snprintf(buffer, d_string_buffer_size, "line_size_%d", index);
+			p_chart_style_float(dictionary, buffer, 'z', &(chart->data.line_size[index]));
+			snprintf(buffer, d_string_buffer_size, "color_R_%d", index);
+			p_chart_style_float(dictionary, buffer, 'z', &(chart->data.color[index].R));
+			snprintf(buffer, d_string_buffer_size, "color_G_%d", index);
+			p_chart_style_float(dictionary, buffer, 'z', &(chart->data.color[index].G));
+			snprintf(buffer, d_string_buffer_size, "color_B_%d", index);
+			p_chart_style_float(dictionary, buffer, 'z', &(chart->data.color[index].B));
+		}
 	}
 	d_release(dictionary);
 }
 
-void f_chart_append(struct s_chart *chart, float x, float y) {
-	if (chart->head < d_chart_bucket) {
-		chart->values[chart->head].x = x;
-		chart->values[chart->head].y = y;
-		chart->values[chart->head].normalized.done = d_false;
-		chart->head++;
+void f_chart_append_signal(struct s_chart *chart, unsigned int code, float x, float y) {
+	if (chart->head[code] < d_chart_bucket) {
+		chart->values[code][chart->head[code]].x = x;
+		chart->values[code][chart->head[code]].y = y;
+		chart->values[code][chart->head[code]].normalized.done = d_false;
+		chart->head[code]++;
 	} else
 		d_log(d_log_level_default, "[WARNING] - d_chart_bucket too small");
 }
 
-void f_chart_append_histogram(struct s_chart *chart, float value) {
+void f_chart_append_histogram(struct s_chart *chart, unsigned int code, float value) {
 	int index, inserted = d_false, bucket_value = value;
-	chart->histogram = d_true;
-	for (index = 0; (!inserted) && (index < chart->head); index++)
-		if (chart->values[index].x == bucket_value) {
-			chart->values[index].y++;
-			chart->values[index].normalized.done = d_false;
+	chart->histogram[code] = d_true;
+	for (index = 0; (!inserted) && (index < chart->head[code]); index++)
+		if (chart->values[code][index].x == bucket_value) {
+			chart->values[code][index].y++;
+			chart->values[code][index].normalized.done = d_false;
 			inserted = d_true;
 		}
-	if (!inserted)
-		if (chart->head < d_chart_bucket) {
-			chart->values[chart->head].x = bucket_value;
-			chart->values[chart->head].y = 1;
-			chart->values[chart->head].normalized.done = d_false;
-			chart->head++;
+	if (!inserted) {
+		if (chart->head[code] < d_chart_bucket) {
+			chart->values[code][chart->head[code]].x = bucket_value;
+			chart->values[code][chart->head[code]].y = 1;
+			chart->values[code][chart->head[code]].normalized.done = d_false;
+			chart->head[code]++;
 		} else
 			d_log(d_log_level_default, "[WARNING] - d_chart_bucket too small");
+	}
 }
 
 void f_chart_flush(struct s_chart *chart) {
-	chart->head = 0;
+	int code;
+	for (code = 0; code < d_chart_max_nested; code++)
+		chart->head[code] = 0;
 }
 
 void f_chart_redraw(struct s_chart *chart) {
@@ -231,20 +242,20 @@ void p_chart_redraw_grid_y(cairo_t *cr, struct s_chart *chart, float full_h, flo
 	}
 }
 
-void p_chart_normalize_switch(struct s_chart *chart, unsigned int left, unsigned int right) {
+void p_chart_normalize_switch(struct s_chart *chart, unsigned int code, unsigned int left, unsigned int right) {
 	struct s_chart_value support;
-	memcpy(&(support), &(chart->values[left]), sizeof(struct s_chart_value));
-	memcpy(&(chart->values[left]), &(chart->values[right]), sizeof(struct s_chart_value));
-	memcpy(&(chart->values[right]), &(support), sizeof(struct s_chart_value));
+	memcpy(&(support), &(chart->values[code][left]), sizeof(struct s_chart_value));
+	memcpy(&(chart->values[code][left]), &(chart->values[code][right]), sizeof(struct s_chart_value));
+	memcpy(&(chart->values[code][right]), &(support), sizeof(struct s_chart_value));
 }
 
-void p_chart_normalize_sort(struct s_chart *chart) {
+void p_chart_normalize_sort(struct s_chart *chart, unsigned int code) {
 	int index, changed = d_true;
 	while (changed) {
 		changed = d_false;
-		for (index = 0; index < (chart->head-1); index++)
-			if (chart->values[index].normalized.x < chart->values[index+1].normalized.x) {
-				p_chart_normalize_switch(chart, index, index+1);
+		for (index = 0; index < (chart->head[code]-1); index++)
+			if (chart->values[code][index].normalized.x < chart->values[code][index+1].normalized.x) {
+				p_chart_normalize_switch(chart, code, index, index+1);
 				changed = d_true;
 			}
 	}
@@ -252,79 +263,93 @@ void p_chart_normalize_sort(struct s_chart *chart) {
 
 void p_chart_normalize(struct s_chart *chart, float full_h, float full_w, unsigned int width, unsigned int height) {
 	float this_x, this_y, normal_x, normal_y, real_x, real_y;
-	int index, normalized = d_false;
-	for (index = 0; index < chart->head; index++)
-		if (!chart->values[index].normalized.done) {
-			this_x = chart->values[index].x;
-			this_y = chart->values[index].y;
-			normal_x = this_x-chart->axis_x.range[0];
-			normal_y = this_y-chart->axis_y.range[0];
-			real_x = (normal_x*width)/full_w;
-			real_y = height-((normal_y*height)/full_h);
-			chart->values[index].normalized.x = real_x;
-			chart->values[index].normalized.y = real_y;
-			chart->values[index].normalized.done = d_true;
-			normalized = d_true;
-		}
-	if (normalized)
-		p_chart_normalize_sort(chart);
+	int index, code, normalized = d_false;
+	for (code = 0; code < d_chart_max_nested; code++) {
+		for (index = 0; index < chart->head[code]; index++)
+			if (!chart->values[code][index].normalized.done) {
+				this_x = chart->values[code][index].x;
+				this_y = chart->values[code][index].y;
+				normal_x = this_x-chart->axis_x.range[0];
+				normal_y = this_y-chart->axis_y.range[0];
+				real_x = (normal_x*width)/full_w;
+				real_y = height-((normal_y*height)/full_h);
+				chart->values[code][index].normalized.x = real_x;
+				chart->values[code][index].normalized.y = real_y;
+				chart->values[code][index].normalized.done = d_true;
+				normalized = d_true;
+			}
+		if (normalized)
+			p_chart_normalize_sort(chart, code);
+	}
 }
 
 int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 	GtkAllocation dimension;
 	struct s_chart *chart = (struct s_chart *)v_chart;
 	float full_w = fabs(chart->axis_x.range[1]-chart->axis_x.range[0]), full_h = fabs(chart->axis_y.range[1]-chart->axis_y.range[0]), arc_size = (2.0*G_PI),
-	      min_value = 0, max_value = 0, min_channel = 0, max_channel = 0;
-	int index, first = d_true;
+	      min_value[d_chart_max_nested] = {0}, max_value[d_chart_max_nested] = {0}, min_channel[d_chart_max_nested] = {0},
+	      max_channel[d_chart_max_nested] = {0};
+	int index, code, first;
 	char buffer[d_string_buffer_size];
 	cairo_t *cr;
 	if ((cr = gdk_cairo_create(chart->plane->window))) {
 		gtk_widget_get_allocation(GTK_WIDGET(chart->plane), &dimension);
 		if ((dimension.width != chart->last_width) || (dimension.height != chart->last_height)) {
-			for (index = 0; index < chart->head; index++)
-				chart->values[index].normalized.done = d_false;
+			for (code = 0; code < d_chart_max_nested; code++)
+				for (index = 0; index < chart->head[code]; index++)
+					chart->values[code][index].normalized.done = d_false;
 			chart->last_width = dimension.width;
 			chart->last_height = dimension.height;
 		}
 		p_chart_normalize(chart, full_h, full_w, dimension.width, dimension.height);
-		if (chart->head) {
-			cairo_set_source_rgb(cr, chart->data.color.R, chart->data.color.G, chart->data.color.B);
-			cairo_set_dash(cr, NULL, 0, 0);
-			for (index = 0; index < chart->head; index++)
-				if (chart->values[index].normalized.done) {
-					if (first) {
-						min_value = chart->values[index].y;
-						max_value = chart->values[index].y;
-						min_channel = chart->values[index].x;
-						max_channel = chart->values[index].x;
-					} else if (chart->values[index].y > max_value) {
-						max_value = chart->values[index].y;
-						max_channel = chart->values[index].x;
-					} else if (chart->values[index].y < min_value) {
-						min_value = chart->values[index].y;
-						min_channel = chart->values[index].x;
+		cairo_set_dash(cr, NULL, 0, 0);
+		for (code = 0; code < d_chart_max_nested; code++)
+			if (chart->head[code]) {
+				cairo_set_source_rgb(cr, chart->data.color[code].R, chart->data.color[code].G, chart->data.color[code].B);
+				cairo_set_line_width(cr, chart->data.line_size[code]);
+				for (index = 0, first = d_true; index < chart->head[code]; index++)
+					if (chart->values[code][index].normalized.done) {
+						if (first) {
+							min_value[code] = chart->values[code][index].y;
+							max_value[code] = chart->values[code][index].y;
+							min_channel[code] = chart->values[code][index].x;
+							max_channel[code] = chart->values[code][index].x;
+						} else if (chart->values[code][index].y > max_value[code]) {
+							max_value[code] = chart->values[code][index].y;
+							max_channel[code] = chart->values[code][index].x;
+						} else if (chart->values[code][index].y < min_value[code]) {
+							min_value[code] = chart->values[code][index].y;
+							min_channel[code] = chart->values[code][index].x;
+						}
+						if (chart->histogram[code]) {
+							cairo_move_to(cr, chart->values[code][index].normalized.x, chart->normalized.x_axis);
+							cairo_line_to(cr, chart->values[code][index].normalized.x, chart->values[code][index].normalized.y);
+						} else if (!first)
+							cairo_line_to(cr, chart->values[code][index].normalized.x, chart->values[code][index].normalized.y);
+						cairo_arc(cr, chart->values[code][index].normalized.x, chart->values[code][index].normalized.y,
+								chart->data.dot_size[code], 0, arc_size);
+						first = d_false;
 					}
-					cairo_set_line_width(cr, chart->data.line_size);
-					if (chart->histogram) {
-						cairo_move_to(cr, chart->values[index].normalized.x, chart->normalized.x_axis);
-						cairo_line_to(cr, chart->values[index].normalized.x, chart->values[index].normalized.y);
-					} else if (!first)
-						cairo_line_to(cr, chart->values[index].normalized.x, chart->values[index].normalized.y);
-					cairo_arc(cr, chart->values[index].normalized.x, chart->values[index].normalized.y, chart->data.dot_size, 0, arc_size);
-					first = d_false;
+				cairo_stroke(cr);
+				if (chart->show_borders) {
+					cairo_move_to(cr, (chart->border_x-d_chart_font_size), (chart->border_y+(code*d_chart_font_height)));
+					cairo_show_text(cr, "@");
 				}
-			cairo_stroke(cr);
+			}
+		if (chart->show_borders) {
+			cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+			for (code = 0; code < d_chart_max_nested; code++)
+				if (chart->head[code]) {
+					cairo_move_to(cr, chart->border_x+d_chart_font_size, (chart->border_y+(code*d_chart_font_height)));
+					snprintf(buffer, d_string_buffer_size, "minimum: %.02f (ch %.0f) | maximum: %.02f (ch %.0f)", min_value[code],
+							min_channel[code], max_value[code], max_channel[code]);
+					cairo_show_text(cr, buffer);
+				}
 		}
 		p_chart_redraw_axis_x(cr, chart, full_h, full_w, dimension.width, dimension.height);
 		p_chart_redraw_axis_y(cr, chart, full_h, full_w, dimension.width, dimension.height);
 		p_chart_redraw_grid_x(cr, chart, full_h, full_w, dimension.width, dimension.height);
 		p_chart_redraw_grid_y(cr, chart, full_h, full_w, dimension.width, dimension.height);
-		if (chart->show_borders) {
-			cairo_move_to(cr, chart->border_x, chart->border_y);
-			snprintf(buffer, d_string_buffer_size, "minimum: %.02f (ch %.0f) | maximum: %.02f (ch %.0f)", min_value, min_channel,
-					max_value, max_channel);
-			cairo_show_text(cr, buffer);
-		}
 		cairo_destroy(cr);
 	}
 	return d_true;
