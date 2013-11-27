@@ -66,13 +66,15 @@ void f_chart_style(struct s_chart *chart, struct o_stream *configuration) {
 	if (dictionary->m_load(dictionary, configuration)) {
 		p_chart_style_axis(dictionary, 'x', &(chart->axis_x));
 		p_chart_style_axis(dictionary, 'y', &(chart->axis_y));
+		p_chart_style_int(dictionary, "border", 'x', &(chart->border_x));
+		p_chart_style_int(dictionary, "border", 'y', &(chart->border_y));
+		p_chart_style_int(dictionary, "show_borders", 'z', &(chart->show_borders));
 		p_chart_style_float(dictionary, "dot_size", 'z', &(chart->data.dot_size));
 		p_chart_style_float(dictionary, "line_size", 'z', &(chart->data.line_size));
 		p_chart_style_float(dictionary, "color_R", 'z', &(chart->data.color.R));
 		p_chart_style_float(dictionary, "color_G", 'z', &(chart->data.color.G));
 		p_chart_style_float(dictionary, "color_B", 'z', &(chart->data.color.B));
 		p_chart_style_int(dictionary, "histogram", 'z', &(chart->histogram));
-		p_chart_style_int(dictionary, "show_borders", 'z', &(chart->show_borders));
 	}
 	d_release(dictionary);
 }
@@ -320,7 +322,7 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 		p_chart_redraw_grid_x(cr, chart, full_h, full_w, dimension.width, dimension.height);
 		p_chart_redraw_grid_y(cr, chart, full_h, full_w, dimension.width, dimension.height);
 		if (chart->show_borders) {
-			cairo_move_to(cr, d_chart_border_x, d_chart_border_y);
+			cairo_move_to(cr, chart->border_x, chart->border_y);
 			snprintf(buffer, d_string_buffer_size, "minimum: %.02f (ch %.0f) | maximum: %.02f (ch %.0f)", min_value, min_channel,
 					max_value, max_channel);
 			cairo_show_text(cr, buffer);
