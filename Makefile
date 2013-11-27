@@ -1,6 +1,6 @@
 objects = chart.o interface.o ladder.o environment.o loop.o firefly.o
 cc = gcc -g
-cflags = -Wall -I/usr/local/include `libusb-config --cflags` `pkg-config --cflags gtk+-2.0` -Wno-variadic-macros -Wno-missing-braces -std=c99 -c -pedantic
+cflags = -Wall -I/usr/local/include `libusb-config --cflags` `pkg-config --cflags gtk+-2.0` -Wno-variadic-macros -Wno-missing-braces -Wno-gnu -std=c99 -c -pedantic
 lflags = -Wall
 liblink = -L../serenity -L/usr/lib64 -lm `libusb-config --libs` `pkg-config --libs gtk+-2.0` -L/usr/lib -lpthread -lserenity_ground -lserenity_structures -lserenity_crypto -lserenity_infn
 exec = firefly.bin
