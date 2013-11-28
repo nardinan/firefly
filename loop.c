@@ -115,7 +115,7 @@ int f_step_interface(struct s_environment *environment, time_t current_time) { d
 		snprintf(buffer, d_string_buffer_size, "%d (~%.01fHz) [damaged:<span foreground='#990000'>%d</span>]",
 				environment->ladders[environment->current]->readed_events, environment->ladders[environment->current]->hertz,
 				environment->ladders[environment->current]->damaged_events);
-		gtk_label_set_text(environment->interface->labels[e_interface_label_events], buffer);
+		gtk_label_set_markup(environment->interface->labels[e_interface_label_events], buffer);
 		if (strlen(environment->ladders[environment->current]->output) > 0) {
 			gtk_label_set_text(environment->interface->labels[e_interface_label_output], environment->ladders[environment->current]->output);
 			bytes = (environment->ladders[environment->current]->readed_events*environment->ladders[environment->current]->event_size);
