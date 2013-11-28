@@ -36,6 +36,12 @@ const char *interface_labels[] = {
 	"v_automatic_time",
 	"v_calibration_time",
 	NULL
+}, *interface_scale_spins[] = {
+	"v_y_top",
+	"v_y_bottom",
+	"v_x_top",
+	"v_x_bottom",
+	NULL
 }, *interface_combos[] = {
 	"v_location",
 	"v_kind",
@@ -71,7 +77,7 @@ const char *interface_labels[] = {
 	"styles/histogram_sigma_raw.keys",
 	"styles/histogram_sigma.keys"
 };
-struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *interface) { d_FP;
+struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *main_interface, GtkBuilder *scale_interface) { d_FP;
 	struct s_interface *result = supplied;
 	struct o_stream *stream;
 	struct o_string *path;
@@ -80,30 +86,37 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *in
 	if (!result)
 		if (!(result = (struct s_interface *) d_calloc(sizeof(struct s_interface), 1)))
 			d_die(d_error_malloc);
-	d_assert(result->interface = interface);
-	d_assert(result->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(interface), "v_main_window")));
+	if (!result->scale_configuration)
+		if (!(result->scale_configuration = (struct s_interface_scale *) d_calloc(sizeof(struct s_interface_scale), 1)))
+			d_die(d_error_malloc);
+	d_assert(result->interface = main_interface);
+	d_assert(result->scale_configuration->interface = scale_interface);
+	d_assert(result->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(main_interface), "v_main_window")));
+	d_assert(result->scale_configuration->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(scale_interface), "v_scale_window")));
 	for (index = 0; interface_labels[index]; index++)
-		d_assert(result->labels[index] = GTK_LABEL(gtk_builder_get_object(interface, interface_labels[index])));
-	d_assert(result->connected_label = GTK_LABEL(gtk_builder_get_object(interface, "v_connected_device_label")));
+		d_assert(result->labels[index] = GTK_LABEL(gtk_builder_get_object(main_interface, interface_labels[index])));
+	d_assert(result->connected_label = GTK_LABEL(gtk_builder_get_object(main_interface, "v_connected_device_label")));
 	for (index = 0; interface_switches[index]; index++)
-		d_assert(result->switches[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(interface, interface_switches[index])));
+		d_assert(result->switches[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(main_interface, interface_switches[index])));
 	for (index = 0; interface_spins[index]; index++)
-		d_assert(result->spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(interface, interface_spins[index])));
+		d_assert(result->spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(main_interface, interface_spins[index])));
 	gtk_spin_button_set_value(result->spins[e_interface_spin_dac], 10.0);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_channel], 0.0);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_delay], 6.6);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_automatic_time], 60.0);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_calibration_time], 60.0);
+	for (index = 0; interface_scale_spins[index]; index++)
+		d_assert(result->scale_configuration->spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(scale_interface, interface_scale_spins[index])));
 	for (index = 0; interface_combos[index]; index++) {
-		d_assert(result->combos[index] = GTK_COMBO_BOX(gtk_builder_get_object(interface, interface_combos[index])));
+		d_assert(result->combos[index] = GTK_COMBO_BOX(gtk_builder_get_object(main_interface, interface_combos[index])));
 		gtk_combo_box_set_active(GTK_COMBO_BOX(result->combos[index]), 0);
 	}
 	for (index = 0; interface_toggles[index]; index++)
-		d_assert(result->toggles[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(interface, interface_toggles[index])));
+		d_assert(result->toggles[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(main_interface, interface_toggles[index])));
 	for (index = 0; interface_files[index]; index++)
-		d_assert(result->files[index] = GTK_FILE_CHOOSER_BUTTON(gtk_builder_get_object(interface, interface_files[index])));
+		d_assert(result->files[index] = GTK_FILE_CHOOSER_BUTTON(gtk_builder_get_object(main_interface, interface_files[index])));
 	for (index = 0; interface_alignments[index]; index++) {
-		d_assert(result->alignments[index] = GTK_ALIGNMENT(gtk_builder_get_object(interface, interface_alignments[index])));
+		d_assert(result->alignments[index] = GTK_ALIGNMENT(gtk_builder_get_object(main_interface, interface_alignments[index])));
 		d_assert(result->charts[index] = f_chart_new(NULL));
 		d_try {
 			if ((path = d_string_pure("styles/base_graph.keys"))) {
@@ -126,7 +139,8 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *in
 		} d_endtry;
 		gtk_container_add(GTK_CONTAINER(result->alignments[index]), result->charts[index]->plane);
 	}
-	d_assert(result->progress_bar = GTK_PROGRESS_BAR(gtk_builder_get_object(interface, "v_action_bar")));
+	d_assert(result->progress_bar = GTK_PROGRESS_BAR(gtk_builder_get_object(main_interface, "v_action_bar")));
+	d_assert(result->scale_configuration->action = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_action")));
 	return result;
 }
 

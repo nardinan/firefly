@@ -123,6 +123,13 @@ void f_chart_flush(struct s_chart *chart) {
 		chart->head[code] = 0;
 }
 
+void f_chart_denormalize(struct s_chart *chart) {
+	int code, index;
+	for (code = 0; code < d_chart_max_nested; code++)
+		for (index = 0; index < d_chart_bucket; index++)
+			chart->values[code][index].normalized.done = d_false;
+}
+
 void f_chart_redraw(struct s_chart *chart) {
 	if (GTK_IS_WIDGET(chart->plane))
 		gtk_widget_queue_draw(GTK_WIDGET(chart->plane));

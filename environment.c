@@ -16,28 +16,43 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "environment.h"
-struct s_environment *f_environment_new(struct s_environment *supplied, const char *builder_path) { d_FP;
-	GtkBuilder *builder;
+struct s_environment *f_environment_new(struct s_environment *supplied, const char *builder_main_path, const char *builder_scale_path) { d_FP;
+	GtkBuilder *main_builder, *scale_builder;
 	struct s_environment *result = supplied;
+	struct s_environment_parameters *parameters;
+	int index;
 	if (!result)
 		if (!(result = (struct s_environment *) d_calloc(sizeof(struct s_environment), 1)))
 			d_die(d_error_malloc);
 	result->lock = f_object_new_pure(NULL);
 	d_object_lock(result->lock);
-	d_assert(builder = gtk_builder_new());
-	d_assert(gtk_builder_add_from_file(builder, builder_path, NULL));
+	d_assert(main_builder = gtk_builder_new());
+	d_assert(scale_builder = gtk_builder_new());
+	d_assert(gtk_builder_add_from_file(main_builder, builder_main_path, NULL));
+	d_assert(gtk_builder_add_from_file(scale_builder, builder_scale_path, NULL));
 	d_assert(result->ladders[result->current] = f_ladder_new(NULL, NULL));
-	d_assert(result->interface = f_interface_new(NULL, builder));
+	d_assert(result->interface = f_interface_new(NULL, main_builder, scale_builder));
 	f_interface_update_configuration(result->interface, result->ladders[result->current]->deviced);
 	g_signal_connect(G_OBJECT(result->interface->files[e_interface_file_calibration]), "file-set", G_CALLBACK(p_callback_calibration), result);
 	g_signal_connect(G_OBJECT(result->interface->window), "delete-event", G_CALLBACK(p_callback_exit), result);
 	g_signal_connect(G_OBJECT(result->interface->window), "expose-event", G_CALLBACK(p_callback_start), result);
+	g_signal_connect(G_OBJECT(result->interface->scale_configuration->window), "delete_event", G_CALLBACK (p_callback_scale_exit), result);
 	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_automatic]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_normal]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration_debug]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_action]), "toggled", G_CALLBACK(p_callback_action), result);
+	g_signal_connect(G_OBJECT(result->interface->scale_configuration->action), "clicked", G_CALLBACK(p_callback_scale_action), result);
+	for (index = 0; index < e_interface_alignment_NULL; index++)
+		if ((parameters = (struct s_environment_parameters *) d_calloc(sizeof(struct s_environment_parameters), 1))) {
+			parameters->environment = result;
+			parameters->attachment = (void *)result->interface->charts[index];
+			gtk_widget_add_events(GTK_WIDGET(result->interface->charts[index]->plane), GDK_BUTTON_PRESS_MASK);
+			g_signal_connect(G_OBJECT(result->interface->charts[index]->plane), "button-press-event", G_CALLBACK(p_callback_scale_show),
+					parameters);
+		} else
+			d_die(d_error_malloc);
 	d_assert(result->searcher = f_trbs_new(NULL));
 	result->searcher->m_async_search(result->searcher, p_environment_incoming_device, d_common_timeout_device, (void *)result);
 	return result;
@@ -127,4 +142,35 @@ void p_callback_calibration(GtkWidget *widget, struct s_environment *environment
 		d_raise;
 	} d_endtry;
 	d_object_unlock(environment->ladders[environment->current]->lock);
+}
+
+void p_callback_scale_exit(GtkWidget *widget, struct s_environment *environment) {
+	gtk_widget_hide_all(widget);
+}
+
+void p_callback_scale_action(GtkWidget *widget, struct s_environment *environment) {
+	float value_top, value_bottom;
+	if (environment->interface->scale_configuration->hooked_chart) {
+		value_top = (float)gtk_spin_button_get_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_y_top]);
+		value_bottom = (float)gtk_spin_button_get_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_y_bottom]);
+		environment->interface->scale_configuration->hooked_chart->axis_y.range[0] = d_min(value_top, value_bottom);
+		environment->interface->scale_configuration->hooked_chart->axis_y.range[1] = d_max(value_top, value_bottom);
+		value_top = (float)gtk_spin_button_get_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_top]);
+		value_bottom = (float)gtk_spin_button_get_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_bottom]);
+		environment->interface->scale_configuration->hooked_chart->axis_x.range[0] = d_min(value_top, value_bottom);
+		environment->interface->scale_configuration->hooked_chart->axis_x.range[1] = d_max(value_top, value_bottom);
+		f_chart_denormalize(environment->interface->scale_configuration->hooked_chart);
+	}
+}
+
+void p_callback_scale_show(GtkWidget *widget, GdkEvent *event, struct s_environment_parameters *parameters) {
+	struct s_environment *environment = parameters->environment;
+	struct s_chart *chart = (struct s_chart *)parameters->attachment;
+	environment->interface->scale_configuration->hooked_chart = chart;
+	gtk_spin_button_set_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_y_bottom], chart->axis_y.range[0]);
+	gtk_spin_button_set_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_y_top], chart->axis_y.range[1]);
+	gtk_spin_button_set_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_bottom], chart->axis_x.range[0]);
+	gtk_spin_button_set_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_top], chart->axis_x.range[1]);
+	gtk_widget_show_all(GTK_WIDGET(environment->interface->scale_configuration->window));
+	gtk_window_present(environment->interface->scale_configuration->window);
 }

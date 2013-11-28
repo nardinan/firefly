@@ -137,8 +137,10 @@ int f_step_interface(struct s_environment *environment, time_t current_time) { d
 	}
 	d_object_unlock(environment->ladders[environment->current]->lock);
 	if (environment->ladders[environment->current]->update_interface) {
-		if (environment->ladders[environment->current]->command == e_ladder_command_stop)
+		if (environment->ladders[environment->current]->command == e_ladder_command_stop) {
 			gtk_toggle_button_set_active(environment->interface->toggles[e_interface_toggle_action], FALSE);
+			gtk_toggle_button_set_active(environment->interface->switches[e_interface_switch_calibration], FALSE);
+		}
 		f_interface_update_configuration(environment->interface, environment->ladders[environment->current]->deviced);
 		environment->ladders[environment->current]->update_interface = d_false;
 	}

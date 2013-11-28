@@ -20,7 +20,7 @@ int main (int argc, char *argv[]) {
 	struct s_environment *environment;
 	int index;
 	gtk_init(&argc, &argv);
-	environment = f_environment_new(NULL, "UI/UI_main.glade");
+	environment = f_environment_new(NULL, "UI/UI_main.glade", "UI/UI_scale_config.glade");
 	gtk_widget_show_all(GTK_WIDGET(environment->interface->window));
 	for (index = 1; index < argc; index++) {
 		if (argv[index][0] == 'M')

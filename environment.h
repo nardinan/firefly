@@ -34,12 +34,19 @@ typedef struct s_environment {
 	struct s_ladder *ladders[d_environment_ladders];
 	unsigned int current; /* a temporary constant */
 } s_environment;
-extern struct s_environment *f_environment_new(struct s_environment *supplied, const char *buider_path);
+typedef struct s_environment_parameters {
+	struct s_environment *environment;
+	void *attachment;
+} s_environment_parameters;
+extern struct s_environment *f_environment_new(struct s_environment *supplied, const char *buider_main_path, const char *buider_scale_path);
 extern int p_environment_incoming_device(struct o_trb *device, void *v_environment);
 extern void p_callback_exit(GtkWidget *widget, struct s_environment *environment);
 extern int p_callback_start(GtkWidget *widget, GdkEvent *event, struct s_environment *environment);
 extern void p_callback_refresh(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_action(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_calibration(GtkWidget *widget, struct s_environment *environment);
+extern void p_callback_scale_exit(GtkWidget *widget, struct s_environment *environment);
+extern void p_callback_scale_action(GtkWidget *widget, struct s_environment *environment);
+extern void p_callback_scale_show(GtkWidget *widget, GdkEvent *event, struct s_environment_parameters *parameters);
 #endif
 
