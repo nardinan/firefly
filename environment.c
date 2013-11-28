@@ -174,5 +174,6 @@ void p_callback_scale_show(GtkWidget *widget, GdkEvent *event, struct s_environm
 	gtk_spin_button_set_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_bottom], chart->axis_x.range[0]);
 	gtk_spin_button_set_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_top], chart->axis_x.range[1]);
 	gtk_widget_show_all(GTK_WIDGET(environment->interface->scale_configuration->window));
+	gtk_window_set_position(environment->interface->scale_configuration->window, GTK_WIN_POS_MOUSE);
 	gtk_window_present(environment->interface->scale_configuration->window);
 }
