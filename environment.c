@@ -36,7 +36,7 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	g_signal_connect(G_OBJECT(result->interface->files[e_interface_file_calibration]), "file-set", G_CALLBACK(p_callback_calibration), result);
 	g_signal_connect(G_OBJECT(result->interface->window), "delete-event", G_CALLBACK(p_callback_exit), result);
 	g_signal_connect(G_OBJECT(result->interface->window), "expose-event", G_CALLBACK(p_callback_start), result);
-	g_signal_connect(G_OBJECT(result->interface->scale_configuration->window), "delete_event", G_CALLBACK (p_callback_scale_exit), result);
+	g_signal_connect(G_OBJECT(result->interface->scale_configuration->window), "delete-event", G_CALLBACK (p_callback_scale_exit), result);
 	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_automatic]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_normal]), "toggled", G_CALLBACK(p_callback_refresh), result);
@@ -63,9 +63,10 @@ int p_environment_incoming_device(struct o_trb *device, void *v_environment) { d
 	return f_ladder_device(environment->ladders[environment->current], device);
 }
 
-void p_callback_exit(GtkWidget *widget, struct s_environment *environment) { d_FP;
+int p_callback_exit(GtkWidget *widget, struct s_environment *environment) { d_FP;
 	/* TODO: clean every allocated variable */
 	exit(0);
+	return d_false;
 }
 
 int p_callback_start(GtkWidget *widget, GdkEvent *event, struct s_environment *environment) {
@@ -144,8 +145,9 @@ void p_callback_calibration(GtkWidget *widget, struct s_environment *environment
 	d_object_unlock(environment->ladders[environment->current]->lock);
 }
 
-void p_callback_scale_exit(GtkWidget *widget, struct s_environment *environment) {
+int p_callback_scale_exit(GtkWidget *widget, struct s_environment *environment) {
 	gtk_widget_hide_all(widget);
+	return d_true;
 }
 
 void p_callback_scale_action(GtkWidget *widget, struct s_environment *environment) {
