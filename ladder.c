@@ -45,8 +45,9 @@ void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 				if (ladder->last_event.filled) {
 					ladder->evented = d_true;
 					ladder->readed_events++;
+					ladder->last_readed_kind = ladder->last_event.kind;
 					/* analyze the event */
-					if (ladder->last_event.kind != 0xa3)
+					if (ladder->last_readed_kind != 0xa3)
 						for (index = 0; (index < d_trb_event_channels) && (!damaged); index++)
 							if ((ladder->last_event.values[index] == 0) || (ladder->last_event.values[index] == 4096))
 								damaged = d_true;
@@ -156,7 +157,7 @@ void f_ladder_analyze(struct s_ladder *ladder, struct s_chart **chart) { d_FP;
 		f_chart_flush(chart[e_interface_alignment_histogram_sigma_raw]);
 		f_chart_flush(chart[e_interface_alignment_histogram_sigma]);
 	}
-	if ((ladder->calibration.calibrated) && (calibration_updated)) {
+	if ((ladder->last_readed_kind != 0xa3) && (ladder->calibration.calibrated) && (calibration_updated)) {
 		for (index = 0; index < d_trb_event_channels; index++) {
 			f_chart_append_signal(chart[e_interface_alignment_pedestal], 0, index, ladder->calibration.pedestal[index]);
 			f_chart_append_signal(chart[e_interface_alignment_sigma_raw], 1, index, ladder->calibration.sigma_raw[index]);
@@ -177,7 +178,7 @@ void f_ladder_analyze(struct s_ladder *ladder, struct s_chart **chart) { d_FP;
 		f_chart_flush(chart[e_interface_alignment_adc_pedestal]);
 		f_chart_flush(chart[e_interface_alignment_adc_pedestal_cn]);
 		if ((ladder->command == e_ladder_command_data) || (ladder->command == e_ladder_command_automatic))
-			if ((ladder->calibration.calibrated) && (ladder->data.computed)) {
+			if ((ladder->last_readed_kind != 0xa3) && (ladder->calibration.calibrated) && (ladder->data.computed)) {
 				for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
 					common_noise[va] = 0;
 					for (channel = startup, entries = 0, common_noise_on_va = 0; channel < (startup+d_trb_event_channels_on_va);

@@ -41,6 +41,7 @@ typedef struct s_ladder {
 	time_t starting_time, finish_time;
 	long long last_readed_time;
 	unsigned int last_readed_events, readed_events, damaged_events, event_size;
+	unsigned char last_readed_kind;
 	int evented, deviced, update_interface;
 	float hertz;
 	struct {
