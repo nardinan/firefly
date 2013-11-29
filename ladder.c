@@ -46,9 +46,10 @@ void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 					ladder->evented = d_true;
 					ladder->readed_events++;
 					/* analyze the event */
-					for (index = 0; (index < d_trb_event_channels) && (!damaged); index++)
-						if ((ladder->last_event.values[index] == 0) || (ladder->last_event.values[index] == 4096))
-							damaged = d_true;
+					if (ladder->last_event.kind != 0xa3)
+						for (index = 0; (index < d_trb_event_channels) && (!damaged); index++)
+							if ((ladder->last_event.values[index] == 0) || (ladder->last_event.values[index] == 4096))
+								damaged = d_true;
 					if (!damaged) {
 						if (ladder->command == e_ladder_command_calibration) {
 							if (ladder->calibration.next == d_ladder_calibration_events) {
