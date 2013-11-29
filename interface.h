@@ -34,6 +34,10 @@ typedef enum e_interface_switches {
 	e_interface_switch_calibration,
 	e_interface_switch_NULL
 } e_interface_switches;
+typedef enum e_interface_scale_switches {
+	e_interface_scale_switch_informations = 0,
+	e_interface_scale_switch_NULL
+} e_interface_scale_switches;
 typedef enum e_interface_spins {
 	e_interface_spin_dac = 0,
 	e_interface_spin_channel,
@@ -81,6 +85,7 @@ typedef struct s_interface_scale {
 	GtkBuilder *interface;
 	GtkWindow *window;
 	GtkSpinButton *spins[e_interface_scale_spin_NULL];
+	GtkToggleButton *switches[e_interface_scale_switch_NULL];
 	GtkButton *action;
 	struct s_chart *hooked_chart;
 } s_interface_scale;

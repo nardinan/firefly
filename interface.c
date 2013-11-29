@@ -29,6 +29,9 @@ const char *interface_labels[] = {
 	"v_automatic",
 	"v_calibration",
 	NULL
+}, *interface_scale_switches[] = {
+	"v_informations",
+	NULL
 }, *interface_spins[] = {
 	"v_dac",
 	"v_channel",
@@ -98,6 +101,9 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	d_assert(result->connected_label = GTK_LABEL(gtk_builder_get_object(main_interface, "v_connected_device_label")));
 	for (index = 0; interface_switches[index]; index++)
 		d_assert(result->switches[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(main_interface, interface_switches[index])));
+	for (index = 0; interface_scale_switches[index]; index++)
+		d_assert(result->scale_configuration->switches[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(scale_interface,
+						interface_scale_switches[index])));
 	for (index = 0; interface_spins[index]; index++)
 		d_assert(result->spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(main_interface, interface_spins[index])));
 	gtk_spin_button_set_value(result->spins[e_interface_spin_dac], 10.0);

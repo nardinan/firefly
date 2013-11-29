@@ -161,6 +161,8 @@ void p_callback_scale_action(GtkWidget *widget, struct s_environment *environmen
 		value_bottom = (float)gtk_spin_button_get_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_bottom]);
 		environment->interface->scale_configuration->hooked_chart->axis_x.range[0] = d_min(value_top, value_bottom);
 		environment->interface->scale_configuration->hooked_chart->axis_x.range[1] = d_max(value_top, value_bottom);
+		environment->interface->scale_configuration->hooked_chart->show_borders =
+			gtk_toggle_button_get_active(environment->interface->scale_configuration->switches[e_interface_scale_switch_informations]);
 		f_chart_denormalize(environment->interface->scale_configuration->hooked_chart);
 	}
 }
@@ -173,6 +175,7 @@ void p_callback_scale_show(GtkWidget *widget, GdkEvent *event, struct s_environm
 	gtk_spin_button_set_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_y_top], chart->axis_y.range[1]);
 	gtk_spin_button_set_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_bottom], chart->axis_x.range[0]);
 	gtk_spin_button_set_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_top], chart->axis_x.range[1]);
+	gtk_toggle_button_set_active(environment->interface->scale_configuration->switches[e_interface_scale_switch_informations], chart->show_borders);
 	gtk_widget_show_all(GTK_WIDGET(environment->interface->scale_configuration->window));
 	gtk_window_set_position(environment->interface->scale_configuration->window, GTK_WIN_POS_MOUSE);
 	gtk_window_present(environment->interface->scale_configuration->window);

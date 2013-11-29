@@ -9,7 +9,7 @@
     <child>
       <object class="GtkTable" id="v_config_box">
         <property name="visible">True</property>
-        <property name="n_rows">4</property>
+        <property name="n_rows">5</property>
         <child>
           <object class="GtkLabel" id="v_title_label">
             <property name="visible">True</property>
@@ -168,6 +168,19 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+          </object>
+          <packing>
+            <property name="top_attach">4</property>
+            <property name="bottom_attach">5</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkCheckButton" id="v_informations">
+            <property name="label" translatable="yes">Show maximum and minimum</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">False</property>
+            <property name="draw_indicator">True</property>
           </object>
           <packing>
             <property name="top_attach">3</property>
