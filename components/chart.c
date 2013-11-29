@@ -338,11 +338,11 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 								chart->data.dot_size[code], 0, arc_size);
 						first = d_false;
 					}
-				cairo_stroke(chart->cairo_brush);
 				if (chart->show_borders) {
 					cairo_move_to(chart->cairo_brush, (chart->border_x-d_chart_font_size), (chart->border_y+(code*d_chart_font_height)));
 					cairo_show_text(chart->cairo_brush, "@");
 				}
+				cairo_stroke(chart->cairo_brush);
 			}
 		if (chart->show_borders) {
 			cairo_set_source_rgb(chart->cairo_brush, 0.0, 0.0, 0.0);
