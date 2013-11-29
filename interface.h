@@ -49,8 +49,10 @@ typedef enum e_interface_spins {
 typedef enum e_interface_scal_spins {
 	e_interface_scale_spin_y_top = 0,
 	e_interface_scale_spin_y_bottom,
+	e_interface_scale_spin_y_segments,
 	e_interface_scale_spin_x_top,
 	e_interface_scale_spin_x_bottom,
+	e_interface_scale_spin_x_segments,
 	e_interface_scale_spin_NULL
 } e_interface_scale_spins;
 typedef enum e_interface_combos {

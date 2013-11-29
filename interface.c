@@ -42,8 +42,10 @@ const char *interface_labels[] = {
 }, *interface_scale_spins[] = {
 	"v_y_top",
 	"v_y_bottom",
+	"v_y_segments",
 	"v_x_top",
 	"v_x_bottom",
+	"v_x_segments",
 	NULL
 }, *interface_combos[] = {
 	"v_location",

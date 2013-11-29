@@ -27,7 +27,7 @@
                 <child>
                   <object class="GtkTable" id="v_x_box">
                     <property name="visible">True</property>
-                    <property name="n_rows">2</property>
+                    <property name="n_rows">3</property>
                     <property name="n_columns">2</property>
                     <property name="homogeneous">True</property>
                     <child>
@@ -72,6 +72,31 @@
                         <property name="bottom_attach">2</property>
                       </packing>
                     </child>
+                    <child>
+                      <object class="GtkLabel" id="v_x_segments_label">
+                        <property name="visible">True</property>
+                        <property name="yalign">0.56000000238418579</property>
+                        <property name="label" translatable="yes">Number of steps</property>
+                      </object>
+                      <packing>
+                        <property name="top_attach">2</property>
+                        <property name="bottom_attach">3</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkSpinButton" id="v_x_segments">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="invisible_char">&#x25CF;</property>
+                        <property name="adjustment">v_x_segments_adjustment</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="right_attach">2</property>
+                        <property name="top_attach">2</property>
+                        <property name="bottom_attach">3</property>
+                      </packing>
+                    </child>
                   </object>
                 </child>
               </object>
@@ -100,7 +125,7 @@
                 <child>
                   <object class="GtkTable" id="v_y_table">
                     <property name="visible">True</property>
-                    <property name="n_rows">2</property>
+                    <property name="n_rows">3</property>
                     <property name="n_columns">2</property>
                     <property name="homogeneous">True</property>
                     <child>
@@ -143,6 +168,30 @@
                         <property name="right_attach">2</property>
                         <property name="top_attach">1</property>
                         <property name="bottom_attach">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="v_y_segments_label">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Number of steps</property>
+                      </object>
+                      <packing>
+                        <property name="top_attach">2</property>
+                        <property name="bottom_attach">3</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkSpinButton" id="v_y_segments">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="invisible_char">&#x25CF;</property>
+                        <property name="adjustment">v_y_segments_adjustment</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="right_attach">2</property>
+                        <property name="top_attach">2</property>
+                        <property name="bottom_attach">3</property>
                       </packing>
                     </child>
                   </object>
@@ -213,5 +262,17 @@
     <property name="upper">2000</property>
     <property name="step_increment">0.10000000000000001</property>
     <property name="page_increment">1</property>
+  </object>
+  <object class="GtkAdjustment" id="v_x_segments_adjustment">
+    <property name="upper">100</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+    <property name="page_size">10</property>
+  </object>
+  <object class="GtkAdjustment" id="v_y_segments_adjustment">
+    <property name="upper">100</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+    <property name="page_size">10</property>
   </object>
 </interface>
