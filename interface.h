@@ -103,6 +103,7 @@ typedef struct s_interface {
 	GtkComboBox *combos[e_interface_combo_NULL];
 	GtkFileChooserButton *files[e_interface_file_NULL];
 	GtkAlignment *alignments[e_interface_alignment_NULL], *main_interface_alignment;
+	GtkNotebook *notebook;
 	struct s_chart *charts[e_interface_alignment_NULL], *main_interface_chart;
 	struct s_interface_scale *scale_configuration;
 	GtkProgressBar *progress_bar;

@@ -165,6 +165,7 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	gtk_combo_box_set_active(result->combos[e_interface_combo_charts], 0);
 	d_assert(result->main_interface_alignment = GTK_ALIGNMENT(gtk_builder_get_object(main_interface, "v_charts_main_master_alignment")));
 	d_assert(result->progress_bar = GTK_PROGRESS_BAR(gtk_builder_get_object(main_interface, "v_action_bar")));
+	d_assert(result->notebook = GTK_NOTEBOOK(gtk_builder_get_object(main_interface, "v_charts_notebook")));
 	d_assert(result->scale_configuration->action = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_action")));
 	d_assert(result->scale_configuration->export_csv = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_export_CSV")));
 	d_assert(result->scale_configuration->export_png = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_export_PNG")));
@@ -233,16 +234,17 @@ void f_interface_lock(struct s_interface *interface, int lock) { d_FP;
 
 void f_interface_show(struct s_interface *interface, enum e_interface_alignments chart) {
 	int selected_index;
-	struct s_chart *selected = interface->charts[chart];
+	struct s_chart *selected;
 	if (interface->main_interface_chart)
 		for (selected_index = 0; selected_index < e_interface_alignment_NULL; selected_index++)
 			if (interface->charts[selected_index] == interface->main_interface_chart)
 				break;
-	if (interface->main_interface_chart != selected) {
-		if (interface->main_interface_chart) {
-			gtk_container_remove(GTK_CONTAINER(interface->main_interface_alignment), interface->main_interface_chart->plane);
-			gtk_container_add(GTK_CONTAINER(interface->alignments[selected_index]), g_object_ref(interface->main_interface_chart->plane));
-		}
+	if (interface->main_interface_chart) {
+		gtk_container_remove(GTK_CONTAINER(interface->main_interface_alignment), interface->main_interface_chart->plane);
+		gtk_container_add(GTK_CONTAINER(interface->alignments[selected_index]), g_object_ref(interface->main_interface_chart->plane));
+		interface->main_interface_chart = NULL;
+	}
+	if ((chart != e_interface_alignment_NULL) || (selected = interface->charts[chart])) {
 		gtk_container_remove(GTK_CONTAINER(interface->alignments[chart]), interface->charts[chart]->plane);
 		gtk_container_add(GTK_CONTAINER(interface->main_interface_alignment), g_object_ref(interface->charts[chart]->plane));
 		interface->main_interface_chart = interface->charts[chart];

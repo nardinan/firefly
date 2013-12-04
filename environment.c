@@ -43,7 +43,8 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration_debug]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_action]), "toggled", G_CALLBACK(p_callback_action), result);
-	g_signal_connect(G_OBJECT(result->interface->combos[e_interface_combo_charts]), "changed", G_CALLBACK(p_callback_change), result);
+	g_signal_connect(G_OBJECT(result->interface->combos[e_interface_combo_charts]), "changed", G_CALLBACK(p_callback_change_chart), result);
+	g_signal_connect(G_OBJECT(result->interface->notebook), "switch-page", G_CALLBACK(p_callback_change_page), result);
 	g_signal_connect(G_OBJECT(result->interface->scale_configuration->action), "clicked", G_CALLBACK(p_callback_scale_action), result);
 	g_signal_connect(G_OBJECT(result->interface->scale_configuration->export_csv), "clicked", G_CALLBACK(p_callback_scale_export_csv), result);
 	g_signal_connect(G_OBJECT(result->interface->scale_configuration->export_png), "clicked", G_CALLBACK(p_callback_scale_export_png), result);
@@ -66,10 +67,9 @@ int p_environment_incoming_device(struct o_trb *device, void *v_environment) { d
 	return f_ladder_device(environment->ladders[environment->current], device);
 }
 
-int p_callback_exit(GtkWidget *widget, struct s_environment *environment) { d_FP;
-	/* TODO: clean every allocated variable */
+void p_callback_exit(GtkWidget *widget, struct s_environment *environment) { d_FP;
+	/* TODO: clean allocated space */
 	exit(0);
-	return d_false;
 }
 
 int p_callback_start(GtkWidget *widget, GdkEvent *event, struct s_environment *environment) {
@@ -148,9 +148,17 @@ void p_callback_calibration(GtkWidget *widget, struct s_environment *environment
 	d_object_unlock(environment->ladders[environment->current]->lock);
 }
 
-void p_callback_change(GtkWidget *widget, struct s_environment *environment) {
+void p_callback_change_chart(GtkWidget *widget, struct s_environment *environment) {
 	int selected = gtk_combo_box_get_active(environment->interface->combos[e_interface_combo_charts]);
 	f_interface_show(environment->interface, selected);
+}
+
+void p_callback_change_page(GtkWidget *widget, gpointer *page, unsigned int page_index, struct s_environment *environment) {
+	int selected = gtk_combo_box_get_active(environment->interface->combos[e_interface_combo_charts]);
+	if (page_index)
+		f_interface_show(environment->interface, e_interface_alignment_NULL);
+	else
+		f_interface_show(environment->interface, selected);
 }
 
 int p_callback_scale_exit(GtkWidget *widget, struct s_environment *environment) {
