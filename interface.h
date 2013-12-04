@@ -103,9 +103,9 @@ typedef struct s_interface {
 	GtkFileChooserButton *files[e_interface_file_NULL];
 	GtkAlignment *alignments[e_interface_alignment_NULL], *main_interface_alignment;
 	GtkNotebook *notebook;
+	GtkProgressBar *progress_bar;
 	struct s_chart *charts[e_interface_alignment_NULL], *main_interface_chart;
 	struct s_interface_scale *scale_configuration;
-	GtkProgressBar *progress_bar;
 } s_interface;
 extern struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *main_interface, GtkBuilder *scale_interface);
 extern void f_interface_update_configuration(struct s_interface *interface, int deviced);
