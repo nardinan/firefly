@@ -787,6 +787,7 @@
                         <property name="visible">True</property>
                         <property name="n_rows">2</property>
                         <property name="n_columns">2</property>
+                        <property name="homogeneous">True</property>
                         <child>
                           <object class="GtkFrame" id="v_calibration_sigma_raw">
                             <property name="visible">True</property>
@@ -848,9 +849,6 @@
                           </packing>
                         </child>
                         <child>
-                          <placeholder/>
-                        </child>
-                        <child>
                           <object class="GtkFrame" id="v_calibration_pedestal">
                             <property name="visible">True</property>
                             <property name="label_xalign">0.5</property>
@@ -875,6 +873,9 @@
                               </object>
                             </child>
                           </object>
+                        </child>
+                        <child>
+                          <placeholder/>
                         </child>
                       </object>
                     </child>
@@ -919,6 +920,7 @@
                         <property name="visible">True</property>
                         <property name="n_rows">2</property>
                         <property name="n_columns">2</property>
+                        <property name="homogeneous">True</property>
                         <child>
                           <object class="GtkFrame" id="v_calibration_histogram_sigma_raw">
                             <property name="visible">True</property>
@@ -1044,6 +1046,7 @@
                     <property name="visible">True</property>
                     <property name="n_rows">2</property>
                     <property name="n_columns">2</property>
+                    <property name="homogeneous">True</property>
                     <child>
                       <object class="GtkFrame" id="v_data_adc">
                         <property name="visible">True</property>
