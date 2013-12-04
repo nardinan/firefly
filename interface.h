@@ -59,7 +59,6 @@ typedef enum e_interface_scal_spins {
 typedef enum e_interface_combos {
 	e_interface_combo_location = 0,
 	e_interface_combo_kind,
-	e_interface_combo_charts,
 	e_interface_combo_NULL
 } e_interface_combos;
 typedef enum e_interface_toggles {
@@ -100,7 +99,7 @@ typedef struct s_interface {
 	GtkLabel *labels[e_interface_label_NULL], *connected_label;
 	GtkToggleButton *switches[e_interface_switch_NULL], *toggles[e_interface_toggle_NULL];
 	GtkSpinButton *spins[e_interface_spin_NULL];
-	GtkComboBox *combos[e_interface_combo_NULL];
+	GtkComboBox *combos[e_interface_combo_NULL], *combo_charts;
 	GtkFileChooserButton *files[e_interface_file_NULL];
 	GtkAlignment *alignments[e_interface_alignment_NULL], *main_interface_alignment;
 	GtkNotebook *notebook;

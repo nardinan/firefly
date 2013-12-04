@@ -50,7 +50,6 @@ const char *interface_labels[] = {
 }, *interface_combos[] = {
 	"v_location",
 	"v_kind",
-	"v_charts_list",
 	NULL
 }, *interface_toggles[] = {
 	"v_mode_normal",
@@ -133,12 +132,13 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 		d_assert(result->combos[index] = GTK_COMBO_BOX(gtk_builder_get_object(main_interface, interface_combos[index])));
 		gtk_combo_box_set_active(GTK_COMBO_BOX(result->combos[index]), 0);
 	}
+	d_assert(result->combo_charts = GTK_COMBO_BOX(gtk_builder_get_object(main_interface, "v_charts_list")));
 	for (index = 0; interface_toggles[index]; index++)
 		d_assert(result->toggles[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(main_interface, interface_toggles[index])));
 	for (index = 0; interface_files[index]; index++)
 		d_assert(result->files[index] = GTK_FILE_CHOOSER_BUTTON(gtk_builder_get_object(main_interface, interface_files[index])));
 	for (index = 0; interface_alignments[index]; index++) {
-		gtk_combo_box_insert_text(result->combos[e_interface_combo_charts], index, interface_name[index]);
+		gtk_combo_box_insert_text(result->combo_charts, index, interface_name[index]);
 		d_assert(result->alignments[index] = GTK_ALIGNMENT(gtk_builder_get_object(main_interface, interface_alignments[index])));
 		d_assert(result->charts[index] = f_chart_new(NULL));
 		d_try {
@@ -162,7 +162,7 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 		} d_endtry;
 		gtk_container_add(GTK_CONTAINER(result->alignments[index]), g_object_ref(result->charts[index]->plane));
 	}
-	gtk_combo_box_set_active(result->combos[e_interface_combo_charts], 0);
+	gtk_combo_box_set_active(result->combo_charts, 0);
 	d_assert(result->main_interface_alignment = GTK_ALIGNMENT(gtk_builder_get_object(main_interface, "v_charts_main_master_alignment")));
 	d_assert(result->progress_bar = GTK_PROGRESS_BAR(gtk_builder_get_object(main_interface, "v_action_bar")));
 	d_assert(result->notebook = GTK_NOTEBOOK(gtk_builder_get_object(main_interface, "v_charts_notebook")));
