@@ -176,6 +176,7 @@ void f_ladder_analyze(struct s_ladder *ladder, struct s_chart **chart) { d_FP;
 			f_chart_append_signal(chart[e_interface_alignment_adc], 0, index, ladder->last_event.values[index]);
 		f_chart_flush(chart[e_interface_alignment_adc_pedestal]);
 		f_chart_flush(chart[e_interface_alignment_adc_pedestal_cn]);
+		f_chart_flush(chart[e_interface_alignment_signal]);
 		if ((ladder->command == e_ladder_command_data) || (ladder->command == e_ladder_command_automatic))
 			if ((ladder->last_readed_kind != 0xa3) && (ladder->calibration.calibrated) && (ladder->data.computed)) {
 				for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
@@ -193,6 +194,8 @@ void f_ladder_analyze(struct s_ladder *ladder, struct s_chart **chart) { d_FP;
 					va = (index/d_trb_event_channels_on_va);
 					f_chart_append_signal(chart[e_interface_alignment_adc_pedestal], 0, index, ladder->data.mean_no_pedestal[index]);
 					f_chart_append_signal(chart[e_interface_alignment_adc_pedestal_cn], 0, index,
+							ladder->data.mean_no_pedestal[index]-common_noise[va]);
+					f_chart_append_signal(chart[e_interface_alignment_signal], 0, index,
 							ladder->data.mean_no_pedestal[index]-common_noise[va]);
 				}
 			}

@@ -19,6 +19,7 @@
 #define firefly_interface_h
 #include "components/chart.h"
 #include "common.h"
+extern const char *interface_name[];
 typedef enum e_interface_labels {
 	e_interface_label_events = 0,
 	e_interface_label_size,
@@ -58,6 +59,7 @@ typedef enum e_interface_scal_spins {
 typedef enum e_interface_combos {
 	e_interface_combo_location = 0,
 	e_interface_combo_kind,
+	e_interface_combo_charts,
 	e_interface_combo_NULL
 } e_interface_combos;
 typedef enum e_interface_toggles {
@@ -72,12 +74,13 @@ typedef enum e_interface_files {
 	e_interface_file_NULL
 } e_interface_files;
 typedef enum e_interface_alignments {
-	e_interface_alignment_pedestal = 0,
-	e_interface_alignment_sigma_raw,
-	e_interface_alignment_sigma,
-	e_interface_alignment_adc,
+	e_interface_alignment_adc = 0,
 	e_interface_alignment_adc_pedestal,
 	e_interface_alignment_adc_pedestal_cn,
+	e_interface_alignment_signal,
+	e_interface_alignment_pedestal,
+	e_interface_alignment_sigma_raw,
+	e_interface_alignment_sigma,
 	e_interface_alignment_histogram_pedestal,
 	e_interface_alignment_histogram_sigma_raw,
 	e_interface_alignment_histogram_sigma,
@@ -88,7 +91,7 @@ typedef struct s_interface_scale {
 	GtkWindow *window;
 	GtkSpinButton *spins[e_interface_scale_spin_NULL];
 	GtkToggleButton *switches[e_interface_scale_switch_NULL];
-	GtkButton *action;
+	GtkButton *action, *export_csv, *export_png;
 	struct s_chart *hooked_chart;
 } s_interface_scale;
 typedef struct s_interface {
@@ -99,13 +102,14 @@ typedef struct s_interface {
 	GtkSpinButton *spins[e_interface_spin_NULL];
 	GtkComboBox *combos[e_interface_combo_NULL];
 	GtkFileChooserButton *files[e_interface_file_NULL];
-	GtkAlignment *alignments[e_interface_alignment_NULL];
-	struct s_chart *charts[e_interface_alignment_NULL];
+	GtkAlignment *alignments[e_interface_alignment_NULL], *main_interface_alignment;
+	struct s_chart *charts[e_interface_alignment_NULL], *main_interface_chart;
 	struct s_interface_scale *scale_configuration;
 	GtkProgressBar *progress_bar;
 } s_interface;
 extern struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *main_interface, GtkBuilder *scale_interface);
 extern void f_interface_update_configuration(struct s_interface *interface, int deviced);
 extern void f_interface_lock(struct s_interface *interface, int lock);
+extern void f_interface_show(struct s_interface *interface, enum e_interface_alignments chart);
 #endif
 

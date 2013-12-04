@@ -43,7 +43,10 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration_debug]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_action]), "toggled", G_CALLBACK(p_callback_action), result);
+	g_signal_connect(G_OBJECT(result->interface->combos[e_interface_combo_charts]), "changed", G_CALLBACK(p_callback_change), result);
 	g_signal_connect(G_OBJECT(result->interface->scale_configuration->action), "clicked", G_CALLBACK(p_callback_scale_action), result);
+	g_signal_connect(G_OBJECT(result->interface->scale_configuration->export_csv), "clicked", G_CALLBACK(p_callback_scale_export_csv), result);
+	g_signal_connect(G_OBJECT(result->interface->scale_configuration->export_png), "clicked", G_CALLBACK(p_callback_scale_export_png), result);
 	for (index = 0; index < e_interface_alignment_NULL; index++)
 		if ((parameters = (struct s_environment_parameters *) d_calloc(sizeof(struct s_environment_parameters), 1))) {
 			parameters->environment = result;
@@ -145,6 +148,11 @@ void p_callback_calibration(GtkWidget *widget, struct s_environment *environment
 	d_object_unlock(environment->ladders[environment->current]->lock);
 }
 
+void p_callback_change(GtkWidget *widget, struct s_environment *environment) {
+	int selected = gtk_combo_box_get_active(environment->interface->combos[e_interface_combo_charts]);
+	f_interface_show(environment->interface, selected);
+}
+
 int p_callback_scale_exit(GtkWidget *widget, struct s_environment *environment) {
 	gtk_widget_hide_all(widget);
 	return d_true;
@@ -171,6 +179,46 @@ void p_callback_scale_action(GtkWidget *widget, struct s_environment *environmen
 	}
 }
 
+void p_callback_scale_export_csv(GtkWidget *widget, struct s_environment *environment) {
+	GtkWidget *dialog;
+	time_t current_time = time(NULL);
+	char time_buffer[d_string_buffer_size], name_buffer[d_string_buffer_size];
+	FILE *stream = NULL;
+	int code, index, pointer;
+	if (environment->interface->scale_configuration->hooked_chart) {
+		for (pointer = 0; pointer < e_interface_alignment_NULL; pointer++)
+			if (environment->interface->scale_configuration->hooked_chart == environment->interface->charts[pointer])
+				break;
+		strftime(time_buffer, d_string_buffer_size, d_common_file_time_format, localtime(&(current_time)));
+		snprintf(name_buffer, d_string_buffer_size, "%s%s.csv", interface_name[pointer], time_buffer);
+		if ((stream = fopen(name_buffer, "w"))) {
+			for (code = 0; code < d_chart_max_nested; code++)
+				if (environment->interface->scale_configuration->hooked_chart->head[code])
+					fprintf(stream, "X_%d,Y_%d,", code, code);
+			for (index = 0; index < d_chart_bucket; index++) {
+				fputc('\n', stream);
+				for (code = 0; code < d_chart_max_nested; code++)
+					if (environment->interface->scale_configuration->hooked_chart->head[code])
+						if (environment->interface->scale_configuration->hooked_chart->head[code] >= index)
+							fprintf(stream, "%f,%f,",
+									environment->interface->scale_configuration->hooked_chart->values[code][index].x,
+									environment->interface->scale_configuration->hooked_chart->values[code][index].y);
+			}
+			fclose(stream);
+			if ((dialog = gtk_message_dialog_new(environment->interface->window, GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_INFO,
+							GTK_BUTTONS_CLOSE, "File '%s' has been created", name_buffer))) {
+				gtk_dialog_run(GTK_DIALOG(dialog));
+				gtk_widget_destroy(GTK_WIDGET(dialog));
+			}
+		} else
+			d_log(e_log_level_medium, "unable to open the file %s", name_buffer);
+	}
+}
+
+void p_callback_scale_export_png(GtkWidget *widget, struct s_environment *environment) {
+	/*TODO: do this */
+}
+
 void p_callback_scale_show(GtkWidget *widget, GdkEvent *event, struct s_environment_parameters *parameters) {
 	struct s_environment *environment = parameters->environment;
 	struct s_chart *chart = (struct s_chart *)parameters->attachment;
@@ -186,3 +234,4 @@ void p_callback_scale_show(GtkWidget *widget, GdkEvent *event, struct s_environm
 	gtk_window_set_position(environment->interface->scale_configuration->window, GTK_WIN_POS_MOUSE);
 	gtk_window_present(environment->interface->scale_configuration->window);
 }
+
