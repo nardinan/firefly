@@ -224,7 +224,35 @@ void p_callback_scale_export_csv(GtkWidget *widget, struct s_environment *enviro
 }
 
 void p_callback_scale_export_png(GtkWidget *widget, struct s_environment *environment) {
-	/*TODO: do this */
+	GtkAllocation dimension;
+	GtkWidget *dialog;
+	GdkPixbuf *pixbuf;
+	GdkColormap *colormap;
+	GdkDrawable *drawable;
+	time_t current_time = time(NULL);
+	char time_buffer[d_string_buffer_size], name_buffer[d_string_buffer_size];
+	int width, height, pointer;
+	if ((environment->interface->scale_configuration->hooked_chart) &&
+			(drawable = GDK_DRAWABLE(environment->interface->scale_configuration->hooked_chart->plane->window))) {
+		for (pointer = 0; pointer < e_interface_alignment_NULL; pointer++)
+			if (environment->interface->scale_configuration->hooked_chart == environment->interface->charts[pointer])
+				break;
+		strftime(time_buffer, d_string_buffer_size, d_common_file_time_format, localtime(&(current_time)));
+		snprintf(name_buffer, d_string_buffer_size, "%s%s.png", interface_name[pointer], time_buffer);
+		gtk_widget_get_allocation(GTK_WIDGET(environment->interface->scale_configuration->hooked_chart->plane), &dimension);
+		width = dimension.width;
+		height = dimension.height;
+		if ((colormap = gdk_drawable_get_colormap(drawable)) &&
+				(pixbuf = gdk_pixbuf_get_from_drawable(NULL, drawable, colormap, 0, 0, 0, 0, width, height))) {
+			gdk_pixbuf_save(pixbuf, name_buffer, "png", NULL, NULL);
+			if ((dialog = gtk_message_dialog_new(environment->interface->window, GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_INFO,
+							GTK_BUTTONS_CLOSE, "File '%s' has been created", name_buffer))) {
+				gtk_dialog_run(GTK_DIALOG(dialog));
+				gtk_widget_destroy(GTK_WIDGET(dialog));
+			}
+		} else
+			d_log(e_log_level_medium, "unable to retrieve the interface's GdkColormap");
+	}
 }
 
 void p_callback_scale_show(GtkWidget *widget, GdkEvent *event, struct s_environment_parameters *parameters) {
