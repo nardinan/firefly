@@ -139,6 +139,7 @@ void p_chart_redraw_axis_x(cairo_t *cr, struct s_chart *chart, float full_h, flo
 	float x_axis_position = height, value_step = (full_w/(float)chart->axis_x.segments), position_step = (width/(float)chart->axis_x.segments),
 	      current_value, current_position, current_label, last_label, size_label;
 	char buffer[d_string_buffer_size];
+	int written, purged;
 	cairo_set_source_rgb(cr, chart->axis_x.color.R, chart->axis_x.color.G, chart->axis_x.color.B);
 	cairo_set_line_width(cr, chart->axis_x.size);
 	if (!d_same_sign(chart->axis_y.range[0], chart->axis_y.range[1]))
@@ -150,7 +151,18 @@ void p_chart_redraw_axis_x(cairo_t *cr, struct s_chart *chart, float full_h, flo
 			current_position += position_step) {
 		if (((!d_positive(current_value)) && (chart->axis_x.show_negative)) || ((d_positive(current_value) && (chart->axis_x.show_positive)))) {
 			if (((last_label-current_position) == 0) || ((current_position-last_label) >= chart->axis_x.minimum_distance)) {
-				size_label = (snprintf(buffer, d_string_buffer_size, "%d", (int)current_value)*d_chart_font_size);
+				purged = d_false;
+				written = snprintf(buffer, d_string_buffer_size, "%.02f", current_value);
+				while ((written) && (!purged)) {
+					if ((buffer[written-1] == '0') || (buffer[written-1] == '.')) {
+						if (buffer[written-1] == '.')
+							purged = d_true;
+						buffer[written-1] = '\0';
+						written--;
+					} else
+						purged = d_true;
+				}
+				size_label = ((float)written*d_chart_font_size);
 				if ((current_label = x_axis_position+chart->axis_x.segments_length-chart->axis_x.offset+d_chart_font_size) > height)
 					current_label = x_axis_position-chart->axis_x.segments_length-chart->axis_x.offset-d_chart_font_size;
 				cairo_move_to(cr, (current_position-(size_label/2.0)), current_label);
@@ -176,6 +188,7 @@ void p_chart_redraw_axis_y(cairo_t *cr, struct s_chart *chart, float full_h, flo
 	float y_axis_position = 0.0, value_step = (full_h/(float)chart->axis_y.segments), position_step = (height/(float)chart->axis_y.segments),
 	      current_value, current_position, current_label, last_label, size_label;
 	char buffer[d_string_buffer_size];
+	int written, purged;
 	cairo_set_source_rgb(cr, chart->axis_y.color.R, chart->axis_y.color.G, chart->axis_y.color.B);
 	cairo_set_line_width(cr, chart->axis_y.size);
 	if (!d_same_sign(chart->axis_x.range[0], chart->axis_x.range[1]))
@@ -187,7 +200,18 @@ void p_chart_redraw_axis_y(cairo_t *cr, struct s_chart *chart, float full_h, flo
 			current_value += value_step, current_position -= position_step) {
 		if (((!d_positive(current_value)) && (chart->axis_y.show_negative)) || ((d_positive(current_value)) && (chart->axis_y.show_positive))) {
 			if (((last_label-current_position) == 0) || ((last_label-current_position) >= chart->axis_y.minimum_distance)) {
-				size_label = (snprintf(buffer, d_string_buffer_size, "%d", (int)current_value)*d_chart_font_size);
+				purged = d_false;
+				written = snprintf(buffer, d_string_buffer_size, "%.02f", current_value);
+				while ((written) && (!purged)) {
+					if ((buffer[written-1] == '0') || (buffer[written-1] == '.')) {
+						if (buffer[written-1] == '.')
+							purged = d_true;
+						buffer[written-1] = '\0';
+						written--;
+					} else
+						purged = d_true;
+				}
+				size_label = ((float)written*d_chart_font_size);
 				if ((current_label = y_axis_position-chart->axis_y.segments_length-size_label) < 0)
 					current_label = y_axis_position+chart->axis_y.segments_length+d_chart_font_size;
 				cairo_move_to(cr, current_label, (current_position+chart->axis_y.offset));

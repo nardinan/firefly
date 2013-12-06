@@ -61,26 +61,39 @@ const char *interface_labels[] = {
 	"v_calibration_file",
 	NULL
 }, *interface_alignments[] = {
-	"v_calibration_pedestal_alignment",
-	"v_calibration_sigma_raw_alignment",
-	"v_calibration_sigma_alignment",
 	"v_data_adc_alignment",
 	"v_data_adc_pedestal_alignment",
 	"v_data_adc_pedestal_cn_alignment",
+	"v_data_signal_alignment",
+	"v_calibration_pedestal_alignment",
+	"v_calibration_sigma_raw_alignment",
+	"v_calibration_sigma_alignment",
 	"v_calibration_histogram_pedestal_alignment",
 	"v_calibration_histogram_sigma_raw_alignment",
 	"v_calibration_histogram_sigma_alignment",
 	NULL
 }, *interface_styles[] = {
-	"styles/pedestal.keys",
-	"styles/sigma_raw.keys",
-	"styles/sigma.keys",
 	"styles/adc.keys",
 	"styles/adc_pedestal.keys",
 	"styles/adc_pedestal_cn.keys",
+	"styles/signal.keys",
+	"styles/pedestal.keys",
+	"styles/sigma_raw.keys",
+	"styles/sigma.keys",
 	"styles/histogram_pedestal.keys",
 	"styles/histogram_sigma_raw.keys",
 	"styles/histogram_sigma.keys"
+}, *interface_name[] = {
+	"ADC",
+	"ADC_pedestal",
+	"ADC_pedestal_CN",
+	"signal",
+	"pedestal",
+	"sigma_raw",
+	"sigma",
+	"histogram_pedestal",
+	"histogram_sigma_raw",
+	"histogram_sigma"
 };
 struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *main_interface, GtkBuilder *scale_interface) { d_FP;
 	struct s_interface *result = supplied;
@@ -119,11 +132,13 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 		d_assert(result->combos[index] = GTK_COMBO_BOX(gtk_builder_get_object(main_interface, interface_combos[index])));
 		gtk_combo_box_set_active(GTK_COMBO_BOX(result->combos[index]), 0);
 	}
+	d_assert(result->combo_charts = GTK_COMBO_BOX(gtk_builder_get_object(main_interface, "v_charts_list")));
 	for (index = 0; interface_toggles[index]; index++)
 		d_assert(result->toggles[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(main_interface, interface_toggles[index])));
 	for (index = 0; interface_files[index]; index++)
 		d_assert(result->files[index] = GTK_FILE_CHOOSER_BUTTON(gtk_builder_get_object(main_interface, interface_files[index])));
 	for (index = 0; interface_alignments[index]; index++) {
+		gtk_combo_box_insert_text(result->combo_charts, index, interface_name[index]);
 		d_assert(result->alignments[index] = GTK_ALIGNMENT(gtk_builder_get_object(main_interface, interface_alignments[index])));
 		d_assert(result->charts[index] = f_chart_new(NULL));
 		d_try {
@@ -145,10 +160,16 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 			d_exception_dump(stderr, exception);
 			d_raise;
 		} d_endtry;
-		gtk_container_add(GTK_CONTAINER(result->alignments[index]), result->charts[index]->plane);
+		gtk_container_add(GTK_CONTAINER(result->alignments[index]), g_object_ref(result->charts[index]->plane));
 	}
+	gtk_combo_box_set_active(result->combo_charts, 0);
+	d_assert(result->main_interface_alignment = GTK_ALIGNMENT(gtk_builder_get_object(main_interface, "v_charts_main_master_alignment")));
 	d_assert(result->progress_bar = GTK_PROGRESS_BAR(gtk_builder_get_object(main_interface, "v_action_bar")));
+	d_assert(result->notebook = GTK_NOTEBOOK(gtk_builder_get_object(main_interface, "v_charts_notebook")));
 	d_assert(result->scale_configuration->action = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_action")));
+	d_assert(result->scale_configuration->export_csv = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_export_CSV")));
+	d_assert(result->scale_configuration->export_png = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_export_PNG")));
+	f_interface_show(result, e_interface_alignment_adc);
 	return result;
 }
 
@@ -209,4 +230,23 @@ void f_interface_lock(struct s_interface *interface, int lock) { d_FP;
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[index]), (!lock));
 	for (index = 0; index < e_interface_file_NULL; index++)
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->files[index]), (!lock));
+}
+
+void f_interface_show(struct s_interface *interface, enum e_interface_alignments chart) {
+	int selected_index;
+	struct s_chart *selected;
+	if (interface->main_interface_chart)
+		for (selected_index = 0; selected_index < e_interface_alignment_NULL; selected_index++)
+			if (interface->charts[selected_index] == interface->main_interface_chart)
+				break;
+	if (interface->main_interface_chart) {
+		gtk_container_remove(GTK_CONTAINER(interface->main_interface_alignment), interface->main_interface_chart->plane);
+		gtk_container_add(GTK_CONTAINER(interface->alignments[selected_index]), g_object_ref(interface->main_interface_chart->plane));
+		interface->main_interface_chart = NULL;
+	}
+	if ((chart != e_interface_alignment_NULL) || (selected = interface->charts[chart])) {
+		gtk_container_remove(GTK_CONTAINER(interface->alignments[chart]), interface->charts[chart]->plane);
+		gtk_container_add(GTK_CONTAINER(interface->main_interface_alignment), g_object_ref(interface->charts[chart]->plane));
+		interface->main_interface_chart = interface->charts[chart];
+	}
 }

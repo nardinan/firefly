@@ -40,13 +40,17 @@ typedef struct s_environment_parameters {
 } s_environment_parameters;
 extern struct s_environment *f_environment_new(struct s_environment *supplied, const char *buider_main_path, const char *buider_scale_path);
 extern int p_environment_incoming_device(struct o_trb *device, void *v_environment);
-extern int p_callback_exit(GtkWidget *widget, struct s_environment *environment);
+extern void p_callback_exit(GtkWidget *widget, struct s_environment *environment);
 extern int p_callback_start(GtkWidget *widget, GdkEvent *event, struct s_environment *environment);
 extern void p_callback_refresh(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_action(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_calibration(GtkWidget *widget, struct s_environment *environment);
+extern void p_callback_change_chart(GtkWidget *widget, struct s_environment *environment);
+extern void p_callback_change_page(GtkWidget *widget, gpointer *page, unsigned int page_index, struct s_environment *environment);
 extern int p_callback_scale_exit(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_scale_action(GtkWidget *widget, struct s_environment *environment);
+extern void p_callback_scale_export_csv(GtkWidget *widget, struct s_environment *environment);
+extern void p_callback_scale_export_png(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_scale_show(GtkWidget *widget, GdkEvent *event, struct s_environment_parameters *parameters);
 #endif
 
