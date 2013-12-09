@@ -24,6 +24,7 @@
 #define d_common_ext_calibration ".cal"
 #define d_common_timeout 500
 #define d_common_timeout_loop 500
+#define d_common_timeout_analyze 250000
 #define d_common_timeout_device 1000000
 #define d_common_sigma_k 10.0
 #define d_common_rms_k 3.0

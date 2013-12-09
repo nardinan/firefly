@@ -58,11 +58,11 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 		} else
 			d_die(d_error_malloc);
 	d_assert(result->searcher = f_trbs_new(NULL));
-	result->searcher->m_async_search(result->searcher, p_environment_incoming_device, d_common_timeout_device, (void *)result);
+	result->searcher->m_async_search(result->searcher, p_callback_incoming_device, d_common_timeout_device, (void *)result);
 	return result;
 }
 
-int p_environment_incoming_device(struct o_trb *device, void *v_environment) { d_FP;
+int p_callback_incoming_device(struct o_trb *device, void *v_environment) { d_FP;
 	struct s_environment *environment = (struct s_environment *)v_environment;
 	return f_ladder_device(environment->ladders[environment->current], device);
 }
@@ -96,8 +96,7 @@ void p_callback_action(GtkWidget *widget, struct s_environment *environment) { d
 void p_callback_calibration(GtkWidget *widget, struct s_environment *environment) { d_FP;
 	char *absolute_path;
 	unsigned char buffer[d_trb_buffer_size];
-	size_t readed, offset = 0;
-	int index, damaged;
+	size_t readed, discarded = 0, offset = 0;
 	struct s_exception *exception = NULL;
 	struct o_string *string_path;
 	struct o_stream *stream;
@@ -107,33 +106,23 @@ void p_callback_calibration(GtkWidget *widget, struct s_environment *environment
 			string_path = d_string_pure(absolute_path);
 			stream = f_stream_new_file(NULL, string_path, "rb", 0777);
 			while ((readed = stream->m_read_raw(stream, buffer+offset, (d_trb_buffer_size-offset)))) {
-				offset = p_trb_event_align(buffer, (readed+offset));
+				if (!d_trb_event_header(buffer))
+					offset = p_trb_event_align(buffer, (readed+offset));
+				else
+					offset += readed;
 				while (offset > d_trb_event_size_normal) {
 					if ((environment->ladders[environment->current]->last_event.m_load(
-									&(environment->ladders[environment->current]->last_event), buffer, offset)))
+									&(environment->ladders[environment->current]->last_event), buffer, offset))) {
 						if (environment->ladders[environment->current]->last_event.filled) {
-							environment->ladders[environment->current]->evented = d_true;
-							environment->ladders[environment->current]->readed_events++;
-							for (index = 0, damaged = d_false; (index < d_trb_event_channels) && (!damaged); index++)
-								if ((environment->ladders[environment->current]->last_event.values[index] == 0) ||
-										(environment->ladders[environment->current]->last_event.values[index] == 4096))
-									damaged = d_true;
-							if (!damaged) {
-								if (environment->ladders[environment->current]->calibration.next ==
-										d_ladder_calibration_events) {
-									memmove(&(environment->ladders[environment->current]->calibration.events[0]),
-											&(environment->ladders[environment->current]->calibration.events[1]),
-											sizeof(struct o_trb_event)*(d_ladder_calibration_events-1));
-									environment->ladders[environment->current]->calibration.next--;
-								}
-								memcpy(&(environment->ladders[environment->current]->calibration.events
-											[environment->ladders[environment->current]->calibration.next++]),
-										&(environment->ladders[environment->current]->last_event),
-										sizeof(struct o_trb_event));
-								environment->ladders[environment->current]->calibration.calibrated = d_false;
-							} else
-								environment->ladders[environment->current]->damaged_events++;
+							if (discarded < d_environment_discard_firs_events)
+								discarded++;
+							else {
+								environment->ladders[environment->current]->evented = d_true;
+								environment->ladders[environment->current]->readed_events++;
+								p_ladder_read_calibrate(environment->ladders[environment->current]);
+							}
 						}
+					}
 					memmove(buffer, (buffer+d_trb_event_size_normal), (offset-d_trb_event_size_normal));
 					offset -= d_trb_event_size_normal;
 				}

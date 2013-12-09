@@ -19,6 +19,7 @@
 #define firefly_environment_h
 #include "ladder.h"
 #define d_environment_ladders 1
+#define d_environment_discard_firs_events 128
 typedef enum e_environment_iterations {
 	e_environment_iteration_update = 0,
 	e_environment_iteration_interface_update,
@@ -32,14 +33,14 @@ typedef struct s_environment {
 	struct o_trbs *searcher;
 	struct s_interface *interface;
 	struct s_ladder *ladders[d_environment_ladders];
-	unsigned int current; /* a temporary constant */
+	unsigned int current;
 } s_environment;
 typedef struct s_environment_parameters {
 	struct s_environment *environment;
 	void *attachment;
 } s_environment_parameters;
 extern struct s_environment *f_environment_new(struct s_environment *supplied, const char *buider_main_path, const char *buider_scale_path);
-extern int p_environment_incoming_device(struct o_trb *device, void *v_environment);
+extern int p_callback_incoming_device(struct o_trb *device, void *v_environment);
 extern void p_callback_exit(GtkWidget *widget, struct s_environment *environment);
 extern int p_callback_start(GtkWidget *widget, GdkEvent *event, struct s_environment *environment);
 extern void p_callback_refresh(GtkWidget *widget, struct s_environment *environment);
