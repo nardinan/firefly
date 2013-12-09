@@ -249,8 +249,14 @@ void f_ladder_plot(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
 	int index;
 	p_ladder_analyze_finished(ladder);
 	d_object_lock(ladder->lock);
-	p_ladder_plot_calibrate(ladder, charts);
-	p_ladder_plot_data(ladder, charts);
+	if ((ladder->deviced) && (ladder->device)) {
+		p_ladder_plot_calibrate(ladder, charts);
+		p_ladder_plot_data(ladder, charts);
+	} else {
+		f_chart_flush(charts[e_interface_alignment_adc]);
+		f_interface_clean_data(charts);
+		f_interface_clean_calibration(charts);
+	}
 	for (index = 0; index < e_interface_alignment_NULL; index++)
 		f_chart_redraw(charts[index]);
 	d_object_unlock(ladder->lock);
