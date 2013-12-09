@@ -82,9 +82,25 @@ void f_chart_style(struct s_chart *chart, struct o_stream *configuration) {
 			p_chart_style_float(dictionary, buffer, 'z', &(chart->data.color[index].G));
 			snprintf(buffer, d_string_buffer_size, "color_B_%d", index);
 			p_chart_style_float(dictionary, buffer, 'z', &(chart->data.color[index].B));
+			snprintf(buffer, d_string_buffer_size, "bins_%d", index);
+			p_chart_style_int(dictionary, buffer, 'z', &(chart->bins[index]));
 		}
 	}
 	d_release(dictionary);
+}
+
+void p_chart_create_bins(struct s_chart *chart, unsigned int code) {
+	float step = fabs(chart->axis_x.range[1]-chart->axis_x.range[0])/(float)chart->bins[code], current_value;
+	for (current_value = chart->axis_x.range[0]; current_value <= chart->axis_x.range[1]; current_value += step) {
+		if (chart->head[code] < d_chart_bucket) {
+			chart->values[code][chart->head[code]].x = current_value;
+			chart->values[code][chart->head[code]].y = 0;
+			chart->values[code][chart->head[code]].normalized.done = d_false;
+			chart->head[code]++;
+		} else
+			d_log(d_log_level_default, "[WARNING] - d_chart_bucket too small");
+	}
+	chart->histogram[code] = d_true;
 }
 
 void f_chart_append_signal(struct s_chart *chart, unsigned int code, float x, float y) {
@@ -98,29 +114,23 @@ void f_chart_append_signal(struct s_chart *chart, unsigned int code, float x, fl
 }
 
 void f_chart_append_histogram(struct s_chart *chart, unsigned int code, float value) {
-	int index, inserted = d_false, bucket_value = value;
-	chart->histogram[code] = d_true;
-	for (index = 0; (!inserted) && (index < chart->head[code]); index++)
-		if (chart->values[code][index].x == bucket_value) {
-			chart->values[code][index].y++;
-			chart->values[code][index].normalized.done = d_false;
-			inserted = d_true;
-		}
-	if (!inserted) {
-		if (chart->head[code] < d_chart_bucket) {
-			chart->values[code][chart->head[code]].x = bucket_value;
-			chart->values[code][chart->head[code]].y = 1;
-			chart->values[code][chart->head[code]].normalized.done = d_false;
-			chart->head[code]++;
-		} else
-			d_log(d_log_level_default, "[WARNING] - d_chart_bucket too small");
+	float normalized;
+	int bin;
+	if (!chart->histogram[code])
+		p_chart_create_bins(chart, code);
+	if ((value >= chart->axis_x.range[0]) && (value <= chart->axis_x.range[1])) {
+		normalized = (value-chart->axis_x.range[0])/(chart->axis_x.range[1]-chart->axis_x.range[0]);
+		bin = (normalized*(float)chart->bins[code]);
+		chart->values[code][bin].y++;
 	}
 }
 
 void f_chart_flush(struct s_chart *chart) {
 	int code;
-	for (code = 0; code < d_chart_max_nested; code++)
+	for (code = 0; code < d_chart_max_nested; code++) {
+		chart->histogram[code] = d_false;
 		chart->head[code] = 0;
+	}
 }
 
 void f_chart_denormalize(struct s_chart *chart) {
