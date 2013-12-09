@@ -22,7 +22,7 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <math.h>
-#define d_chart_bucket 512
+#define d_chart_bucket 1024
 #define d_chart_max_nested 4
 #define d_chart_font_size 7.0
 #define d_chart_font_height 12.0
@@ -47,7 +47,7 @@ typedef struct s_chart_axis {
 typedef struct s_chart {
 	GtkWidget *plane;
 	cairo_t *cairo_brush;
-	int head[d_chart_max_nested], histogram[d_chart_max_nested], last_width, last_height, show_borders, border_x, border_y;
+	int head[d_chart_max_nested], histogram[d_chart_max_nested], last_width, last_height, show_borders, border_x, border_y, bins[d_chart_max_nested];
 	struct {
 		float x_axis, y_axis;
 	} normalized;
@@ -63,6 +63,7 @@ extern void p_chart_style_float(struct o_dictionary *dictionary, const char *key
 extern void p_chart_style_int(struct o_dictionary *dictionary, const char *key, const char postfix, int *value);
 extern void p_chart_style_axis(struct o_dictionary *dictionary, const char postfix, struct s_chart_axis *axis);
 extern void f_chart_style(struct s_chart *chart, struct o_stream *configuration);
+extern void p_chart_build_bins(struct s_chart *chart, unsigned int code);
 extern void f_chart_append_signal(struct s_chart *chart, unsigned int code, float x, float y);
 extern void f_chart_append_histogram(struct s_chart *chart, unsigned int code, float value);
 extern void f_chart_flush(struct s_chart *chart);
