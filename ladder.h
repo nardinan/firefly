@@ -52,11 +52,11 @@ typedef struct s_ladder {
 	float hertz;
 	pthread_t analyze_thread;
 	struct {
-		struct o_object *lock;
+		struct o_object *lock, *write_lock;
 		unsigned int next;
 		struct o_trb_event events[d_ladder_calibration_events];
 		float pedestal[d_trb_event_channels], sigma_raw[d_trb_event_channels], sigma[d_trb_event_channels];
-		int calibrated, flags[d_trb_event_channels];
+		int computed, calibrated, flags[d_trb_event_channels];
 	} calibration;
 	struct {
 		struct o_object *lock;
@@ -75,9 +75,10 @@ extern void p_ladder_analyze_finished(struct s_ladder *ladder);
 extern void p_ladder_analyze_calibrate(struct s_ladder *ladder); /* thread */
 extern void p_ladder_analyze_data(struct s_ladder *ladder); /* thread */
 extern void *f_ladder_analyze_thread(void *v_ladder); /* thread */
-extern void p_ladder_plot_calibrated(struct s_ladder *ladder, struct s_chart **chart);
-extern void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **chart);
-extern void f_ladder_plot(struct s_ladder *ladder, struct s_chart **chart);
+extern void p_ladder_plot_calibrated(struct s_ladder *ladder, struct s_chart **charts);
+extern void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts);
+extern void f_ladder_plot_adc(struct s_ladder *ladder, struct s_chart **charts);
+extern void f_ladder_plot(struct s_ladder *ladder, struct s_chart **charts);
 extern int f_ladder_device(struct s_ladder *ladder, struct o_trb *device);
 extern void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *interface);
 extern void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface);

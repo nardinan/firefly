@@ -250,3 +250,18 @@ void f_interface_show(struct s_interface *interface, enum e_interface_alignments
 		interface->main_interface_chart = interface->charts[chart];
 	}
 }
+
+void f_interface_clean_calibration(struct s_chart **charts) {
+	f_chart_flush(charts[e_interface_alignment_pedestal]);
+	f_chart_flush(charts[e_interface_alignment_sigma_raw]);
+	f_chart_flush(charts[e_interface_alignment_sigma]);
+	f_chart_flush(charts[e_interface_alignment_histogram_pedestal]);
+	f_chart_flush(charts[e_interface_alignment_histogram_sigma_raw]);
+	f_chart_flush(charts[e_interface_alignment_histogram_sigma]);
+}
+
+void f_interface_clean_data(struct s_chart **charts) {
+	f_chart_flush(charts[e_interface_alignment_adc_pedestal]);
+	f_chart_flush(charts[e_interface_alignment_adc_pedestal_cn]);
+	f_chart_flush(charts[e_interface_alignment_signal]);
+}

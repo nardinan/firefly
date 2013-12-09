@@ -111,5 +111,7 @@ extern struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuil
 extern void f_interface_update_configuration(struct s_interface *interface, int deviced);
 extern void f_interface_lock(struct s_interface *interface, int lock);
 extern void f_interface_show(struct s_interface *interface, enum e_interface_alignments chart);
+extern void f_interface_clean_calibration(struct s_chart **charts);
+extern void f_interface_clean_data(struct s_chart **charts);
 #endif
 

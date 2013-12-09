@@ -20,7 +20,8 @@ struct s_loop_call steps[] = {
 	{"verify that miniTRB is still connected to the system", 0, 2000000, f_step_check_device},
 	{"compute the speed of miniTRB incoming data (in Herz)", 0, 1000000, f_step_check_hertz},
 	{"read an event from miniTRB", 0, 1000, f_step_read},
-	{"analyze store readed data and redraw plots", 0, 200000, f_step_analyze},
+	{"redraw slow charts (i.e. Pedestal)", 0, 1000000, f_step_plot_slow},
+	{"redraw fast charts (i.e. ADC)", 0, 100000, f_step_plot_fast},
 	{"update 'statistics' panel and refresh other components", 0, 500000, f_step_interface},
 	{"update the progress bar", 0, 100000, f_step_progress},
 	{ NULL, 0, 0, NULL }
@@ -56,9 +57,15 @@ int f_step_check_device(struct s_environment *environment, time_t current_time) 
 			environment->ladders[environment->current]->evented = d_false;
 			environment->ladders[environment->current]->command = e_ladder_command_stop;
 			d_ladder_safe_assign(environment->ladders[environment->current]->calibration.lock,
+					environment->ladders[environment->current]->calibration.computed, d_false);
+			d_ladder_safe_assign(environment->ladders[environment->current]->calibration.lock,
 					environment->ladders[environment->current]->calibration.calibrated, d_false);
 			d_ladder_safe_assign(environment->ladders[environment->current]->calibration.lock,
 					environment->ladders[environment->current]->calibration.next, 0);
+			d_ladder_safe_assign(environment->ladders[environment->current]->data.lock,
+					environment->ladders[environment->current]->data.computed, d_false);
+			d_ladder_safe_assign(environment->ladders[environment->current]->data.lock,
+					environment->ladders[environment->current]->data.next, 0);
 			d_ladder_safe_assign(environment->ladders[environment->current]->calibration.lock,
 					environment->ladders[environment->current]->update_interface, d_true);
 		}
@@ -91,7 +98,12 @@ int f_step_read(struct s_environment *environment, time_t current_time) { d_FP;
 	return 0;
 }
 
-int f_step_analyze(struct s_environment *environment, time_t current_time) { d_FP;
+int f_step_plot_fast(struct s_environment *environment, time_t current_time) { d_FP;
+	f_ladder_plot_adc(environment->ladders[environment->current], environment->interface->charts);
+	return 0;
+}
+
+int f_step_plot_slow(struct s_environment *environment, time_t current_time) { d_FP;
 	f_ladder_plot(environment->ladders[environment->current], environment->interface->charts);
 	return 0;
 }

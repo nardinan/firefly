@@ -22,13 +22,14 @@ struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) {
 	if (!result)
 		if (!(result = (struct s_ladder *) d_calloc(sizeof(struct s_ladder), 1)))
 			d_die(d_error_malloc);
-	result->lock = f_object_new_pure(NULL);
+	d_assert(result->lock = f_object_new_pure(NULL));
 	if (device) {
 		result->device = device;
 		result->deviced = d_true;
 	}
 	d_assert(f_trb_event_new(&(result->last_event)));
 	d_assert(result->calibration.lock = f_object_new_pure(NULL));
+	d_assert(result->calibration.write_lock = f_object_new_pure(NULL));
 	for (index = 0; index < d_ladder_calibration_events; index++)
 		d_assert(f_trb_event_new(&(result->calibration.events[index])));
 	d_assert(result->data.lock = f_object_new_pure(NULL));
@@ -40,7 +41,7 @@ struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) {
 
 int p_ladder_read_integrity(struct o_trb_event *event, unsigned char *last_readed_code) { d_FP;
 	int index, result = d_true;
-	if (((*last_readed_code == 0x99) && (event->code == 0x00)) || ((*last_readed_code+1) == event->code)) {
+	if (((*last_readed_code == 0xff) && (event->code == 0x00)) || ((*last_readed_code+1) == event->code)) {
 		for (index = 0; (index < d_trb_event_channels) && (result); index++)
 			if (event->values[index] >= 4096)
 				result = d_false;
@@ -109,11 +110,12 @@ void p_ladder_analyze_finished(struct s_ladder *ladder) { d_FP;
 
 void p_ladder_analyze_calibrate(struct s_ladder *ladder) { d_FP;
 	float pedestal = 0, rms, total = 0, total_square = 0, fraction = (1.0/(float)d_trb_event_channels);
-	int index, next, calibrated;
-	d_ladder_safe_assign(ladder->calibration.lock, calibrated, ladder->calibration.calibrated);
-	if (!calibrated) {
+	int index, next, computed;
+	d_ladder_safe_assign(ladder->calibration.lock, computed, ladder->calibration.computed);
+	if (!computed) {
 		d_ladder_safe_assign(ladder->calibration.lock, next, ladder->calibration.next);
 		if (next == d_ladder_calibration_events) {
+			d_object_lock(ladder->calibration.write_lock);
 			d_assert(p_trb_event_pedestal(ladder->calibration.events, d_ladder_calibration_events, ladder->calibration.pedestal));
 			d_assert(p_trb_event_sigma_raw(ladder->calibration.events, d_ladder_calibration_events, ladder->calibration.sigma_raw));
 			for (index = 0; index < d_trb_event_channels; index++) {
@@ -132,6 +134,8 @@ void p_ladder_analyze_calibrate(struct s_ladder *ladder) { d_FP;
 			}
 			d_assert(p_trb_event_sigma(ladder->calibration.events, d_ladder_calibration_events, d_common_sigma_k, ladder->calibration.sigma_raw,
 						ladder->calibration.pedestal, ladder->calibration.flags, ladder->calibration.sigma));
+			d_object_unlock(ladder->calibration.write_lock);
+			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.computed, d_true);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.calibrated, d_true);
 		}
 	}
@@ -146,6 +150,7 @@ void p_ladder_analyze_data(struct s_ladder *ladder) { d_FP;
 		if (next == d_ladder_data_events) {
 			d_object_lock(ladder->calibration.lock);
 			if (ladder->calibration.calibrated) {
+				d_object_lock(ladder->calibration.write_lock);
 				for (channel = 0; channel < d_trb_event_channels; channel++) {
 					for (index = 0, value = 0, value_no_pedestal = 0; index < d_ladder_data_events; index++) {
 						value += ladder->data.events[index].values[channel];
@@ -164,9 +169,10 @@ void p_ladder_analyze_data(struct s_ladder *ladder) { d_FP;
 					if (entries > 0)
 						ladder->data.cn[va] = (common_noise_on_va/(float)entries);
 				}
+				d_object_unlock(ladder->calibration.write_lock);
+				d_ladder_safe_assign(ladder->data.lock, ladder->data.computed, d_true);
 			}
 			d_object_unlock(ladder->calibration.lock);
-			d_ladder_safe_assign(ladder->data.lock, ladder->data.computed, d_true);
 		}
 	}
 }
@@ -180,73 +186,73 @@ void *f_ladder_analyze_thread(void *v_ladder) { d_FP;
 	pthread_exit(NULL);
 }
 
-void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **chart) { d_FP;
+void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
 	int index;
 	d_object_lock(ladder->calibration.lock);
-	if ((ladder->calibration.calibrated) || (ladder->last_readed_kind == 0xa3)) {
-		f_chart_flush(chart[e_interface_alignment_pedestal]);
-		f_chart_flush(chart[e_interface_alignment_sigma_raw]);
-		f_chart_flush(chart[e_interface_alignment_sigma]);
-		f_chart_flush(chart[e_interface_alignment_histogram_pedestal]);
-		f_chart_flush(chart[e_interface_alignment_histogram_sigma_raw]);
-		f_chart_flush(chart[e_interface_alignment_histogram_sigma]);
+	if ((ladder->calibration.computed) || (ladder->last_readed_kind == 0xa3)) {
+		f_interface_clean_calibration(charts);
 		if (ladder->last_readed_kind != 0xa3) {
 			for (index = 0; index < d_trb_event_channels; index++) {
-				f_chart_append_signal(chart[e_interface_alignment_pedestal], 0, index, ladder->calibration.pedestal[index]);
-				f_chart_append_signal(chart[e_interface_alignment_sigma_raw], 1, index, ladder->calibration.sigma_raw[index]);
-				f_chart_append_signal(chart[e_interface_alignment_sigma_raw], 0, index,
+				f_chart_append_signal(charts[e_interface_alignment_pedestal], 0, index, ladder->calibration.pedestal[index]);
+				f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 1, index, ladder->calibration.sigma_raw[index]);
+				f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 0, index,
 						((ladder->calibration.flags[index]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?
-						chart[e_interface_alignment_sigma_raw]->axis_y.range[1]:0);
-				f_chart_append_signal(chart[e_interface_alignment_sigma], 0, index, ladder->calibration.sigma[index]);
-				f_chart_append_histogram(chart[e_interface_alignment_histogram_pedestal], 0, ladder->calibration.pedestal[index]);
-				f_chart_append_histogram(chart[e_interface_alignment_histogram_sigma_raw], 0, ladder->calibration.sigma_raw[index]);
-				f_chart_append_histogram(chart[e_interface_alignment_histogram_sigma], 0, ladder->calibration.sigma[index]);
+						charts[e_interface_alignment_sigma_raw]->axis_y.range[1]:0);
+				f_chart_append_signal(charts[e_interface_alignment_sigma], 0, index, ladder->calibration.sigma[index]);
+				f_chart_append_histogram(charts[e_interface_alignment_histogram_pedestal], 0, ladder->calibration.pedestal[index]);
+				f_chart_append_histogram(charts[e_interface_alignment_histogram_sigma_raw], 0, ladder->calibration.sigma_raw[index]);
+				f_chart_append_histogram(charts[e_interface_alignment_histogram_sigma], 0, ladder->calibration.sigma[index]);
 			}
-			chart[e_interface_alignment_sigma_raw]->histogram[0] = d_true;
+			charts[e_interface_alignment_sigma_raw]->histogram[0] = d_true;
 		}
 		ladder->calibration.next = 0;
-		ladder->calibration.calibrated = d_false;
+		ladder->calibration.computed = d_false;
 	}
 	d_object_unlock(ladder->calibration.lock);
 }
 
-void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **chart) { d_FP;
+void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
 	int index, va;
-	if ((ladder->evented) && ((ladder->command == e_ladder_command_data) || (ladder->command == e_ladder_command_automatic))) {
-		f_chart_flush(chart[e_interface_alignment_adc_pedestal]);
-		f_chart_flush(chart[e_interface_alignment_adc_pedestal_cn]);
-		f_chart_flush(chart[e_interface_alignment_signal]);
-		d_object_lock(ladder->data.lock);
-		if ((ladder->last_readed_kind != 0xa3) && (ladder->data.computed)) {
+	d_object_lock(ladder->data.lock);
+	if ((ladder->data.computed) || (ladder->last_readed_kind == 0xa3)) {
+		f_interface_clean_data(charts);
+		if (ladder->last_readed_kind != 0xa3) {
 			for (index = 0; index < d_trb_event_channels; index++) {
 				va = (index/d_trb_event_channels_on_va);
-				f_chart_append_signal(chart[e_interface_alignment_adc_pedestal], 0, index, ladder->data.mean_no_pedestal[index]);
-				f_chart_append_signal(chart[e_interface_alignment_adc_pedestal_cn], 0, index,
+				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 0, index, ladder->data.mean_no_pedestal[index]);
+				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal_cn], 0, index,
 						ladder->data.mean_no_pedestal[index]-ladder->data.cn[va]);
-				f_chart_append_signal(chart[e_interface_alignment_signal], 0, index,
+				f_chart_append_signal(charts[e_interface_alignment_signal], 0, index,
 						ladder->data.mean_no_pedestal[index]-ladder->data.cn[va]);
 			}
-			ladder->data.next = 0;
-			ladder->data.computed = d_false;
 		}
-		d_object_unlock(ladder->data.lock);
+		ladder->data.next = 0;
+		ladder->data.computed = d_false;
 	}
+	d_object_unlock(ladder->data.lock);
 }
 
-void f_ladder_plot(struct s_ladder *ladder, struct s_chart **chart) { d_FP;
+void f_ladder_plot_adc(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
+	int index;
+	d_object_lock(ladder->lock);
+	if (ladder->evented) {
+		f_chart_flush(charts[e_interface_alignment_adc]);
+		for (index = 0; index < d_trb_event_channels; index++)
+			f_chart_append_signal(charts[e_interface_alignment_adc], 0, index, ladder->last_event.values[index]);
+	}
+	f_chart_redraw(charts[e_interface_alignment_adc]);
+	ladder->evented = d_false;
+	d_object_unlock(ladder->lock);
+}
+
+void f_ladder_plot(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
 	int index;
 	p_ladder_analyze_finished(ladder);
 	d_object_lock(ladder->lock);
-	if (ladder->evented) {
-		f_chart_flush(chart[e_interface_alignment_adc]);
-		for (index = 0; index < d_trb_event_channels; index++)
-			f_chart_append_signal(chart[e_interface_alignment_adc], 0, index, ladder->last_event.values[index]);
-	}
-	p_ladder_plot_calibrate(ladder, chart);
-	p_ladder_plot_data(ladder, chart);
+	p_ladder_plot_calibrate(ladder, charts);
+	p_ladder_plot_data(ladder, charts);
 	for (index = 0; index < e_interface_alignment_NULL; index++)
-		f_chart_redraw(chart[index]);
-	ladder->evented = d_false;
+		f_chart_redraw(charts[index]);
 	d_object_unlock(ladder->lock);
 }
 
@@ -288,8 +294,11 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 					localtime(&(ladder->starting_time)));
 		} else
 			memset(ladder->output, 0, d_string_buffer_size);
+		f_interface_clean_data(interface->charts);
 		if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_calibration])) {
+			f_interface_clean_calibration(interface->charts);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.next, 0);
+			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.computed, d_false);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.calibrated, d_false);
 			ladder->command = e_ladder_command_calibration;
 			ladder->finish_time = ladder->starting_time+gtk_spin_button_get_value_as_int(interface->spins[e_interface_spin_calibration_time]);
