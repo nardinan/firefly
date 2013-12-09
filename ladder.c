@@ -78,7 +78,7 @@ void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 	d_object_lock(ladder->lock);
 	ladder->evented = d_false;
 	if ((ladder->deviced) && (ladder->device))
-		if (ladder->command != e_ladder_command_stop)
+		if (ladder->command != e_ladder_command_stop) {
 			if ((ladder->device->m_event(ladder->device, &(ladder->last_event), timeout))) {
 				if (ladder->last_event.filled) {
 					ladder->evented = d_true;
@@ -90,6 +90,7 @@ void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 						p_ladder_read_data(ladder);
 				}
 			}
+		}
 	d_object_unlock(ladder->lock);
 }
 
@@ -288,7 +289,6 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 		} else
 			memset(ladder->output, 0, d_string_buffer_size);
 		if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_calibration])) {
-			d_object_lock(ladder->calibration.lock);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.next, 0);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.calibrated, d_false);
 			ladder->command = e_ladder_command_calibration;
