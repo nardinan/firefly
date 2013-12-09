@@ -47,7 +47,7 @@ typedef struct s_ladder {
 	time_t starting_time, finish_time;
 	long long last_readed_time;
 	unsigned int last_readed_events, readed_events, damaged_events, event_size;
-	unsigned char last_readed_kind;
+	unsigned char last_readed_kind, last_readed_code;
 	int evented, deviced, update_interface;
 	float hertz;
 	pthread_t analyze_thread;
@@ -67,7 +67,7 @@ typedef struct s_ladder {
 	} data;
 } s_ladder;
 extern struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device);
-extern int p_ladder_read_integrity(struct o_trb_event *event);
+extern int p_ladder_read_integrity(struct o_trb_event *event, unsigned char *last_readed_code);
 extern void p_ladder_read_calibrate(struct s_ladder *ladder);
 extern void p_ladder_read_data(struct s_ladder *ladder);
 extern void f_ladder_read(struct s_ladder *ladder, time_t timeout);

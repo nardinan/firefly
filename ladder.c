@@ -38,17 +38,21 @@ struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) {
 	return result;
 }
 
-int p_ladder_read_integrity(struct o_trb_event *event) { d_FP;
+int p_ladder_read_integrity(struct o_trb_event *event, unsigned char *last_readed_code) { d_FP;
 	int index, result = d_true;
-	for (index = 0; (index < d_trb_event_channels) && (result); index++)
-		if (event->values[index] >= 4096)
-			result = d_false;
+	if (((*last_readed_code == 0x99) && (event->code == 0x00)) || ((*last_readed_code+1) == event->code)) {
+		for (index = 0; (index < d_trb_event_channels) && (result); index++)
+			if (event->values[index] >= 4096)
+				result = d_false;
+	} else
+		result = d_false;
+	*last_readed_code = event->code;
 	return result;
 }
 
 void p_ladder_read_calibrate(struct s_ladder *ladder) { d_FP;
 	if (ladder->last_event.filled) {
-		if (p_ladder_read_integrity(&(ladder->last_event))) {
+		if (p_ladder_read_integrity(&(ladder->last_event), &(ladder->last_readed_code))) {
 			d_object_lock(ladder->calibration.lock);
 			if (ladder->calibration.next < d_ladder_calibration_events)
 				memcpy(&(ladder->calibration.events[ladder->calibration.next++]), &(ladder->last_event), sizeof(struct o_trb_event));
@@ -60,7 +64,7 @@ void p_ladder_read_calibrate(struct s_ladder *ladder) { d_FP;
 
 void p_ladder_read_data(struct s_ladder *ladder) { d_FP;
 	if (ladder->last_event.filled) {
-		if (p_ladder_read_integrity(&(ladder->last_event))) {
+		if (p_ladder_read_integrity(&(ladder->last_event), &(ladder->last_readed_code))) {
 			d_object_lock(ladder->data.lock);
 			if (ladder->data.next < d_ladder_data_events)
 				memcpy(&(ladder->data.events[ladder->data.next++]), &(ladder->last_event), sizeof(struct o_trb_event));
@@ -267,6 +271,7 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 	ladder->readed_events = 0;
 	ladder->damaged_events = 0;
 	ladder->last_readed_events = 0;
+	ladder->last_readed_code = 0x00;
 	ladder->starting_time = time(NULL);
 	ladder->last_readed_time = time(NULL);
 	ladder->evented = d_false;
