@@ -79,19 +79,19 @@ void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 	d_object_lock(ladder->lock);
 	ladder->evented = d_false;
 	if ((ladder->deviced) && (ladder->device))
-		if (ladder->command != e_ladder_command_stop) {
-			if ((ladder->device->m_event(ladder->device, &(ladder->last_event), timeout))) {
+		if (ladder->command != e_ladder_command_stop)
+			if ((ladder->device->m_event(ladder->device, &(ladder->last_event), timeout)))
 				if (ladder->last_event.filled) {
 					ladder->evented = d_true;
 					ladder->readed_events++;
 					ladder->last_readed_kind = ladder->last_event.kind;
-					if (ladder->command == e_ladder_command_calibration)
-						p_ladder_read_calibrate(ladder);
-					else
-						p_ladder_read_data(ladder);
+					if (ladder->last_readed_kind != 0xa3) {
+						if (ladder->command == e_ladder_command_calibration)
+							p_ladder_read_calibrate(ladder);
+						else
+							p_ladder_read_data(ladder);
+					}
 				}
-			}
-		}
 	d_object_unlock(ladder->lock);
 }
 
