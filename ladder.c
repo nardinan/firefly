@@ -225,6 +225,12 @@ void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP
 				f_chart_append_signal(charts[e_interface_alignment_signal], 0, index,
 						ladder->data.mean_no_pedestal[index]-ladder->data.cn[va]);
 			}
+			f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_1], 0, ladder->data.cn[0]);
+			f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_2], 0, ladder->data.cn[1]);
+			f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_3], 0, ladder->data.cn[2]);
+			f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_4], 0, ladder->data.cn[3]);
+			f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_5], 0, ladder->data.cn[4]);
+			f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_6], 0, ladder->data.cn[5]);
 		}
 		ladder->data.next = 0;
 		ladder->data.computed = d_false;
@@ -255,6 +261,7 @@ void f_ladder_plot(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
 	} else {
 		f_chart_flush(charts[e_interface_alignment_adc]);
 		f_interface_clean_data(charts);
+		f_interface_clean_common_noise(charts);
 		f_interface_clean_calibration(charts);
 	}
 	for (index = 0; index < e_interface_alignment_NULL; index++)
@@ -301,6 +308,7 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 		} else
 			memset(ladder->output, 0, d_string_buffer_size);
 		f_interface_clean_data(interface->charts);
+		f_interface_clean_common_noise(interface->charts);
 		if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_calibration])) {
 			f_interface_clean_calibration(interface->charts);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.next, 0);

@@ -83,6 +83,12 @@ typedef enum e_interface_alignments {
 	e_interface_alignment_histogram_pedestal,
 	e_interface_alignment_histogram_sigma_raw,
 	e_interface_alignment_histogram_sigma,
+	e_interface_alignment_histogram_cn_1,
+	e_interface_alignment_histogram_cn_2,
+	e_interface_alignment_histogram_cn_3,
+	e_interface_alignment_histogram_cn_4,
+	e_interface_alignment_histogram_cn_5,
+	e_interface_alignment_histogram_cn_6,
 	e_interface_alignment_NULL
 } e_interface_alignments;
 typedef struct s_interface_scale {
@@ -113,5 +119,6 @@ extern void f_interface_lock(struct s_interface *interface, int lock);
 extern void f_interface_show(struct s_interface *interface, enum e_interface_alignments chart);
 extern void f_interface_clean_calibration(struct s_chart **charts);
 extern void f_interface_clean_data(struct s_chart **charts);
+extern void f_interface_clean_common_noise(struct s_chart **charts);
 #endif
 

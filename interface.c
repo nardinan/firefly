@@ -71,6 +71,12 @@ const char *interface_labels[] = {
 	"v_calibration_histogram_pedestal_alignment",
 	"v_calibration_histogram_sigma_raw_alignment",
 	"v_calibration_histogram_sigma_alignment",
+	"v_data_cn_1_alignment",
+	"v_data_cn_2_alignment",
+	"v_data_cn_3_alignment",
+	"v_data_cn_4_alignment",
+	"v_data_cn_5_alignment",
+	"v_data_cn_6_alignment",
 	NULL
 }, *interface_styles[] = {
 	"styles/adc.keys",
@@ -82,7 +88,13 @@ const char *interface_labels[] = {
 	"styles/sigma.keys",
 	"styles/histogram_pedestal.keys",
 	"styles/histogram_sigma_raw.keys",
-	"styles/histogram_sigma.keys"
+	"styles/histogram_sigma.keys",
+	"styles/histogram_cn.keys",
+	"styles/histogram_cn.keys",
+	"styles/histogram_cn.keys",
+	"styles/histogram_cn.keys",
+	"styles/histogram_cn.keys",
+	"styles/histogram_cn.keys"
 }, *interface_name[] = {
 	"ADC",
 	"ADC_pedestal",
@@ -93,7 +105,13 @@ const char *interface_labels[] = {
 	"sigma",
 	"histogram_pedestal",
 	"histogram_sigma_raw",
-	"histogram_sigma"
+	"histogram_sigma",
+	"common_noise_va1",
+	"common_noise_va2",
+	"common_noise_va3",
+	"common_noise_va4",
+	"common_noise_va5",
+	"common_noise_va6",
 };
 struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *main_interface, GtkBuilder *scale_interface) { d_FP;
 	struct s_interface *result = supplied;
@@ -264,4 +282,13 @@ void f_interface_clean_data(struct s_chart **charts) {
 	f_chart_flush(charts[e_interface_alignment_adc_pedestal]);
 	f_chart_flush(charts[e_interface_alignment_adc_pedestal_cn]);
 	f_chart_flush(charts[e_interface_alignment_signal]);
+}
+
+void f_interface_clean_common_noise(struct s_chart **charts) {
+	f_chart_flush(charts[e_interface_alignment_histogram_cn_1]);
+	f_chart_flush(charts[e_interface_alignment_histogram_cn_2]);
+	f_chart_flush(charts[e_interface_alignment_histogram_cn_3]);
+	f_chart_flush(charts[e_interface_alignment_histogram_cn_4]);
+	f_chart_flush(charts[e_interface_alignment_histogram_cn_5]);
+	f_chart_flush(charts[e_interface_alignment_histogram_cn_6]);
 }
