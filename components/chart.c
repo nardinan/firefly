@@ -205,7 +205,7 @@ void p_chart_redraw_axis_y(cairo_t *cr, struct s_chart *chart, float full_h, flo
 		y_axis_position = (abs(chart->axis_x.range[0])*width)/full_w;
 	chart->normalized.y_axis = y_axis_position;
 	cairo_move_to(cr, y_axis_position, 0.0);
-	cairo_move_to(cr, y_axis_position, height);
+	cairo_line_to(cr, y_axis_position, height);
 	for (current_value = chart->axis_y.range[0], current_position = height, last_label = height; current_value < chart->axis_y.range[1];
 			current_value += value_step, current_position -= position_step) {
 		if (((!d_positive(current_value)) && (chart->axis_y.show_negative)) || ((d_positive(current_value)) && (chart->axis_y.show_positive))) {
