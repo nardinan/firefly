@@ -106,26 +106,25 @@ void p_callback_calibration(GtkWidget *widget, struct s_environment *environment
 			string_path = d_string_pure(absolute_path);
 			stream = f_stream_new_file(NULL, string_path, "rb", 0777);
 			while ((readed = stream->m_read_raw(stream, buffer+offset, (d_trb_buffer_size-offset)))) {
-				if (!d_trb_event_header(buffer))
-					offset = p_trb_event_align(buffer, (readed+offset));
-				else
-					offset += readed;
-				while (offset > d_trb_event_size_normal) {
+				offset += readed;
+				while (offset > d_trb_event_size_normal)
 					if ((environment->ladders[environment->current]->last_event.m_load(
-									&(environment->ladders[environment->current]->last_event), buffer, offset))) {
+									&(environment->ladders[environment->current]->last_event), buffer, 0xa0, offset))) {
 						if (environment->ladders[environment->current]->last_event.filled) {
 							if (discarded < d_environment_discard_firs_events)
 								discarded++;
 							else {
 								environment->ladders[environment->current]->evented = d_true;
 								environment->ladders[environment->current]->readed_events++;
+								environment->ladders[environment->current]->last_readed_kind =
+									environment->ladders[environment->current]->last_event.kind;
 								p_ladder_read_calibrate(environment->ladders[environment->current]);
 							}
 						}
-					}
-					memmove(buffer, (buffer+d_trb_event_size_normal), (offset-d_trb_event_size_normal));
-					offset -= d_trb_event_size_normal;
-				}
+						memmove(buffer, (buffer+d_trb_event_size_normal), (offset-d_trb_event_size_normal));
+						offset -= d_trb_event_size_normal;
+					} else
+						offset = p_trb_event_align(buffer, offset);
 			}
 			d_release(stream);
 			d_release(string_path);
