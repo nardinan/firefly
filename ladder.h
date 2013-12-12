@@ -18,8 +18,6 @@
 #ifndef firefly_ladder_h
 #define firefly_ladder_h
 #include "interface.h"
-#define d_ladder_calibration_events 512
-#define d_ladder_data_events 128
 #define d_ladder_trigger_internal 0x22
 #define d_ladder_trigger_external 0x11
 #define d_ladder_rms_constant 3.0
@@ -53,15 +51,15 @@ typedef struct s_ladder {
 	pthread_t analyze_thread;
 	struct {
 		struct o_object *lock, *write_lock;
-		unsigned int next;
-		struct o_trb_event events[d_ladder_calibration_events];
+		unsigned int next, size;
+		struct o_trb_event events[d_common_calibration_events];
 		float pedestal[d_trb_event_channels], sigma_raw[d_trb_event_channels], sigma[d_trb_event_channels];
 		int computed, calibrated, flags[d_trb_event_channels];
 	} calibration;
 	struct {
 		struct o_object *lock;
-		unsigned int next;
-		struct o_trb_event events[d_ladder_data_events];
+		unsigned int next, size;
+		struct o_trb_event events[d_common_data_events];
 		float mean[d_trb_event_channels], mean_no_pedestal[d_trb_event_channels], cn[d_trb_event_vas];
 		int computed;
 	} data;

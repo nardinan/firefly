@@ -46,6 +46,7 @@ extern int p_callback_start(GtkWidget *widget, GdkEvent *event, struct s_environ
 extern void p_callback_refresh(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_action(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_calibration(GtkWidget *widget, struct s_environment *environment);
+extern void p_callback_change_bucket(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_change_chart(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_change_page(GtkWidget *widget, gpointer *page, unsigned int page_index, struct s_environment *environment);
 extern int p_callback_scale_exit(GtkWidget *widget, struct s_environment *environment);

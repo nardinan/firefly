@@ -47,7 +47,11 @@ typedef enum e_interface_spins {
 	e_interface_spin_calibration_time,
 	e_interface_spin_NULL
 } e_interface_spins;
-typedef enum e_interface_scal_spins {
+typedef enum e_interface_bucket_spins {
+	e_interface_bucket_spin_data = 0,
+	e_interface_bucket_spin_NULL
+} e_interface_bucket_spins;
+typedef enum e_interface_scale_spins {
 	e_interface_scale_spin_y_top = 0,
 	e_interface_scale_spin_y_bottom,
 	e_interface_scale_spin_y_segments,
@@ -104,7 +108,7 @@ typedef struct s_interface {
 	GtkWindow *window;
 	GtkLabel *labels[e_interface_label_NULL], *connected_label;
 	GtkToggleButton *switches[e_interface_switch_NULL], *toggles[e_interface_toggle_NULL];
-	GtkSpinButton *spins[e_interface_spin_NULL];
+	GtkSpinButton *spins[e_interface_spin_NULL], *bucket_spins[e_interface_bucket_spin_NULL];
 	GtkComboBox *combos[e_interface_combo_NULL], *combo_charts;
 	GtkFileChooserButton *files[e_interface_file_NULL];
 	GtkAlignment *alignments[e_interface_alignment_NULL], *main_interface_alignment;

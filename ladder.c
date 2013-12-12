@@ -30,10 +30,12 @@ struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) {
 	d_assert(f_trb_event_new(&(result->last_event)));
 	d_assert(result->calibration.lock = f_object_new_pure(NULL));
 	d_assert(result->calibration.write_lock = f_object_new_pure(NULL));
-	for (index = 0; index < d_ladder_calibration_events; index++)
+	result->calibration.size = d_common_calibration_events_default;
+	result->data.size = d_common_data_events_default;
+	for (index = 0; index < d_common_calibration_events; index++)
 		d_assert(f_trb_event_new(&(result->calibration.events[index])));
 	d_assert(result->data.lock = f_object_new_pure(NULL));
-	for (index = 0; index < d_ladder_data_events; index++)
+	for (index = 0; index < d_common_data_events; index++)
 		d_assert(f_trb_event_new(&(result->data.events[index])));
 	pthread_create(&(result->analyze_thread), NULL, f_ladder_analyze_thread, (void *)result);
 	return result;
@@ -55,7 +57,7 @@ void p_ladder_read_calibrate(struct s_ladder *ladder) { d_FP;
 	if (ladder->last_event.filled) {
 		if (p_ladder_read_integrity(&(ladder->last_event), &(ladder->last_readed_code))) {
 			d_object_lock(ladder->calibration.lock);
-			if (ladder->calibration.next < d_ladder_calibration_events)
+			if (ladder->calibration.next < ladder->calibration.size)
 				memcpy(&(ladder->calibration.events[ladder->calibration.next++]), &(ladder->last_event), sizeof(struct o_trb_event));
 			d_object_unlock(ladder->calibration.lock);
 		} else
@@ -67,7 +69,7 @@ void p_ladder_read_data(struct s_ladder *ladder) { d_FP;
 	if (ladder->last_event.filled) {
 		if (p_ladder_read_integrity(&(ladder->last_event), &(ladder->last_readed_code))) {
 			d_object_lock(ladder->data.lock);
-			if (ladder->data.next < d_ladder_data_events)
+			if (ladder->data.next < ladder->data.size)
 				memcpy(&(ladder->data.events[ladder->data.next++]), &(ladder->last_event), sizeof(struct o_trb_event));
 			d_object_unlock(ladder->data.lock);
 		} else
@@ -110,14 +112,15 @@ void p_ladder_analyze_finished(struct s_ladder *ladder) { d_FP;
 
 void p_ladder_analyze_calibrate(struct s_ladder *ladder) { d_FP;
 	float pedestal = 0, rms, total = 0, total_square = 0, fraction = (1.0/(float)d_trb_event_channels);
-	int index, next, computed;
+	int index, next, size, computed;
 	d_ladder_safe_assign(ladder->calibration.lock, computed, ladder->calibration.computed);
 	if (!computed) {
 		d_ladder_safe_assign(ladder->calibration.lock, next, ladder->calibration.next);
-		if (next == d_ladder_calibration_events) {
+		d_ladder_safe_assign(ladder->calibration.lock, size, ladder->calibration.size);
+		if (next >= size) {
 			d_object_lock(ladder->calibration.write_lock);
-			d_assert(p_trb_event_pedestal(ladder->calibration.events, d_ladder_calibration_events, ladder->calibration.pedestal));
-			d_assert(p_trb_event_sigma_raw(ladder->calibration.events, d_ladder_calibration_events, ladder->calibration.sigma_raw));
+			d_assert(p_trb_event_pedestal(ladder->calibration.events, next, ladder->calibration.pedestal));
+			d_assert(p_trb_event_sigma_raw(ladder->calibration.events, next, ladder->calibration.sigma_raw));
 			for (index = 0; index < d_trb_event_channels; index++) {
 				total += ladder->calibration.sigma_raw[index];
 				total_square += ladder->calibration.sigma_raw[index]*ladder->calibration.sigma_raw[index];
@@ -132,7 +135,7 @@ void p_ladder_analyze_calibrate(struct s_ladder *ladder) { d_FP;
 						(ladder->calibration.sigma_raw[index] < pedestal-(d_ladder_rms_constant*rms)))
 					ladder->calibration.flags[index] |= e_trb_event_channel_damaged;
 			}
-			d_assert(p_trb_event_sigma(ladder->calibration.events, d_ladder_calibration_events, d_common_sigma_k, ladder->calibration.sigma_raw,
+			d_assert(p_trb_event_sigma(ladder->calibration.events, next, d_common_sigma_k, ladder->calibration.sigma_raw,
 						ladder->calibration.pedestal, ladder->calibration.flags, ladder->calibration.sigma));
 			d_object_unlock(ladder->calibration.write_lock);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.computed, d_true);
@@ -142,22 +145,23 @@ void p_ladder_analyze_calibrate(struct s_ladder *ladder) { d_FP;
 }
 
 void p_ladder_analyze_data(struct s_ladder *ladder) { d_FP;
-	int index, next, computed, channel, va, startup, entries;
+	int index, next, size, computed, channel, va, startup, entries;
 	float value, value_no_pedestal, common_noise_on_va;
 	d_ladder_safe_assign(ladder->data.lock, computed, ladder->data.computed);
 	if (!computed) {
 		d_ladder_safe_assign(ladder->data.lock, next, ladder->data.next);
-		if (next == d_ladder_data_events) {
+		d_ladder_safe_assign(ladder->data.lock, size, ladder->data.size);
+		if (next >= size) {
 			d_object_lock(ladder->calibration.lock);
 			if (ladder->calibration.calibrated) {
 				d_object_lock(ladder->calibration.write_lock);
 				for (channel = 0; channel < d_trb_event_channels; channel++) {
-					for (index = 0, value = 0, value_no_pedestal = 0; index < d_ladder_data_events; index++) {
+					for (index = 0, value = 0, value_no_pedestal = 0; index < next; index++) {
 						value += ladder->data.events[index].values[channel];
 						value_no_pedestal += (ladder->data.events[index].values[channel]-ladder->calibration.pedestal[channel]);
 					}
-					ladder->data.mean[channel] = value/(float)d_ladder_data_events;
-					ladder->data.mean_no_pedestal[channel] = value_no_pedestal/(float)d_ladder_data_events;
+					ladder->data.mean[channel] = value/(float)size;
+					ladder->data.mean_no_pedestal[channel] = value_no_pedestal/(float)size;
 				}
 				for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
 					ladder->data.cn[va] = 0;

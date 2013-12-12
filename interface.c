@@ -39,6 +39,9 @@ const char *interface_labels[] = {
 	"v_automatic_time",
 	"v_calibration_time",
 	NULL
+}, *interface_bucket_spins[] = {
+	"v_data_bucket",
+	NULL
 }, *interface_scale_spins[] = {
 	"v_y_top",
 	"v_y_bottom",
@@ -113,6 +116,7 @@ const char *interface_labels[] = {
 	"common_noise_va5",
 	"common_noise_va6",
 };
+
 struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *main_interface, GtkBuilder *scale_interface) { d_FP;
 	struct s_interface *result = supplied;
 	struct o_stream *stream;
@@ -139,11 +143,14 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 						interface_scale_switches[index])));
 	for (index = 0; interface_spins[index]; index++)
 		d_assert(result->spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(main_interface, interface_spins[index])));
+	for (index = 0; interface_bucket_spins[index]; index++)
+		d_assert(result->bucket_spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(main_interface, interface_bucket_spins[index])));
 	gtk_spin_button_set_value(result->spins[e_interface_spin_dac], 10.0);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_channel], 0.0);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_delay], 6.6);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_automatic_time], 60.0);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_calibration_time], 60.0);
+	gtk_spin_button_set_value(result->bucket_spins[e_interface_bucket_spin_data], d_common_data_events_default);
 	for (index = 0; interface_scale_spins[index]; index++)
 		d_assert(result->scale_configuration->spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(scale_interface, interface_scale_spins[index])));
 	for (index = 0; interface_combos[index]; index++) {

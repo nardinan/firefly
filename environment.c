@@ -43,6 +43,8 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration_debug]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_action]), "toggled", G_CALLBACK(p_callback_action), result);
+	g_signal_connect(G_OBJECT(result->interface->bucket_spins[e_interface_bucket_spin_data]), "value-changed", G_CALLBACK(p_callback_change_bucket),
+			result);
 	g_signal_connect(G_OBJECT(result->interface->combo_charts), "changed", G_CALLBACK(p_callback_change_chart), result);
 	g_signal_connect(G_OBJECT(result->interface->notebook), "switch-page", G_CALLBACK(p_callback_change_page), result);
 	g_signal_connect(G_OBJECT(result->interface->scale_configuration->action), "clicked", G_CALLBACK(p_callback_scale_action), result);
@@ -57,9 +59,9 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 					parameters);
 		} else
 			d_die(d_error_malloc);
-	d_assert(result->searcher = f_trbs_new(NULL));
-	result->searcher->m_async_search(result->searcher, p_callback_incoming_device, d_common_timeout_device, (void *)result);
-	return result;
+		d_assert(result->searcher = f_trbs_new(NULL));
+		result->searcher->m_async_search(result->searcher, p_callback_incoming_device, d_common_timeout_device, (void *)result);
+		return result;
 }
 
 int p_callback_incoming_device(struct o_trb *device, void *v_environment) { d_FP;
@@ -134,6 +136,11 @@ void p_callback_calibration(GtkWidget *widget, struct s_environment *environment
 		d_raise;
 	} d_endtry;
 	d_object_unlock(environment->ladders[environment->current]->lock);
+}
+
+void p_callback_change_bucket(GtkWidget *widget, struct s_environment *environment) {
+	int value = gtk_spin_button_get_value_as_int(environment->interface->bucket_spins[e_interface_bucket_spin_data]);
+	d_ladder_safe_assign(environment->ladders[environment->current]->data.lock, environment->ladders[environment->current]->data.size, value);
 }
 
 void p_callback_change_chart(GtkWidget *widget, struct s_environment *environment) {
