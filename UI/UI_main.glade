@@ -776,108 +776,148 @@
                 <property name="label_xalign">0.5</property>
                 <property name="shadow_type">none</property>
                 <child>
-                  <object class="GtkAlignment" id="v_calibration_plots_alignment">
+                  <object class="GtkVBox" id="v_calibration_avg_box">
                     <property name="visible">True</property>
-                    <property name="top_padding">3</property>
-                    <property name="bottom_padding">3</property>
-                    <property name="left_padding">3</property>
-                    <property name="right_padding">3</property>
+                    <property name="orientation">vertical</property>
                     <child>
-                      <object class="GtkTable" id="v_calibration_box">
+                      <object class="GtkHBox" id="v_calibration_bucket_box">
                         <property name="visible">True</property>
-                        <property name="n_rows">2</property>
-                        <property name="n_columns">2</property>
-                        <property name="homogeneous">True</property>
                         <child>
-                          <object class="GtkFrame" id="v_calibration_sigma_raw">
+                          <object class="GtkLabel" id="v_calibration_bucket_label">
                             <property name="visible">True</property>
-                            <property name="label_xalign">0.5</property>
-                            <property name="shadow_type">in</property>
-                            <child>
-                              <object class="GtkAlignment" id="v_calibration_sigma_raw_alignment">
-                                <property name="visible">True</property>
-                                <property name="top_padding">3</property>
-                                <property name="bottom_padding">3</property>
-                                <property name="left_padding">3</property>
-                                <property name="right_padding">3</property>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                              </object>
-                            </child>
-                            <child type="label">
-                              <object class="GtkLabel" id="v_calibration_sigma_raw_label">
-                                <property name="visible">True</property>
-                                <property name="label" translatable="yes">&lt;i&gt;Sigma raw&lt;/i&gt;</property>
-                                <property name="use_markup">True</property>
-                              </object>
-                            </child>
+                            <property name="label" translatable="yes">Bucket size</property>
                           </object>
                           <packing>
-                            <property name="left_attach">1</property>
-                            <property name="right_attach">2</property>
+                            <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkFrame" id="v_calibration_sigma">
+                          <object class="GtkSpinButton" id="v_calibration_bucket">
                             <property name="visible">True</property>
-                            <property name="label_xalign">0.5</property>
-                            <property name="shadow_type">in</property>
-                            <child>
-                              <object class="GtkAlignment" id="v_calibration_sigma_alignment">
-                                <property name="visible">True</property>
-                                <property name="top_padding">3</property>
-                                <property name="bottom_padding">3</property>
-                                <property name="left_padding">3</property>
-                                <property name="right_padding">3</property>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                              </object>
-                            </child>
-                            <child type="label">
-                              <object class="GtkLabel" id="v_calibration_sigma_label">
-                                <property name="visible">True</property>
-                                <property name="label" translatable="yes">&lt;i&gt;Sigma&lt;/i&gt;</property>
-                                <property name="use_markup">True</property>
-                              </object>
-                            </child>
+                            <property name="can_focus">True</property>
+                            <property name="invisible_char">&#x25CF;</property>
+                            <property name="adjustment">v_bucket_calibration_model</property>
                           </object>
                           <packing>
-                            <property name="top_attach">1</property>
-                            <property name="bottom_attach">2</property>
+                            <property name="fill">False</property>
+                            <property name="position">1</property>
                           </packing>
-                        </child>
-                        <child>
-                          <object class="GtkFrame" id="v_calibration_pedestal">
-                            <property name="visible">True</property>
-                            <property name="label_xalign">0.5</property>
-                            <property name="shadow_type">in</property>
-                            <child>
-                              <object class="GtkAlignment" id="v_calibration_pedestal_alignment">
-                                <property name="visible">True</property>
-                                <property name="top_padding">3</property>
-                                <property name="bottom_padding">3</property>
-                                <property name="left_padding">3</property>
-                                <property name="right_padding">3</property>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                              </object>
-                            </child>
-                            <child type="label">
-                              <object class="GtkLabel" id="v_calibration_pedestal_label">
-                                <property name="visible">True</property>
-                                <property name="label" translatable="yes">&lt;i&gt;Pedestal&lt;/i&gt;</property>
-                                <property name="use_markup">True</property>
-                              </object>
-                            </child>
-                          </object>
-                        </child>
-                        <child>
-                          <placeholder/>
                         </child>
                       </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkAlignment" id="v_calibration_plots_alignment">
+                        <property name="visible">True</property>
+                        <property name="top_padding">3</property>
+                        <property name="bottom_padding">3</property>
+                        <property name="left_padding">3</property>
+                        <property name="right_padding">3</property>
+                        <child>
+                          <object class="GtkTable" id="v_calibration_box">
+                            <property name="visible">True</property>
+                            <property name="n_rows">2</property>
+                            <property name="n_columns">2</property>
+                            <property name="homogeneous">True</property>
+                            <child>
+                              <object class="GtkFrame" id="v_calibration_sigma_raw">
+                                <property name="visible">True</property>
+                                <property name="label_xalign">0.5</property>
+                                <property name="shadow_type">in</property>
+                                <child>
+                                  <object class="GtkAlignment" id="v_calibration_sigma_raw_alignment">
+                                    <property name="visible">True</property>
+                                    <property name="top_padding">3</property>
+                                    <property name="bottom_padding">3</property>
+                                    <property name="left_padding">3</property>
+                                    <property name="right_padding">3</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child type="label">
+                                  <object class="GtkLabel" id="v_calibration_sigma_raw_label">
+                                    <property name="visible">True</property>
+                                    <property name="label" translatable="yes">&lt;i&gt;Sigma raw&lt;/i&gt;</property>
+                                    <property name="use_markup">True</property>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkFrame" id="v_calibration_sigma">
+                                <property name="visible">True</property>
+                                <property name="label_xalign">0.5</property>
+                                <property name="shadow_type">in</property>
+                                <child>
+                                  <object class="GtkAlignment" id="v_calibration_sigma_alignment">
+                                    <property name="visible">True</property>
+                                    <property name="top_padding">3</property>
+                                    <property name="bottom_padding">3</property>
+                                    <property name="left_padding">3</property>
+                                    <property name="right_padding">3</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child type="label">
+                                  <object class="GtkLabel" id="v_calibration_sigma_label">
+                                    <property name="visible">True</property>
+                                    <property name="label" translatable="yes">&lt;i&gt;Sigma&lt;/i&gt;</property>
+                                    <property name="use_markup">True</property>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="top_attach">1</property>
+                                <property name="bottom_attach">2</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkFrame" id="v_calibration_pedestal">
+                                <property name="visible">True</property>
+                                <property name="label_xalign">0.5</property>
+                                <property name="shadow_type">in</property>
+                                <child>
+                                  <object class="GtkAlignment" id="v_calibration_pedestal_alignment">
+                                    <property name="visible">True</property>
+                                    <property name="top_padding">3</property>
+                                    <property name="bottom_padding">3</property>
+                                    <property name="left_padding">3</property>
+                                    <property name="right_padding">3</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child type="label">
+                                  <object class="GtkLabel" id="v_calibration_pedestal_label">
+                                    <property name="visible">True</property>
+                                    <property name="label" translatable="yes">&lt;i&gt;Pedestal&lt;/i&gt;</property>
+                                    <property name="use_markup">True</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="position">1</property>
+                      </packing>
                     </child>
                   </object>
                 </child>
@@ -896,7 +936,7 @@
             <child type="tab">
               <object class="GtkLabel" id="v_charts_calibration">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">Calibration</property>
+                <property name="label" translatable="yes">Calibration AVG</property>
               </object>
               <packing>
                 <property name="position">1</property>
@@ -1539,7 +1579,13 @@
   </object>
   <object class="GtkAdjustment" id="v_bucket_data_model">
     <property name="lower">1</property>
-    <property name="upper">512</property>
+    <property name="upper">1024</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="v_bucket_calibration_model">
+    <property name="lower">64</property>
+    <property name="upper">1024</property>
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>

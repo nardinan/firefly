@@ -58,9 +58,10 @@ typedef struct s_ladder {
 	} calibration;
 	struct {
 		struct o_object *lock;
-		unsigned int next, size;
+		unsigned int next, size, cn_bucket_size;
 		struct o_trb_event events[d_common_data_events];
-		float mean[d_trb_event_channels], mean_no_pedestal[d_trb_event_channels], cn[d_trb_event_vas];
+		float mean[d_trb_event_channels], mean_no_pedestal[d_trb_event_channels], cn[d_trb_event_vas],
+		      cn_bucket[d_common_data_events][d_trb_event_vas];
 		int computed;
 	} data;
 } s_ladder;

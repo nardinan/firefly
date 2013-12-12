@@ -49,6 +49,7 @@ typedef enum e_interface_spins {
 } e_interface_spins;
 typedef enum e_interface_bucket_spins {
 	e_interface_bucket_spin_data = 0,
+	e_interface_bucket_spin_calibration,
 	e_interface_bucket_spin_NULL
 } e_interface_bucket_spins;
 typedef enum e_interface_scale_spins {

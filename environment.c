@@ -43,6 +43,8 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration_debug]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_action]), "toggled", G_CALLBACK(p_callback_action), result);
+	g_signal_connect(G_OBJECT(result->interface->bucket_spins[e_interface_bucket_spin_calibration]), "value-changed", G_CALLBACK(p_callback_change_bucket),
+			result);
 	g_signal_connect(G_OBJECT(result->interface->bucket_spins[e_interface_bucket_spin_data]), "value-changed", G_CALLBACK(p_callback_change_bucket),
 			result);
 	g_signal_connect(G_OBJECT(result->interface->combo_charts), "changed", G_CALLBACK(p_callback_change_chart), result);
@@ -139,8 +141,12 @@ void p_callback_calibration(GtkWidget *widget, struct s_environment *environment
 }
 
 void p_callback_change_bucket(GtkWidget *widget, struct s_environment *environment) {
-	int value = gtk_spin_button_get_value_as_int(environment->interface->bucket_spins[e_interface_bucket_spin_data]);
-	d_ladder_safe_assign(environment->ladders[environment->current]->data.lock, environment->ladders[environment->current]->data.size, value);
+	int value = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(widget));
+	if (widget == GTK_WIDGET(environment->interface->bucket_spins[e_interface_bucket_spin_calibration]))
+		d_ladder_safe_assign(environment->ladders[environment->current]->calibration.lock,
+				environment->ladders[environment->current]->calibration.size, value);
+	else
+		d_ladder_safe_assign(environment->ladders[environment->current]->data.lock, environment->ladders[environment->current]->data.size, value);
 }
 
 void p_callback_change_chart(GtkWidget *widget, struct s_environment *environment) {

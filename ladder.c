@@ -173,6 +173,21 @@ void p_ladder_analyze_data(struct s_ladder *ladder) { d_FP;
 					if (entries > 0)
 						ladder->data.cn[va] = (common_noise_on_va/(float)entries);
 				}
+				ladder->data.cn_bucket_size = next;
+				for (index = 0; index < next; index++)
+					for (va = 0, startup =0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
+						ladder->data.cn_bucket[index][va] = 0;
+						for (channel = startup, entries = 0, common_noise_on_va = 0; channel < (startup+d_trb_event_channels_on_va);
+								channel++)  {
+							value = ladder->data.events[index].values[channel]-ladder->calibration.pedestal[channel];
+							if (fabs(value) < (d_common_sigma_k*ladder->calibration.sigma[channel])) {
+								common_noise_on_va += value;
+								entries++;
+							}
+						}
+						if (entries > 0)
+							ladder->data.cn_bucket[index][va] = (common_noise_on_va/(float)entries);
+					}
 				d_object_unlock(ladder->calibration.write_lock);
 				d_ladder_safe_assign(ladder->data.lock, ladder->data.computed, d_true);
 			}
@@ -220,6 +235,7 @@ void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP
 	d_object_lock(ladder->data.lock);
 	if ((ladder->data.computed) || (ladder->last_readed_kind == 0xa3)) {
 		f_interface_clean_data(charts);
+		f_interface_clean_common_noise(charts);
 		if (ladder->last_readed_kind != 0xa3) {
 			for (index = 0; index < d_trb_event_channels; index++) {
 				va = (index/d_trb_event_channels_on_va);
@@ -229,12 +245,14 @@ void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP
 				f_chart_append_signal(charts[e_interface_alignment_signal], 0, index,
 						ladder->data.mean_no_pedestal[index]-ladder->data.cn[va]);
 			}
-			f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_1], 0, ladder->data.cn[0]);
-			f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_2], 0, ladder->data.cn[1]);
-			f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_3], 0, ladder->data.cn[2]);
-			f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_4], 0, ladder->data.cn[3]);
-			f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_5], 0, ladder->data.cn[4]);
-			f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_6], 0, ladder->data.cn[5]);
+			for (index = 0; index < ladder->data.cn_bucket_size; index++) {
+				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_1], 0, ladder->data.cn_bucket[index][0]);
+				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_2], 0, ladder->data.cn_bucket[index][1]);
+				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_3], 0, ladder->data.cn_bucket[index][2]);
+				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_4], 0, ladder->data.cn_bucket[index][3]);
+				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_5], 0, ladder->data.cn_bucket[index][4]);
+				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_6], 0, ladder->data.cn_bucket[index][5]);
+			}
 		}
 		ladder->data.next = 0;
 		ladder->data.computed = d_false;
@@ -336,7 +354,7 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) 
 	float hold_delay;
 	struct o_string *name, *extension;
 	d_object_lock(ladder->lock);
-	if ((ladder->deviced) && (ladder->device)) {
+	if ((ladder->deviced) && (ladder->device))
 		if (ladder->command != e_ladder_command_stop) {
 			hold_delay = (float)gtk_spin_button_get_value(interface->spins[e_interface_spin_delay]);
 			if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_internal]))
@@ -368,7 +386,6 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) 
 				ladder->device->m_close_stream(ladder->device);
 			d_release(extension);
 		}
-	}
 	d_object_unlock(ladder->lock);
 }
 

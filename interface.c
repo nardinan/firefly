@@ -41,6 +41,7 @@ const char *interface_labels[] = {
 	NULL
 }, *interface_bucket_spins[] = {
 	"v_data_bucket",
+	"v_calibration_bucket",
 	NULL
 }, *interface_scale_spins[] = {
 	"v_y_top",
@@ -151,6 +152,7 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	gtk_spin_button_set_value(result->spins[e_interface_spin_automatic_time], 60.0);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_calibration_time], 60.0);
 	gtk_spin_button_set_value(result->bucket_spins[e_interface_bucket_spin_data], d_common_data_events_default);
+	gtk_spin_button_set_value(result->bucket_spins[e_interface_bucket_spin_calibration], d_common_calibration_events_default);
 	for (index = 0; interface_scale_spins[index]; index++)
 		d_assert(result->scale_configuration->spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(scale_interface, interface_scale_spins[index])));
 	for (index = 0; interface_combos[index]; index++) {
