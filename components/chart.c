@@ -140,6 +140,20 @@ void f_chart_denormalize(struct s_chart *chart) {
 			chart->values[code][index].normalized.done = d_false;
 }
 
+void f_chart_integerize(struct s_chart *chart) {
+	float full_w = fabs(chart->axis_x.range[1]-chart->axis_x.range[0]), full_h = fabs(chart->axis_y.range[1]-chart->axis_y.range[0]), value;
+	for (;; chart->axis_x.segments++) {
+		value = (full_w/(float)chart->axis_x.segments);
+		if (value == (int)value)
+			break;
+	}
+	for (;; chart->axis_y.segments++) {
+		value = (full_h/(float)chart->axis_y.segments);
+		if (value == (int)value)
+			break;
+	}
+}
+
 void f_chart_redraw(struct s_chart *chart) {
 	if (GTK_IS_WIDGET(chart->plane))
 		gtk_widget_queue_draw(GTK_WIDGET(chart->plane));
@@ -158,7 +172,7 @@ void p_chart_redraw_axis_x(cairo_t *cr, struct s_chart *chart, float full_h, flo
 	cairo_move_to(cr, 0.0, x_axis_position);
 	cairo_line_to(cr, width, x_axis_position);
 	for (current_value = chart->axis_x.range[0], current_position = 0, last_label = 0; current_value < chart->axis_x.range[1]; current_value += value_step,
-			current_position += position_step) {
+			current_position += position_step)
 		if (((!d_positive(current_value)) && (chart->axis_x.show_negative)) || ((d_positive(current_value) && (chart->axis_x.show_positive)))) {
 			if (((last_label-current_position) == 0) || ((current_position-last_label) >= chart->axis_x.minimum_distance)) {
 				purged = d_false;
@@ -190,7 +204,6 @@ void p_chart_redraw_axis_x(cairo_t *cr, struct s_chart *chart, float full_h, flo
 				cairo_line_to(cr, current_position, x_axis_position+chart->axis_x.segments_length);
 			}
 		}
-	}
 	cairo_stroke(cr);
 }
 
@@ -207,7 +220,7 @@ void p_chart_redraw_axis_y(cairo_t *cr, struct s_chart *chart, float full_h, flo
 	cairo_move_to(cr, y_axis_position, 0.0);
 	cairo_line_to(cr, y_axis_position, height);
 	for (current_value = chart->axis_y.range[0], current_position = height, last_label = height; current_value < chart->axis_y.range[1];
-			current_value += value_step, current_position -= position_step) {
+			current_value += value_step, current_position -= position_step)
 		if (((!d_positive(current_value)) && (chart->axis_y.show_negative)) || ((d_positive(current_value)) && (chart->axis_y.show_positive))) {
 			if (((last_label-current_position) == 0) || ((last_label-current_position) >= chart->axis_y.minimum_distance)) {
 				purged = d_false;
@@ -239,7 +252,6 @@ void p_chart_redraw_axis_y(cairo_t *cr, struct s_chart *chart, float full_h, flo
 				cairo_line_to(cr, y_axis_position+chart->axis_y.segments_length, current_position);
 			}
 		}
-	}
 	cairo_stroke(cr);
 }
 

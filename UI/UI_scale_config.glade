@@ -36,13 +36,13 @@
                         <child>
                           <object class="GtkLabel" id="v_x_top_label">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">Top</property>
+                            <property name="label" translatable="yes">Maximum</property>
                           </object>
                         </child>
                         <child>
                           <object class="GtkLabel" id="v_x_bottom_label">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">Bottom</property>
+                            <property name="label" translatable="yes">Minimum</property>
                           </object>
                           <packing>
                             <property name="top_attach">1</property>
@@ -134,13 +134,13 @@
                         <child>
                           <object class="GtkLabel" id="v_y_top_label">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">Top</property>
+                            <property name="label" translatable="yes">Maximum</property>
                           </object>
                         </child>
                         <child>
                           <object class="GtkLabel" id="v_y_bottom_label">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">Bottom</property>
+                            <property name="label" translatable="yes">Minimum</property>
                           </object>
                           <packing>
                             <property name="top_attach">1</property>

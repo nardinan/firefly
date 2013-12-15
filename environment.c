@@ -184,7 +184,9 @@ void p_callback_scale_action(GtkWidget *widget, struct s_environment *environmen
 			gtk_spin_button_get_value_as_int(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_segments]);
 		environment->interface->scale_configuration->hooked_chart->show_borders =
 			gtk_toggle_button_get_active(environment->interface->scale_configuration->switches[e_interface_scale_switch_informations]);
+		p_callback_scale_exit(GTK_WIDGET(environment->interface->scale_configuration->window), environment);
 		f_chart_denormalize(environment->interface->scale_configuration->hooked_chart);
+		f_chart_integerize(environment->interface->scale_configuration->hooked_chart);
 	}
 }
 

@@ -68,6 +68,7 @@ extern void f_chart_append_signal(struct s_chart *chart, unsigned int code, floa
 extern void f_chart_append_histogram(struct s_chart *chart, unsigned int code, float value);
 extern void f_chart_flush(struct s_chart *chart);
 extern void f_chart_denormalize(struct s_chart *chart);
+extern void f_chart_integerize(struct s_chart *chart);
 extern void f_chart_redraw(struct s_chart *chart);
 extern void p_chart_redraw_axis_x(cairo_t *cr, struct s_chart *chart, float full_h, float full_w, unsigned int width, unsigned int height);
 extern void p_chart_redraw_axis_y(cairo_t *cr, struct s_chart *chart, float full_h, float full_w, unsigned int width, unsigned int height);
