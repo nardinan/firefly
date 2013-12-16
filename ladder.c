@@ -166,10 +166,11 @@ void p_ladder_analyze_data(struct s_ladder *ladder) { d_FP;
 				for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
 					ladder->data.cn[va] = 0;
 					for (channel = startup, entries = 0, common_noise_on_va = 0; channel < (startup+d_trb_event_channels_on_va); channel++)
-						if (fabs(ladder->data.mean_no_pedestal[channel]) < (d_common_sigma_k*ladder->calibration.sigma[channel])) {
-							common_noise_on_va += ladder->data.mean_no_pedestal[channel];
-							entries++;
-						}
+						if ((ladder->calibration.flags[channel]&e_trb_event_channel_damaged) != e_trb_event_channel_damaged)
+							if (fabs(ladder->data.mean_no_pedestal[channel]) < (d_common_sigma_k*ladder->calibration.sigma[channel])) {
+								common_noise_on_va += ladder->data.mean_no_pedestal[channel];
+								entries++;
+							}
 					if (entries > 0)
 						ladder->data.cn[va] = (common_noise_on_va/(float)entries);
 				}
@@ -239,12 +240,16 @@ void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP
 		if (ladder->last_readed_kind != 0xa3) {
 			for (index = 0; index < d_trb_event_channels; index++) {
 				va = (index/d_trb_event_channels_on_va);
-				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 0, index, ladder->data.mean_no_pedestal[index]);
+				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 1, index, ladder->data.mean_no_pedestal[index]);
+				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 0, index,
+						((ladder->calibration.flags[index]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?
+						charts[e_interface_alignment_adc_pedestal]->axis_y.range[1]:0);
 				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal_cn], 0, index,
 						ladder->data.mean_no_pedestal[index]-ladder->data.cn[va]);
 				f_chart_append_signal(charts[e_interface_alignment_signal], 0, index,
 						ladder->data.mean_no_pedestal[index]-ladder->data.cn[va]);
 			}
+			charts[e_interface_alignment_adc_pedestal]->histogram[0] = d_true;
 			for (index = 0; index < ladder->data.cn_bucket_size; index++) {
 				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_1], 0, ladder->data.cn_bucket[index][0]);
 				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_2], 0, ladder->data.cn_bucket[index][1]);

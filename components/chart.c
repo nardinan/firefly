@@ -144,12 +144,12 @@ void f_chart_integerize(struct s_chart *chart) {
 	float full_w = fabs(chart->axis_x.range[1]-chart->axis_x.range[0]), full_h = fabs(chart->axis_y.range[1]-chart->axis_y.range[0]), value;
 	for (;; chart->axis_x.segments++) {
 		value = (full_w/(float)chart->axis_x.segments);
-		if (value == (int)value)
+		if ((value == (int)value) || ((int)value == 0))
 			break;
 	}
 	for (;; chart->axis_y.segments++) {
 		value = (full_h/(float)chart->axis_y.segments);
-		if (value == (int)value)
+		if ((value == (int)value) || ((int)value == 0))
 			break;
 	}
 }
