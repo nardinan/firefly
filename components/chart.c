@@ -100,7 +100,7 @@ void p_chart_create_bins(struct s_chart *chart, unsigned int code) {
 		} else
 			d_log(d_log_level_default, "[WARNING] - d_chart_bucket too small");
 	}
-	chart->histogram[code] = d_true;
+	chart->kind[code] = e_chart_kind_histogram;
 }
 
 void f_chart_append_signal(struct s_chart *chart, unsigned int code, float x, float y) {
@@ -116,7 +116,7 @@ void f_chart_append_signal(struct s_chart *chart, unsigned int code, float x, fl
 void f_chart_append_histogram(struct s_chart *chart, unsigned int code, float value) {
 	float normalized;
 	int bin;
-	if (!chart->histogram[code])
+	if (chart->kind[code] != e_chart_kind_histogram)
 		p_chart_create_bins(chart, code);
 	if ((value >= chart->axis_x.range[0]) && (value <= chart->axis_x.range[1])) {
 		normalized = (value-chart->axis_x.range[0])/(chart->axis_x.range[1]-chart->axis_x.range[0]);
@@ -125,10 +125,20 @@ void f_chart_append_histogram(struct s_chart *chart, unsigned int code, float va
 	}
 }
 
+void f_chart_append_envelope(struct s_chart *chart, unsigned int code, float x, float max, float min) {
+	if (chart->head[code] < d_chart_bucket) {
+		chart->values[code][chart->head[code]].x = x;
+		chart->values[code][chart->head[code]].y = max;
+		chart->values[code][chart->head[code]].w = min;
+		chart->values[code][chart->head[code]].normalized.done = d_false;
+	} else
+		d_log(d_log_level_default, "[WARNING] - d_chart_bucket too small");
+}
+
 void f_chart_flush(struct s_chart *chart) {
 	int code;
 	for (code = 0; code < d_chart_max_nested; code++) {
-		chart->histogram[code] = d_false;
+		chart->kind[code] = e_chart_kind_signal;
 		chart->head[code] = 0;
 	}
 }
@@ -315,19 +325,23 @@ void p_chart_normalize_sort(struct s_chart *chart, unsigned int code) {
 }
 
 void p_chart_normalize(struct s_chart *chart, float full_h, float full_w, unsigned int width, unsigned int height) {
-	float this_x, this_y, normal_x, normal_y, real_x, real_y;
+	float this_x, this_y, this_w, normal_x, normal_y, normal_w, real_x, real_y, real_w;
 	int index, code, normalized = d_false;
 	for (code = 0; code < d_chart_max_nested; code++) {
 		for (index = 0; index < chart->head[code]; index++)
 			if (!chart->values[code][index].normalized.done) {
 				this_x = chart->values[code][index].x;
 				this_y = chart->values[code][index].y;
+				this_w = chart->values[code][index].w;
 				normal_x = this_x-chart->axis_x.range[0];
 				normal_y = this_y-chart->axis_y.range[0];
+				normal_w = this_w-chart->axis_y.range[0];
 				real_x = (normal_x*width)/full_w;
 				real_y = height-((normal_y*height)/full_h);
+				real_w = height-((normal_w*height)/full_h);
 				chart->values[code][index].normalized.x = real_x;
 				chart->values[code][index].normalized.y = real_y;
+				chart->values[code][index].normalized.w = real_w;
 				chart->values[code][index].normalized.done = d_true;
 				normalized = d_true;
 			}
@@ -373,10 +387,15 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 							min_value[code] = chart->values[code][index].y;
 							min_channel[code] = chart->values[code][index].x;
 						}
-						if (chart->histogram[code]) {
+						if (chart->kind[code] == e_chart_kind_histogram) {
 							cairo_move_to(chart->cairo_brush, chart->values[code][index].normalized.x, chart->normalized.x_axis);
 							cairo_line_to(chart->cairo_brush, chart->values[code][index].normalized.x,
 									chart->values[code][index].normalized.y);
+						} else if (chart->kind[code] == e_chart_kind_envelope) {
+							cairo_move_to(chart->cairo_brush, chart->values[code][index].normalized.x,
+									chart->values[code][index].normalized.y);
+							cairo_line_to(chart->cairo_brush, chart->values[code][index].normalized.x,
+									chart->values[code][index].normalized.w);
 						} else if (!first)
 							cairo_line_to(chart->cairo_brush, chart->values[code][index].normalized.x,
 									chart->values[code][index].normalized.y);

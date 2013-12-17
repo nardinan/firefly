@@ -28,10 +28,15 @@
 #define d_chart_font_height 12.0
 #define d_same_sign(a,b) (((a)>=0)^((b)<0))
 #define d_positive(a) ((a)>=0)
+typedef enum e_chart_kinds {
+	e_chart_kind_signal = 0,
+	e_chart_kind_histogram,
+	e_chart_kind_envelope
+} e_chart_kinds;
 typedef struct s_chart_value {
-	float x, y;
+	float x, y, w;
 	struct {
-		float x, y;
+		float x, y, w;
 		int done;
 	} normalized;
 } s_chart_value;
@@ -47,7 +52,8 @@ typedef struct s_chart_axis {
 typedef struct s_chart {
 	GtkWidget *plane;
 	cairo_t *cairo_brush;
-	int head[d_chart_max_nested], histogram[d_chart_max_nested], last_width, last_height, show_borders, border_x, border_y, bins[d_chart_max_nested];
+	int head[d_chart_max_nested], last_width, last_height, show_borders, border_x, border_y, bins[d_chart_max_nested];
+	enum e_chart_kinds kind[d_chart_max_nested];
 	struct {
 		float x_axis, y_axis;
 	} normalized;
@@ -66,6 +72,7 @@ extern void f_chart_style(struct s_chart *chart, struct o_stream *configuration)
 extern void p_chart_build_bins(struct s_chart *chart, unsigned int code);
 extern void f_chart_append_signal(struct s_chart *chart, unsigned int code, float x, float y);
 extern void f_chart_append_histogram(struct s_chart *chart, unsigned int code, float value);
+extern void f_chart_append_envelope(struct s_chart *chart, unsigned int code, float x, float max, float min);
 extern void f_chart_flush(struct s_chart *chart);
 extern void f_chart_denormalize(struct s_chart *chart);
 extern void f_chart_integerize(struct s_chart *chart);
