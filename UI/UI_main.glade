@@ -1202,7 +1202,7 @@
                             <child type="label">
                               <object class="GtkLabel" id="v_data_adc_pedestal_cn_label">
                                 <property name="visible">True</property>
-                                <property name="label" translatable="yes">&lt;i&gt;ADC-Pedestal-CN&lt;/i&gt;</property>
+                                <property name="label" translatable="yes">&lt;i&gt;Signal&lt;/i&gt;</property>
                                 <property name="use_markup">True</property>
                               </object>
                             </child>
@@ -1401,7 +1401,7 @@
               <object class="GtkLabel" id="v_charts_data_histograms">
                 <property name="visible">True</property>
                 <property name="yalign">0.43000000715255737</property>
-                <property name="label" translatable="yes">Data AVG</property>
+                <property name="label" translatable="yes">Signal</property>
               </object>
               <packing>
                 <property name="position">5</property>
@@ -1617,6 +1617,9 @@
                   </object>
                 </child>
               </object>
+              <packing>
+                <property name="position">5</property>
+              </packing>
             </child>
             <child type="tab">
               <object class="GtkLabel" id="v_charts_cn">

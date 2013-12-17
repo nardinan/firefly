@@ -137,8 +137,7 @@ void p_ladder_load_calibrate(struct s_ladder *ladder, struct o_stream *stream) {
 					ladder->calibration.flags[channel] = 0;
 					if (d_array_cast(atoi, elements, singleton, 6, 0))
 						ladder->calibration.flags[channel] = e_trb_event_channel_damaged;
-				} else
-					d_log(e_log_level_medium, "wrong channel ID %d", channel);
+				}
 			}
 			d_release(elements);
 		}
@@ -256,9 +255,10 @@ void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
 							if (entries > 0)
 								ladder->data.cn_bucket[index][va] = (common_noise_on_va/(float)entries);
 							for (channel = startup; channel < (startup+d_trb_event_channels_on_va); channel++) {
+								ladder->data.signal_bucket[index][channel] = (ladder->data.events[index].values[channel]-
+										ladder->calibration.pedestal[channel]-ladder->data.cn_bucket[index][va]);
 								ladder->data.signal_over_noise_bucket[index][channel] =
-									(ladder->data.events[index].values[channel]-ladder->calibration.pedestal[channel]-
-									 ladder->data.cn_bucket[index][va])/ladder->calibration.sigma[channel];
+									ladder->data.signal_bucket[index][channel]/ladder->calibration.sigma[channel];
 								if (ladder->data.signal_over_noise_bucket[index][channel] > d_common_occupancy_k)
 									ladder->data.occupancy[channel]++;
 							}
