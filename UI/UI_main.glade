@@ -21,19 +21,6 @@
               </packing>
             </child>
             <child>
-              <object class="GtkAspectFrame" id="v_top">
-                <property name="visible">True</property>
-                <property name="label_xalign">0</property>
-                <property name="shadow_type">none</property>
-                <child>
-                  <placeholder/>
-                </child>
-              </object>
-              <packing>
-                <property name="position">1</property>
-              </packing>
-            </child>
-            <child>
               <object class="GtkVBox" id="v_configuration_main_grid">
                 <property name="visible">True</property>
                 <property name="orientation">vertical</property>
@@ -53,7 +40,7 @@
                 <child>
                   <object class="GtkTable" id="v_configuration_grid">
                     <property name="visible">True</property>
-                    <property name="n_rows">2</property>
+                    <property name="n_rows">4</property>
                     <property name="n_columns">2</property>
                     <child>
                       <object class="GtkLabel" id="v_location_label">
@@ -62,6 +49,8 @@
                         <property name="label" translatable="yes">Location</property>
                       </object>
                       <packing>
+                        <property name="top_attach">2</property>
+                        <property name="bottom_attach">3</property>
                         <property name="x_options"/>
                       </packing>
                     </child>
@@ -72,8 +61,8 @@
                         <property name="label" translatable="yes">Kind</property>
                       </object>
                       <packing>
-                        <property name="top_attach">1</property>
-                        <property name="bottom_attach">2</property>
+                        <property name="top_attach">3</property>
+                        <property name="bottom_attach">4</property>
                         <property name="x_options"/>
                       </packing>
                     </child>
@@ -92,6 +81,8 @@
                       <packing>
                         <property name="left_attach">1</property>
                         <property name="right_attach">2</property>
+                        <property name="top_attach">2</property>
+                        <property name="bottom_attach">3</property>
                       </packing>
                     </child>
                     <child>
@@ -109,14 +100,52 @@
                       <packing>
                         <property name="left_attach">1</property>
                         <property name="right_attach">2</property>
+                        <property name="top_attach">3</property>
+                        <property name="bottom_attach">4</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkEntry" id="v_ladder_name">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="max_length">16</property>
+                        <property name="invisible_char">&#x25CF;</property>
+                        <property name="text" translatable="yes">test_ladder</property>
+                        <property name="caps_lock_warning">False</property>
+                      </object>
+                      <packing>
+                        <property name="right_attach">2</property>
                         <property name="top_attach">1</property>
                         <property name="bottom_attach">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="v_ladder_name_label&#xDF;">
+                        <property name="visible">True</property>
+                        <property name="xalign">0</property>
+                        <property name="label" translatable="yes">Ladder name:</property>
+                      </object>
+                      <packing>
+                        <property name="right_attach">2</property>
                       </packing>
                     </child>
                   </object>
                   <packing>
                     <property name="position">1</property>
                   </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkAspectFrame" id="v_top">
+                <property name="visible">True</property>
+                <property name="label_xalign">0</property>
+                <property name="shadow_type">none</property>
+                <child>
+                  <placeholder/>
                 </child>
               </object>
               <packing>
@@ -413,38 +442,15 @@
                         <child>
                           <object class="GtkTable" id="v_calibration_grid">
                             <property name="visible">True</property>
-                            <property name="n_rows">2</property>
                             <property name="n_columns">2</property>
                             <property name="homogeneous">True</property>
-                            <child>
-                              <object class="GtkLabel" id="v_calibration_time_label">
-                                <property name="visible">True</property>
-                                <property name="xalign">0.94999998807907104</property>
-                                <property name="label" translatable="yes">Time (secs)</property>
-                              </object>
-                            </child>
                             <child>
                               <object class="GtkLabel" id="v_calibration_file_label">
                                 <property name="visible">True</property>
                                 <property name="xalign">0.94999998807907104</property>
-                                <property name="label" translatable="yes">(or) Choose a file</property>
+                                <property name="xpad">5</property>
+                                <property name="label" translatable="yes">Choose a file</property>
                               </object>
-                              <packing>
-                                <property name="top_attach">1</property>
-                                <property name="bottom_attach">2</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkSpinButton" id="v_calibration_time">
-                                <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="invisible_char">&#x25CF;</property>
-                                <property name="adjustment">v_calibration_time_model</property>
-                              </object>
-                              <packing>
-                                <property name="left_attach">1</property>
-                                <property name="right_attach">2</property>
-                              </packing>
                             </child>
                             <child>
                               <object class="GtkFileChooserButton" id="v_calibration_file">
@@ -454,8 +460,6 @@
                               <packing>
                                 <property name="left_attach">1</property>
                                 <property name="right_attach">2</property>
-                                <property name="top_attach">1</property>
-                                <property name="bottom_attach">2</property>
                               </packing>
                             </child>
                           </object>
@@ -1541,7 +1545,6 @@
   <object class="GtkAdjustment" id="v_dac_model">
     <property name="value">10</property>
     <property name="upper">65536</property>
-    <property name="lower">0</property>
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
@@ -1558,13 +1561,6 @@
     <property name="page_increment">1</property>
   </object>
   <object class="GtkAdjustment" id="v_automatic_time_model">
-    <property name="value">60</property>
-    <property name="lower">30</property>
-    <property name="upper">3600</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="v_calibration_time_model">
     <property name="value">60</property>
     <property name="lower">30</property>
     <property name="upper">3600</property>

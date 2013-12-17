@@ -99,8 +99,6 @@ void p_callback_action(GtkWidget *widget, struct s_environment *environment) { d
 
 void p_callback_calibration(GtkWidget *widget, struct s_environment *environment) { d_FP;
 	char *absolute_path;
-	unsigned char buffer[d_trb_buffer_size];
-	size_t readed, discarded = 0, offset = 0;
 	struct s_exception *exception = NULL;
 	struct o_string *string_path;
 	struct o_stream *stream;
@@ -108,28 +106,8 @@ void p_callback_calibration(GtkWidget *widget, struct s_environment *environment
 	d_try {
 		if ((absolute_path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(widget)))) {
 			string_path = d_string_pure(absolute_path);
-			stream = f_stream_new_file(NULL, string_path, "rb", 0777);
-			while ((readed = stream->m_read_raw(stream, buffer+offset, (d_trb_buffer_size-offset)))) {
-				offset += readed;
-				while (offset > d_trb_event_size_normal)
-					if ((environment->ladders[environment->current]->last_event.m_load(
-									&(environment->ladders[environment->current]->last_event), buffer, 0xa0, offset))) {
-						if (environment->ladders[environment->current]->last_event.filled) {
-							if (discarded < d_environment_discard_firs_events)
-								discarded++;
-							else {
-								environment->ladders[environment->current]->evented = d_true;
-								environment->ladders[environment->current]->readed_events++;
-								environment->ladders[environment->current]->last_readed_kind =
-									environment->ladders[environment->current]->last_event.kind;
-								p_ladder_read_calibrate(environment->ladders[environment->current]);
-							}
-						}
-						memmove(buffer, (buffer+d_trb_event_size_normal), (offset-d_trb_event_size_normal));
-						offset -= d_trb_event_size_normal;
-					} else
-						offset = p_trb_event_align(buffer, offset);
-			}
+			stream = f_stream_new_file(NULL, string_path, "r", 0777);
+			p_ladder_load_calibrate(environment->ladders[environment->current], stream);
 			d_release(stream);
 			d_release(string_path);
 		}

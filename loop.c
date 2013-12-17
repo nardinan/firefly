@@ -133,22 +133,20 @@ int f_step_interface(struct s_environment *environment, time_t current_time) { d
 		gtk_label_set_markup(environment->interface->labels[e_interface_label_events], buffer);
 		if (strlen(environment->ladders[environment->current]->output) > 0) {
 			gtk_label_set_text(environment->interface->labels[e_interface_label_output], environment->ladders[environment->current]->output);
-			bytes = (environment->ladders[environment->current]->readed_events*environment->ladders[environment->current]->event_size);
-			while ((unity[index+1]) && (bytes > 1024.0)) {
-				bytes /= 1024.0;
-				index++;
-			}
-			snprintf(buffer, d_string_buffer_size, "%.02f %s", bytes, unity[index]);
-			gtk_label_set_text(environment->interface->labels[e_interface_label_size], buffer);
+			if (environment->ladders[environment->current]->command != e_ladder_command_calibration) {
+				bytes = (environment->ladders[environment->current]->readed_events*environment->ladders[environment->current]->event_size);
+				while ((unity[index+1]) && (bytes > 1024.0)) {
+					bytes /= 1024.0;
+					index++;
+				}
+				snprintf(buffer, d_string_buffer_size, "%.02f %s", bytes, unity[index]);
+				gtk_label_set_text(environment->interface->labels[e_interface_label_size], buffer);
+			} else
+				gtk_label_set_text(environment->interface->labels[e_interface_label_size], "-");
 		} else {
 			gtk_label_set_text(environment->interface->labels[e_interface_label_output], "read-only");
 			gtk_label_set_text(environment->interface->labels[e_interface_label_size], "-");
 		}
-	} else {
-		gtk_label_set_text(environment->interface->labels[e_interface_label_start_time], "?");
-		gtk_label_set_text(environment->interface->labels[e_interface_label_events], "?");
-		gtk_label_set_text(environment->interface->labels[e_interface_label_output], "?");
-		gtk_label_set_text(environment->interface->labels[e_interface_label_size], "?");
 	}
 	d_object_unlock(environment->ladders[environment->current]->lock);
 	if (environment->ladders[environment->current]->update_interface) {
@@ -172,15 +170,16 @@ int f_step_progress(struct s_environment *environment, time_t current_time) { d_
 		gtk_progress_bar_set_text(environment->interface->progress_bar, "IDLE");
 	else if (environment->ladders[environment->current]->command == e_ladder_command_data)
 		gtk_progress_bar_set_text(environment->interface->progress_bar, "DATA (manual)");
-	else {
+	else if (environment->ladders[environment->current]->command == e_ladder_command_calibration) {
+		gtk_progress_bar_set_text(environment->interface->progress_bar, "CALIBRATION");
+		fraction = ((float)environment->ladders[environment->current]->readed_events/
+				(float)environment->ladders[environment->current]->calibration.size);
+	} else {
+		gtk_progress_bar_set_text(environment->interface->progress_bar, "DATA (auto)");
 		total_time = environment->ladders[environment->current]->finish_time-environment->ladders[environment->current]->starting_time;
 		elpased_time = current_time-environment->ladders[environment->current]->starting_time;
 		fraction = ((float)elpased_time/(float)total_time);
-		if (environment->ladders[environment->current]->command == e_ladder_command_calibration)
-			gtk_progress_bar_set_text(environment->interface->progress_bar, "CALIBRATION (auto)");
-		else
-			gtk_progress_bar_set_text(environment->interface->progress_bar, "DATA (auto)");
 	}
-	gtk_progress_bar_set_fraction(environment->interface->progress_bar, fraction);
+	gtk_progress_bar_set_fraction(environment->interface->progress_bar, d_min(fraction, 1.0));
 	return 0;
 }

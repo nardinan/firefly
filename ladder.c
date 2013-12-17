@@ -97,20 +97,84 @@ void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 	d_object_unlock(ladder->lock);
 }
 
+void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
+	int channel, va, channel_on_va;
+	struct o_stream *stream;
+	struct o_string *name, *string = NULL;
+	d_object_lock(ladder->calibration.lock);
+	if ((ladder->calibration.calibrated) && (d_strlen(ladder->output) > 0)) {
+		name = d_string(d_string_buffer_size, "%s%s", ladder->output, d_common_ext_calibration);
+		if ((stream = f_stream_new_file(NULL, name, "w", 0777))) {
+			for (channel = 0; channel < d_trb_event_channels; channel++) {
+				va = channel/d_trb_event_channels_on_va;
+				channel_on_va = channel%d_trb_event_channels_on_va;
+				string = f_string_new(string, d_string_buffer_size, "%d, %d, %d, %03f, %03f, %03f, %d\n", channel, va, channel_on_va,
+						ladder->calibration.pedestal[channel], ladder->calibration.sigma_raw[channel],
+						ladder->calibration.sigma[channel],
+						((ladder->calibration.flags[channel]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?1:0);
+				stream->m_write_string(stream, string);
+			}
+			d_release(string);
+			d_release(stream);
+		}
+		d_release(name);
+	}
+	d_object_unlock(ladder->calibration.lock);
+}
+
+void p_ladder_load_calibrate(struct s_ladder *ladder, struct o_stream *stream) { d_FP;
+	int channel;
+	struct o_string *readed_buffer, *buffer = NULL, *singleton;
+	struct o_array *elements;
+	d_object_lock(ladder->calibration.lock);
+	while ((readed_buffer = stream->m_read_line(stream, buffer, d_string_buffer_size))) {
+		if ((elements = readed_buffer->m_split(readed_buffer, ','))) {
+			if (elements->filled == 7) {
+				channel = d_array_cast(atoi, elements, singleton, 0, d_trb_event_channels);
+				if ((channel >= 0) && (channel < d_trb_event_channels)) {
+					ladder->calibration.pedestal[channel] = d_array_cast(atof, elements, singleton, 3, 0.0);
+					ladder->calibration.sigma_raw[channel] = d_array_cast(atof, elements, singleton, 4, 0.0);
+					ladder->calibration.sigma[channel] = d_array_cast(atof, elements, singleton, 5, 0.0);
+					ladder->calibration.flags[channel] = 0;
+					if (d_array_cast(atoi, elements, singleton, 6, 0))
+						ladder->calibration.flags[channel] = e_trb_event_channel_damaged;
+				} else
+					d_log(e_log_level_medium, "wrong channel ID %d", channel);
+			}
+			d_release(elements);
+		}
+		buffer = readed_buffer;
+	}
+	d_release(buffer);
+	ladder->calibration.calibrated = d_true;
+	ladder->calibration.computed = d_true;
+	d_object_unlock(ladder->calibration.lock);
+}
+
 void p_ladder_analyze_finished(struct s_ladder *ladder) { d_FP;
 	time_t current_time = time(NULL);
+	int calibrated;
 	d_object_lock(ladder->lock);
-	if ((ladder->command != e_ladder_command_stop) && (ladder->command != e_ladder_command_data))
+	if (ladder->command == e_ladder_command_automatic) {
 		if (current_time >= ladder->finish_time) {
 			ladder->command = e_ladder_command_stop;
 			if ((ladder->deviced) && (ladder->device))
 				ladder->device->m_close_stream(ladder->device);
 			ladder->update_interface = d_true;
 		}
+	} else if (ladder->command == e_ladder_command_calibration) {
+		d_ladder_safe_assign(ladder->calibration.lock, calibrated, ladder->calibration.calibrated);
+		if (calibrated) {
+			ladder->command = e_ladder_command_stop;
+			if ((ladder->deviced) && (ladder->device))
+				p_ladder_save_calibrate(ladder);
+			ladder->update_interface = d_true;
+		}
+	}
 	d_object_unlock(ladder->lock);
 }
 
-void p_ladder_analyze_calibrate(struct s_ladder *ladder) { d_FP;
+void p_ladder_analyze_thread_calibrate(struct s_ladder *ladder) { d_FP;
 	float pedestal = 0, rms, total = 0, total_square = 0, fraction = (1.0/(float)d_trb_event_channels);
 	int index, next, size, computed;
 	d_ladder_safe_assign(ladder->calibration.lock, computed, ladder->calibration.computed);
@@ -144,7 +208,7 @@ void p_ladder_analyze_calibrate(struct s_ladder *ladder) { d_FP;
 	}
 }
 
-void p_ladder_analyze_data(struct s_ladder *ladder) { d_FP;
+void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
 	int index, next, size, computed, channel, va, startup, entries;
 	float value, value_no_pedestal, common_noise_on_va;
 	d_ladder_safe_assign(ladder->data.lock, computed, ladder->data.computed);
@@ -167,7 +231,8 @@ void p_ladder_analyze_data(struct s_ladder *ladder) { d_FP;
 					ladder->data.cn[va] = 0;
 					for (channel = startup, entries = 0, common_noise_on_va = 0; channel < (startup+d_trb_event_channels_on_va); channel++)
 						if ((ladder->calibration.flags[channel]&e_trb_event_channel_damaged) != e_trb_event_channel_damaged)
-							if (fabs(ladder->data.mean_no_pedestal[channel]) < (d_common_sigma_k*ladder->calibration.sigma[channel])) {
+							if (fabs(ladder->data.mean_no_pedestal[channel]) <
+									(d_common_sigma_k*ladder->calibration.sigma[channel])) {
 								common_noise_on_va += ladder->data.mean_no_pedestal[channel];
 								entries++;
 							}
@@ -176,7 +241,7 @@ void p_ladder_analyze_data(struct s_ladder *ladder) { d_FP;
 				}
 				ladder->data.cn_bucket_size = next;
 				for (index = 0; index < next; index++)
-					for (va = 0, startup =0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
+					for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
 						ladder->data.cn_bucket[index][va] = 0;
 						for (channel = startup, entries = 0, common_noise_on_va = 0; channel < (startup+d_trb_event_channels_on_va);
 								channel++)  {
@@ -200,8 +265,8 @@ void p_ladder_analyze_data(struct s_ladder *ladder) { d_FP;
 void *f_ladder_analyze_thread(void *v_ladder) { d_FP;
 	struct s_ladder *ladder = (struct s_ladder *)v_ladder;
 	while (usleep(d_common_timeout_analyze) == 0) {
-		p_ladder_analyze_calibrate(ladder);
-		p_ladder_analyze_data(ladder);
+		p_ladder_analyze_thread_calibrate(ladder);
+		p_ladder_analyze_thread_data(ladder);
 	}
 	pthread_exit(NULL);
 }
@@ -209,22 +274,20 @@ void *f_ladder_analyze_thread(void *v_ladder) { d_FP;
 void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
 	int index;
 	d_object_lock(ladder->calibration.lock);
-	if ((ladder->calibration.computed) || (ladder->last_readed_kind == 0xa3)) {
+	if (ladder->calibration.computed) {
 		f_interface_clean_calibration(charts);
-		if (ladder->last_readed_kind != 0xa3) {
-			for (index = 0; index < d_trb_event_channels; index++) {
-				f_chart_append_signal(charts[e_interface_alignment_pedestal], 0, index, ladder->calibration.pedestal[index]);
-				f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 1, index, ladder->calibration.sigma_raw[index]);
-				f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 0, index,
-						((ladder->calibration.flags[index]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?
-						charts[e_interface_alignment_sigma_raw]->axis_y.range[1]:0);
-				f_chart_append_signal(charts[e_interface_alignment_sigma], 0, index, ladder->calibration.sigma[index]);
-				f_chart_append_histogram(charts[e_interface_alignment_histogram_pedestal], 0, ladder->calibration.pedestal[index]);
-				f_chart_append_histogram(charts[e_interface_alignment_histogram_sigma_raw], 0, ladder->calibration.sigma_raw[index]);
-				f_chart_append_histogram(charts[e_interface_alignment_histogram_sigma], 0, ladder->calibration.sigma[index]);
-			}
-			charts[e_interface_alignment_sigma_raw]->histogram[0] = d_true;
+		for (index = 0; index < d_trb_event_channels; index++) {
+			f_chart_append_signal(charts[e_interface_alignment_pedestal], 0, index, ladder->calibration.pedestal[index]);
+			f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 1, index, ladder->calibration.sigma_raw[index]);
+			f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 0, index,
+					((ladder->calibration.flags[index]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?
+					charts[e_interface_alignment_sigma_raw]->axis_y.range[1]:0);
+			f_chart_append_signal(charts[e_interface_alignment_sigma], 0, index, ladder->calibration.sigma[index]);
+			f_chart_append_histogram(charts[e_interface_alignment_histogram_pedestal], 0, ladder->calibration.pedestal[index]);
+			f_chart_append_histogram(charts[e_interface_alignment_histogram_sigma_raw], 0, ladder->calibration.sigma_raw[index]);
+			f_chart_append_histogram(charts[e_interface_alignment_histogram_sigma], 0, ladder->calibration.sigma[index]);
 		}
+		charts[e_interface_alignment_sigma_raw]->histogram[0] = d_true;
 		ladder->calibration.next = 0;
 		ladder->calibration.computed = d_false;
 	}
@@ -314,17 +377,31 @@ int f_ladder_device(struct s_ladder *ladder, struct o_trb *device) { d_FP;
 void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
 	char *location, *kind;
 	size_t written = 0;
+	time_t current_time = time(NULL);
 	d_object_lock(ladder->lock);
 	ladder->readed_events = 0;
 	ladder->damaged_events = 0;
 	ladder->last_readed_events = 0;
 	ladder->last_readed_code = 0x00;
-	ladder->starting_time = time(NULL);
-	ladder->last_readed_time = time(NULL);
+	ladder->last_readed_time = current_time;
+	ladder->starting_time = current_time;
 	ladder->evented = d_false;
 	d_ladder_safe_assign(ladder->data.lock, ladder->data.next, 0);
 	d_ladder_safe_assign(ladder->data.lock, ladder->data.computed, d_false);
 	if (gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_action])) {
+		f_interface_clean_data(interface->charts);
+		f_interface_clean_common_noise(interface->charts);
+		if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_calibration])) {
+			f_interface_clean_calibration(interface->charts);
+			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.next, 0);
+			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.computed, d_false);
+			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.calibrated, d_false);
+			ladder->command = e_ladder_command_calibration;
+		} else if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_automatic])) {
+			ladder->finish_time = ladder->starting_time+gtk_spin_button_get_value_as_int(interface->spins[e_interface_spin_automatic_time]);
+			ladder->command = e_ladder_command_automatic;
+		} else
+			ladder->command = e_ladder_command_data;
 		if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_public])) {
 			if ((location = gtk_combo_box_get_active_text(interface->combos[e_interface_combo_location])))
 				ladder->output[written++] = location[0];
@@ -334,20 +411,6 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 					localtime(&(ladder->starting_time)));
 		} else
 			memset(ladder->output, 0, d_string_buffer_size);
-		f_interface_clean_data(interface->charts);
-		f_interface_clean_common_noise(interface->charts);
-		if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_calibration])) {
-			f_interface_clean_calibration(interface->charts);
-			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.next, 0);
-			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.computed, d_false);
-			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.calibrated, d_false);
-			ladder->command = e_ladder_command_calibration;
-			ladder->finish_time = ladder->starting_time+gtk_spin_button_get_value_as_int(interface->spins[e_interface_spin_calibration_time]);
-		} else if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_automatic])) {
-			ladder->command = e_ladder_command_automatic;
-			ladder->finish_time = ladder->starting_time+gtk_spin_button_get_value_as_int(interface->spins[e_interface_spin_automatic_time]);
-		} else
-			ladder->command = e_ladder_command_data;
 	} else
 		ladder->command = e_ladder_command_stop;
 	d_object_unlock(ladder->lock);
@@ -357,7 +420,7 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) 
 	unsigned char trigger = d_ladder_trigger_internal, dac = 0x00, channel = 0x00;
 	enum e_trb_mode mode = e_trb_mode_normal;
 	float hold_delay;
-	struct o_string *name, *extension;
+	struct o_string *name;
 	d_object_lock(ladder->lock);
 	if ((ladder->deviced) && (ladder->device))
 		if (ladder->command != e_ladder_command_stop) {
@@ -366,6 +429,7 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) 
 				trigger = d_ladder_trigger_internal;
 			else
 				trigger = d_ladder_trigger_external;
+			ladder->device->m_close_stream(ladder->device);
 			if (ladder->command != e_ladder_command_calibration) {
 				if (gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_normal]))
 					mode = e_trb_mode_normal;
@@ -377,19 +441,14 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) 
 					dac = (float)gtk_spin_button_get_value(interface->spins[e_interface_spin_dac]);
 					channel = gtk_spin_button_get_value(interface->spins[e_interface_spin_channel]);
 				}
-				extension = d_string_pure(d_common_ext_data);
-			} else
-				extension = d_string_pure(d_common_ext_calibration);
+				if (d_strlen(ladder->output) > 0) {
+					name = d_string(d_string_buffer_size, "%s%s", ladder->output, d_common_ext_data);
+					ladder->device->m_stream(ladder->device, NULL, name, "w", 0777);
+					d_release(name);
+				}
+			}
 			ladder->device->m_setup(ladder->device, trigger, hold_delay, mode, dac, channel, d_common_timeout);
 			ladder->event_size = ladder->device->event_size;
-			if (strlen(ladder->output) > 0) {
-				name = d_string_pure(ladder->output);
-				name->m_append(name, extension);
-				ladder->device->m_stream(ladder->device, NULL, name, "w", 0777);
-				d_release(name);
-			} else
-				ladder->device->m_close_stream(ladder->device);
-			d_release(extension);
 		}
 	d_object_unlock(ladder->lock);
 }

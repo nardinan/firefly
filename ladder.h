@@ -70,11 +70,13 @@ extern int p_ladder_read_integrity(struct o_trb_event *event, unsigned char *las
 extern void p_ladder_read_calibrate(struct s_ladder *ladder);
 extern void p_ladder_read_data(struct s_ladder *ladder);
 extern void f_ladder_read(struct s_ladder *ladder, time_t timeout);
+extern void p_ladder_save_calibrate(struct s_ladder *ladder);
+extern void p_ladder_load_calibrate(struct s_ladder *ladder, struct o_stream *stream);
 extern void p_ladder_analyze_finished(struct s_ladder *ladder);
-extern void p_ladder_analyze_calibrate(struct s_ladder *ladder); /* thread */
-extern void p_ladder_analyze_data(struct s_ladder *ladder); /* thread */
-extern void *f_ladder_analyze_thread(void *v_ladder); /* thread */
-extern void p_ladder_plot_calibrated(struct s_ladder *ladder, struct s_chart **charts);
+extern void p_ladder_analyze_thread_calibrate(struct s_ladder *ladder);
+extern void p_ladder_analyze_thread_data(struct s_ladder *ladder);
+extern void *f_ladder_analyze_thread(void *v_ladder);
+extern void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts);
 extern void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts);
 extern void f_ladder_plot_adc(struct s_ladder *ladder, struct s_chart **charts);
 extern void f_ladder_plot(struct s_ladder *ladder, struct s_chart **charts);

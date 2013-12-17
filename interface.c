@@ -37,7 +37,6 @@ const char *interface_labels[] = {
 	"v_channel",
 	"v_delay",
 	"v_automatic_time",
-	"v_calibration_time",
 	NULL
 }, *interface_bucket_spins[] = {
 	"v_data_bucket",
@@ -54,6 +53,9 @@ const char *interface_labels[] = {
 }, *interface_combos[] = {
 	"v_location",
 	"v_kind",
+	NULL
+}, *interface_entries[] = {
+	"v_ladder_name",
 	NULL
 }, *interface_toggles[] = {
 	"v_mode_normal",
@@ -150,7 +152,6 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	gtk_spin_button_set_value(result->spins[e_interface_spin_channel], 0.0);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_delay], 6.6);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_automatic_time], 60.0);
-	gtk_spin_button_set_value(result->spins[e_interface_spin_calibration_time], 60.0);
 	gtk_spin_button_set_value(result->bucket_spins[e_interface_bucket_spin_data], d_common_data_events_default);
 	gtk_spin_button_set_value(result->bucket_spins[e_interface_bucket_spin_calibration], d_common_calibration_events_default);
 	for (index = 0; interface_scale_spins[index]; index++)
@@ -160,6 +161,8 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 		gtk_combo_box_set_active(GTK_COMBO_BOX(result->combos[index]), 0);
 	}
 	d_assert(result->combo_charts = GTK_COMBO_BOX(gtk_builder_get_object(main_interface, "v_charts_list")));
+	for (index = 0; interface_entries[index]; index++)
+		d_assert(result->entries[index] = GTK_ENTRY(gtk_builder_get_object(main_interface, interface_entries[index])));
 	for (index = 0; interface_toggles[index]; index++)
 		d_assert(result->toggles[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(main_interface, interface_toggles[index])));
 	for (index = 0; interface_files[index]; index++)
@@ -225,7 +228,7 @@ void f_interface_update_configuration(struct s_interface *interface, int deviced
 		else
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_automatic_time]), FALSE);
 		if ((gtk_toggle_button_get_active(interface->switches[e_interface_switch_calibration]))) {
-			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_calibration_time]), TRUE);
+			gtk_toggle_button_set_active(interface->switches[e_interface_switch_public], TRUE); /* write data on calibration mode */
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->files[e_interface_file_calibration]), FALSE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[e_interface_toggle_normal]), FALSE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[e_interface_toggle_calibration]), FALSE);
@@ -235,7 +238,6 @@ void f_interface_update_configuration(struct s_interface *interface, int deviced
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_automatic_time]), FALSE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->switches[e_interface_switch_automatic]), FALSE);
 		} else {
-			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_calibration_time]), FALSE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->files[e_interface_file_calibration]), TRUE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[e_interface_toggle_normal]), TRUE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[e_interface_toggle_calibration]), TRUE);
@@ -253,6 +255,8 @@ void f_interface_lock(struct s_interface *interface, int lock) { d_FP;
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[index]), (!lock));
 	for (index = 0; index < e_interface_combo_NULL; index++)
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->combos[index]), (!lock));
+	for (index = 0; index < e_interface_entry_NULL; index++)
+		gtk_widget_set_sensitive(GTK_WIDGET(interface->entries[index]), (!lock));
 	for (index = 0; index < e_interface_toggle_action; index++)
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[index]), (!lock));
 	for (index = 0; index < e_interface_file_NULL; index++)
