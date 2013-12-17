@@ -104,6 +104,7 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 	if ((ladder->calibration.calibrated) && (d_strlen(ladder->output) > 0)) {
 		name = d_string(d_string_buffer_size, "%s%s", ladder->output, d_common_ext_calibration);
 		if ((stream = f_stream_new_file(NULL, name, "w", 0777))) {
+			d_object_lock(ladder->calibration.write_lock);
 			for (channel = 0; channel < d_trb_event_channels; channel++) {
 				va = channel/d_trb_event_channels_on_va;
 				channel_on_va = channel%d_trb_event_channels_on_va;
@@ -113,6 +114,7 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 						((ladder->calibration.flags[channel]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?1:0);
 				stream->m_write_string(stream, string);
 			}
+			d_object_unlock(ladder->calibration.write_lock);
 			d_release(string);
 			d_release(stream);
 		}
