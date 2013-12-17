@@ -26,6 +26,10 @@ loop.o: loop.c loop.h environment.h
 firefly.o: firefly.c loop.h
 	$(cc) $(cflags) firefly.c
 
+cleandat:
+	rm -f *.dat
+	rm -f *.cal
+
 clean:
 	rm -f *.o
 	rm -f $(exec)

@@ -44,7 +44,7 @@ typedef struct s_ladder {
 	enum e_ladder_commands command;
 	time_t starting_time, finish_time;
 	long long last_readed_time;
-	unsigned int last_readed_events, readed_events, damaged_events, event_size;
+	unsigned int last_readed_events, readed_events, damaged_events, event_size, listening_channel;
 	unsigned char last_readed_kind, last_readed_code;
 	int evented, deviced, update_interface;
 	float hertz;
@@ -58,7 +58,7 @@ typedef struct s_ladder {
 	} calibration;
 	struct {
 		struct o_object *lock;
-		unsigned int next, size, cn_bucket_size;
+		unsigned int next, size, cn_bucket_size, channel;
 		struct o_trb_event events[d_common_data_events];
 		float mean[d_trb_event_channels], mean_no_pedestal[d_trb_event_channels], cn[d_trb_event_vas],
 		      cn_bucket[d_common_data_events][d_trb_event_vas];

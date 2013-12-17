@@ -87,12 +87,11 @@ void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 					ladder->evented = d_true;
 					ladder->readed_events++;
 					ladder->last_readed_kind = ladder->last_event.kind;
-					if (ladder->last_readed_kind != 0xa3) {
-						if (ladder->command == e_ladder_command_calibration)
+					if (ladder->command == e_ladder_command_calibration) {
+						if (ladder->last_readed_kind != 0xa3)
 							p_ladder_read_calibrate(ladder);
-						else
-							p_ladder_read_data(ladder);
-					}
+					} else
+						p_ladder_read_data(ladder);
 				}
 	d_object_unlock(ladder->lock);
 }
@@ -209,7 +208,7 @@ void p_ladder_analyze_thread_calibrate(struct s_ladder *ladder) { d_FP;
 }
 
 void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
-	int index, next, size, computed, channel, va, startup, entries;
+	int index, next, size, computed, channel, channel_on_event, va, startup, entries;
 	float value, value_no_pedestal, common_noise_on_va;
 	d_ladder_safe_assign(ladder->data.lock, computed, ladder->data.computed);
 	if (!computed) {
@@ -219,41 +218,66 @@ void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
 			d_object_lock(ladder->calibration.lock);
 			if (ladder->calibration.calibrated) {
 				d_object_lock(ladder->calibration.write_lock);
-				for (channel = 0; channel < d_trb_event_channels; channel++) {
-					for (index = 0, value = 0, value_no_pedestal = 0; index < next; index++) {
-						value += ladder->data.events[index].values[channel];
-						value_no_pedestal += (ladder->data.events[index].values[channel]-ladder->calibration.pedestal[channel]);
-					}
-					ladder->data.mean[channel] = value/(float)size;
-					ladder->data.mean_no_pedestal[channel] = value_no_pedestal/(float)size;
-				}
-				for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
-					ladder->data.cn[va] = 0;
-					for (channel = startup, entries = 0, common_noise_on_va = 0; channel < (startup+d_trb_event_channels_on_va); channel++)
-						if ((ladder->calibration.flags[channel]&e_trb_event_channel_damaged) != e_trb_event_channel_damaged)
-							if (fabs(ladder->data.mean_no_pedestal[channel]) <
-									(d_common_sigma_k*ladder->calibration.sigma[channel])) {
-								common_noise_on_va += ladder->data.mean_no_pedestal[channel];
-								entries++;
-							}
-					if (entries > 0)
-						ladder->data.cn[va] = (common_noise_on_va/(float)entries);
-				}
-				ladder->data.cn_bucket_size = next;
-				for (index = 0; index < next; index++)
-					for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
-						ladder->data.cn_bucket[index][va] = 0;
-						for (channel = startup, entries = 0, common_noise_on_va = 0; channel < (startup+d_trb_event_channels_on_va);
-								channel++)  {
-							value = ladder->data.events[index].values[channel]-ladder->calibration.pedestal[channel];
-							if (fabs(value) < (d_common_sigma_k*ladder->calibration.sigma[channel])) {
-								common_noise_on_va += value;
-								entries++;
-							}
+				if (ladder->last_readed_kind != 0xa3) {
+					for (channel = 0; channel < d_trb_event_channels; channel++) {
+						for (index = 0, value = 0, value_no_pedestal = 0; index < next; index++) {
+							value += ladder->data.events[index].values[channel];
+							value_no_pedestal += (ladder->data.events[index].values[channel]-ladder->calibration.pedestal[channel]);
 						}
-						if (entries > 0)
-							ladder->data.cn_bucket[index][va] = (common_noise_on_va/(float)entries);
+						ladder->data.mean[channel] = value/(float)next;
+						ladder->data.mean_no_pedestal[channel] = value_no_pedestal/(float)next;
 					}
+					for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
+						ladder->data.cn[va] = 0;
+						for (channel = startup, entries = 0, common_noise_on_va = 0; channel < (startup+d_trb_event_channels_on_va);
+								channel++)
+							if ((ladder->calibration.flags[channel]&e_trb_event_channel_damaged) != e_trb_event_channel_damaged)
+								if (fabs(ladder->data.mean_no_pedestal[channel]) <
+										(d_common_sigma_k*ladder->calibration.sigma[channel])) {
+									common_noise_on_va += ladder->data.mean_no_pedestal[channel];
+									entries++;
+								}
+						if (entries > 0)
+							ladder->data.cn[va] = (common_noise_on_va/(float)entries);
+					}
+					ladder->data.cn_bucket_size = next;
+					for (index = 0; index < next; index++)
+						for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
+							ladder->data.cn_bucket[index][va] = 0;
+							for (channel = startup, entries = 0, common_noise_on_va = 0;
+									channel < (startup+d_trb_event_channels_on_va); channel++)  {
+								value = ladder->data.events[index].values[channel]-ladder->calibration.pedestal[channel];
+								if (fabs(value) < (d_common_sigma_k*ladder->calibration.sigma[channel])) {
+									common_noise_on_va += value;
+									entries++;
+								}
+							}
+							if (entries > 0)
+								ladder->data.cn_bucket[index][va] = (common_noise_on_va/(float)entries);
+						}
+				} else {
+					memset(ladder->data.mean, 0, sizeof(float)*d_trb_event_channels);
+					memset(ladder->data.mean_no_pedestal, 0, sizeof(float)*d_trb_event_channels);
+					for (channel = 0, channel_on_event = ladder->listening_channel; channel < d_trb_event_samples_half; channel++) {
+						for (index = 0, value = 0, value_no_pedestal = 0; index < next; index++) {
+							value += ladder->data.events[index].values[channel];
+							value_no_pedestal += (ladder->data.events[index].values[channel]-
+									ladder->calibration.pedestal[channel_on_event]);
+						}
+						ladder->data.mean[channel] = value/(float)next;
+						ladder->data.mean_no_pedestal[channel] = value_no_pedestal/(float)next;
+					}
+					for (channel = d_trb_event_channels_half, channel_on_event = ladder->listening_channel+d_trb_event_channels_half;
+							channel < (d_trb_event_samples_half+d_trb_event_channels_half); channel++) {
+						for (index = 0, value = 0, value_no_pedestal = 0; index < next; index++) {
+							value += ladder->data.events[index].values[channel];
+							value_no_pedestal += (ladder->data.events[index].values[channel]-
+									ladder->calibration.pedestal[channel_on_event]);
+						}
+						ladder->data.mean[channel] = value/(float)next;
+						ladder->data.mean_no_pedestal[channel] = value_no_pedestal/(float)next;
+					}
+				}
 				d_object_unlock(ladder->calibration.write_lock);
 				d_ladder_safe_assign(ladder->data.lock, ladder->data.computed, d_true);
 			}
@@ -297,7 +321,7 @@ void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) {
 void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
 	int index, va;
 	d_object_lock(ladder->data.lock);
-	if ((ladder->data.computed) || (ladder->last_readed_kind == 0xa3)) {
+	if (ladder->data.computed) {
 		f_interface_clean_data(charts);
 		f_interface_clean_common_noise(charts);
 		if (ladder->last_readed_kind != 0xa3) {
@@ -321,7 +345,9 @@ void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP
 				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_5], 0, ladder->data.cn_bucket[index][4]);
 				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_6], 0, ladder->data.cn_bucket[index][5]);
 			}
-		}
+		} else
+			for (index = 0; index < d_trb_event_channels; index++)
+				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 1, index, ladder->data.mean_no_pedestal[index]);
 		ladder->data.next = 0;
 		ladder->data.computed = d_false;
 	}
@@ -440,6 +466,7 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) 
 					mode = e_trb_mode_calibration_debug_digital;
 					dac = (float)gtk_spin_button_get_value(interface->spins[e_interface_spin_dac]);
 					channel = gtk_spin_button_get_value(interface->spins[e_interface_spin_channel]);
+					ladder->listening_channel = channel;
 				}
 				if (d_strlen(ladder->output) > 0) {
 					name = d_string(d_string_buffer_size, "%s%s", ladder->output, d_common_ext_data);
