@@ -126,11 +126,13 @@ void f_chart_append_histogram(struct s_chart *chart, unsigned int code, float va
 }
 
 void f_chart_append_envelope(struct s_chart *chart, unsigned int code, float x, float max, float min) {
+	chart->kind[code] = e_chart_kind_envelope;
 	if (chart->head[code] < d_chart_bucket) {
 		chart->values[code][chart->head[code]].x = x;
 		chart->values[code][chart->head[code]].y = max;
 		chart->values[code][chart->head[code]].w = min;
 		chart->values[code][chart->head[code]].normalized.done = d_false;
+		chart->head[code]++;
 	} else
 		d_log(d_log_level_default, "[WARNING] - d_chart_bucket too small");
 }
@@ -398,6 +400,9 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 									chart->values[code][index].normalized.w);
 						} else if (!first)
 							cairo_line_to(chart->cairo_brush, chart->values[code][index].normalized.x,
+									chart->values[code][index].normalized.y);
+						else
+							cairo_move_to(chart->cairo_brush, chart->values[code][index].normalized.x,
 									chart->values[code][index].normalized.y);
 						cairo_arc(chart->cairo_brush, chart->values[code][index].normalized.x, chart->values[code][index].normalized.y,
 								chart->data.dot_size[code], 0, arc_size);

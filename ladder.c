@@ -209,7 +209,7 @@ void p_ladder_analyze_thread_calibrate(struct s_ladder *ladder) { d_FP;
 }
 
 void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
-	int index, next, size, computed, channel, channel_on_event, va, startup, entries;
+	int index, next, size, computed, channel, channel_on_event, va, startup, entries, not_first[d_trb_event_channels] = {d_false};
 	float value, value_no_pedestal, common_noise_on_va;
 	d_ladder_safe_assign(ladder->data.lock, computed, ladder->data.computed);
 	if (!computed) {
@@ -242,8 +242,6 @@ void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
 							ladder->data.cn[va] = (common_noise_on_va/(float)entries);
 					}
 					memset(ladder->data.occupancy, 0, sizeof(float)*d_trb_event_channels);
-					memset(ladder->data.signal_bucket_maximum, 0, sizeof(float)*d_trb_event_channels);
-					memset(ladder->data.signal_bucket_minimum, 0, sizeof(float)*d_trb_event_channels);
 					ladder->data.cn_bucket_size = next;
 					for (index = 0; index < next; index++)
 						for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
@@ -261,10 +259,18 @@ void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
 							for (channel = startup; channel < (startup+d_trb_event_channels_on_va); channel++) {
 								ladder->data.signal_bucket[index][channel] = (ladder->data.events[index].values[channel]-
 										ladder->calibration.pedestal[channel]-ladder->data.cn_bucket[index][va]);
-								if (ladder->data.signal_bucket[index][channel] > ladder->data.signal_bucket_maximum[channel])
+								if (!not_first[channel]) {
 									ladder->data.signal_bucket_maximum[channel] =
 										ladder->data.signal_bucket[index][channel];
-								if (ladder->data.signal_bucket[index][channel] < ladder->data.signal_bucket_minimum[channel])
+									ladder->data.signal_bucket_minimum[channel] =
+										ladder->data.signal_bucket[index][channel];
+									not_first[channel] = d_true;
+								} else if (ladder->data.signal_bucket[index][channel] >
+										ladder->data.signal_bucket_maximum[channel])
+									ladder->data.signal_bucket_maximum[channel] =
+										ladder->data.signal_bucket[index][channel];
+								else if (ladder->data.signal_bucket[index][channel] <
+										ladder->data.signal_bucket_minimum[channel])
 									ladder->data.signal_bucket_minimum[channel] =
 										ladder->data.signal_bucket[index][channel];
 								ladder->data.signal_over_noise_bucket[index][channel] =
