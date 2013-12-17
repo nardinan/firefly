@@ -71,6 +71,9 @@ const char *interface_labels[] = {
 	"v_data_adc_pedestal_alignment",
 	"v_data_adc_pedestal_cn_alignment",
 	"v_data_signal_alignment",
+	"v_data_occupancy_alignment",
+	"v_data_histogram_signal_alignment",
+	"v_data_envelope_signal_alignment",
 	"v_calibration_pedestal_alignment",
 	"v_calibration_sigma_raw_alignment",
 	"v_calibration_sigma_alignment",
@@ -89,6 +92,9 @@ const char *interface_labels[] = {
 	"styles/adc_pedestal.keys",
 	"styles/adc_pedestal_cn.keys",
 	"styles/signal.keys",
+	"styles/occupancy.keys",
+	"styles/histogram_signal.keys",
+	"styles/envelope_signal.keys",
 	"styles/pedestal.keys",
 	"styles/sigma_raw.keys",
 	"styles/sigma.keys",
@@ -106,6 +112,9 @@ const char *interface_labels[] = {
 	"ADC_pedestal",
 	"ADC_pedestal_CN",
 	"signal",
+	"occupancy",
+	"histogram_signal",
+	"envelope_signal",
 	"pedestal",
 	"sigma_raw",
 	"sigma",
@@ -295,6 +304,9 @@ void f_interface_clean_data(struct s_chart **charts) {
 	f_chart_flush(charts[e_interface_alignment_adc_pedestal]);
 	f_chart_flush(charts[e_interface_alignment_adc_pedestal_cn]);
 	f_chart_flush(charts[e_interface_alignment_signal]);
+	f_chart_flush(charts[e_interface_alignment_occupancy]);
+	f_chart_flush(charts[e_interface_alignment_histogram_signal]);
+	f_chart_flush(charts[e_interface_alignment_envelope_signal]);
 }
 
 void f_interface_clean_common_noise(struct s_chart **charts) {

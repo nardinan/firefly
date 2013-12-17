@@ -240,6 +240,7 @@ void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
 						if (entries > 0)
 							ladder->data.cn[va] = (common_noise_on_va/(float)entries);
 					}
+					memset(ladder->data.occupancy, 0, sizeof(float)*d_trb_event_channels);
 					ladder->data.cn_bucket_size = next;
 					for (index = 0; index < next; index++)
 						for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
@@ -254,7 +255,16 @@ void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
 							}
 							if (entries > 0)
 								ladder->data.cn_bucket[index][va] = (common_noise_on_va/(float)entries);
+							for (channel = startup; channel < (startup+d_trb_event_channels_on_va); channel++) {
+								ladder->data.signal_over_noise_bucket[index][channel] =
+									(ladder->data.events[index].values[channel]-ladder->calibration.pedestal[channel]-
+									 ladder->data.cn_bucket[index][va])/ladder->calibration.sigma[channel];
+								if (ladder->data.signal_over_noise_bucket[index][channel] > d_common_occupancy_k)
+									ladder->data.occupancy[channel]++;
+							}
 						}
+					for (channel = 0; channel < d_trb_event_channels; channel++)
+						ladder->data.occupancy[channel] /= (float)next;
 				} else {
 					memset(ladder->data.mean, 0, sizeof(float)*d_trb_event_channels);
 					memset(ladder->data.mean_no_pedestal, 0, sizeof(float)*d_trb_event_channels);
@@ -320,6 +330,7 @@ void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) {
 
 void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
 	int index, va;
+	float value;
 	d_object_lock(ladder->data.lock);
 	if (ladder->data.computed) {
 		f_interface_clean_data(charts);
@@ -331,10 +342,11 @@ void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP
 				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 0, index,
 						((ladder->calibration.flags[index]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?
 						charts[e_interface_alignment_adc_pedestal]->axis_y.range[1]:0);
-				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal_cn], 0, index,
-						ladder->data.mean_no_pedestal[index]-ladder->data.cn[va]);
-				f_chart_append_signal(charts[e_interface_alignment_signal], 0, index,
-						ladder->data.mean_no_pedestal[index]-ladder->data.cn[va]);
+				value = ladder->data.mean_no_pedestal[index]-ladder->data.cn[va];
+				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal_cn], 0, index, value);
+				f_chart_append_signal(charts[e_interface_alignment_signal], 0, index, value);
+				f_chart_append_histogram(charts[e_interface_alignment_histogram_signal], 0, value);
+				f_chart_append_signal(charts[e_interface_alignment_occupancy], 0, index, ladder->data.occupancy[index]);
 			}
 			charts[e_interface_alignment_adc_pedestal]->histogram[0] = d_true;
 			for (index = 0; index < ladder->data.cn_bucket_size; index++) {
