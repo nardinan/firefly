@@ -214,10 +214,10 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 
 void f_interface_update_configuration(struct s_interface *interface, int deviced) { d_FP;
 	if (deviced) {
-		gtk_label_set_markup(interface->connected_label, "<span font_weight='ultralight'>miniTRB is <span foreground='#006600'>online</span></span>");
+		gtk_label_set_markup(interface->connected_label, "<span background='#00FF00'>miniTRB is <b>online</b></span>");
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[e_interface_toggle_action]), TRUE);
 	} else {
-		gtk_label_set_markup(interface->connected_label, "<span font_weight='ultralight'>miniTRB is <span foreground='#660000'>offline</span></span>");
+		gtk_label_set_markup(interface->connected_label, "<span background='#FF0000'>miniTRB is <b>offline</b></span>");
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(interface->toggles[e_interface_toggle_action]), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[e_interface_toggle_action]), FALSE);
 	}

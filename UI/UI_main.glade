@@ -12,9 +12,18 @@
             <property name="visible">True</property>
             <property name="orientation">vertical</property>
             <child>
-              <object class="GtkLabel" id="v_connected_device_label">
+              <object class="GtkHBox" id="v_connected_device_grid">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">?</property>
+                <property name="border_width">3</property>
+                <child>
+                  <object class="GtkLabel" id="v_connected_device_label">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">?</property>
+                  </object>
+                  <packing>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="position">0</property>
