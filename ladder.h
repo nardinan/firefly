@@ -20,7 +20,6 @@
 #include "interface.h"
 #define d_ladder_trigger_internal 0x22
 #define d_ladder_trigger_external 0x11
-#define d_ladder_rms_constant 3.0
 #define d_ladder_safe_assign(sep,res,val)\
 do{\
 	d_object_lock(sep);\

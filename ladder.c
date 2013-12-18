@@ -195,8 +195,8 @@ void p_ladder_analyze_thread_calibrate(struct s_ladder *ladder) { d_FP;
 			rms = sqrt(fabs((total_square-(total*total))));
 			for (index = 0; index < d_trb_event_channels; index++) {
 				ladder->calibration.flags[index] = 0;
-				if ((ladder->calibration.sigma_raw[index] > pedestal+(d_ladder_rms_constant*rms)) ||
-						(ladder->calibration.sigma_raw[index] < pedestal-(d_ladder_rms_constant*rms)))
+				if ((ladder->calibration.sigma_raw[index] > pedestal+(d_common_rms_k*rms)) ||
+						(ladder->calibration.sigma_raw[index] < pedestal-(d_common_rms_k*rms)))
 					ladder->calibration.flags[index] |= e_trb_event_channel_damaged;
 			}
 			d_assert(p_trb_event_sigma(ladder->calibration.events, next, d_common_sigma_k, ladder->calibration.sigma_raw,
@@ -221,9 +221,11 @@ void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
 				d_object_lock(ladder->calibration.write_lock);
 				if (ladder->last_readed_kind != 0xa3) {
 					for (channel = 0; channel < d_trb_event_channels; channel++) {
+						ladder->data.occupancy[channel] = 0;
 						for (index = 0, value = 0, value_no_pedestal = 0; index < next; index++) {
 							value += ladder->data.events[index].values[channel];
-							value_no_pedestal += (ladder->data.events[index].values[channel]-ladder->calibration.pedestal[channel]);
+							value_no_pedestal += (ladder->data.events[index].values[channel]-
+									ladder->calibration.pedestal[channel]);
 						}
 						ladder->data.mean[channel] = value/(float)next;
 						ladder->data.mean_no_pedestal[channel] = value_no_pedestal/(float)next;
@@ -241,7 +243,6 @@ void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
 						if (entries > 0)
 							ladder->data.cn[va] = (common_noise_on_va/(float)entries);
 					}
-					memset(ladder->data.occupancy, 0, sizeof(float)*d_trb_event_channels);
 					ladder->data.cn_bucket_size = next;
 					for (index = 0; index < next; index++)
 						for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
