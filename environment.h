@@ -43,6 +43,7 @@ extern struct s_environment *f_environment_new(struct s_environment *supplied, c
 extern int p_callback_incoming_device(struct o_trb *device, void *v_environment);
 extern void p_callback_exit(GtkWidget *widget, struct s_environment *environment);
 extern int p_callback_start(GtkWidget *widget, GdkEvent *event, struct s_environment *environment);
+extern int p_callback_space(GtkWidget *widget, GdkEvent *event, struct s_environment *environment);
 extern void p_callback_refresh(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_action(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_calibration(GtkWidget *widget, struct s_environment *environment);

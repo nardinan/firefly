@@ -131,6 +131,7 @@ extern void f_interface_lock(struct s_interface *interface, int lock);
 extern void f_interface_show(struct s_interface *interface, enum e_interface_alignments chart);
 extern void f_interface_clean_calibration(struct s_chart **charts);
 extern void f_interface_clean_data(struct s_chart **charts);
+extern void f_interface_clean_data_histogram(struct s_chart **charts);
 extern void f_interface_clean_common_noise(struct s_chart **charts);
 #endif
 

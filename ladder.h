@@ -45,7 +45,7 @@ typedef struct s_ladder {
 	long long last_readed_time;
 	unsigned int last_readed_events, readed_events, damaged_events, event_size, listening_channel;
 	unsigned char last_readed_kind, last_readed_code;
-	int evented, deviced, update_interface;
+	int evented, deviced, paused, update_interface;
 	float hertz;
 	pthread_t analyze_thread;
 	struct {
@@ -57,9 +57,9 @@ typedef struct s_ladder {
 	} calibration;
 	struct {
 		struct o_object *lock;
-		unsigned int next, size, cn_bucket_size, channel;
+		unsigned int next, size, buckets_size, channel, occupancy[d_trb_event_channels], total_events;
 		struct o_trb_event events[d_common_data_events];
-		float mean[d_trb_event_channels], mean_no_pedestal[d_trb_event_channels], cn[d_trb_event_vas], occupancy[d_trb_event_channels],
+		float mean[d_trb_event_channels], mean_no_pedestal[d_trb_event_channels], cn[d_trb_event_vas],
 		      cn_bucket[d_common_data_events][d_trb_event_vas], signal_bucket[d_common_data_events][d_trb_event_channels],
 		      signal_bucket_maximum[d_trb_event_channels], signal_bucket_minimum[d_trb_event_channels],
 		      signal_over_noise_bucket[d_common_data_events][d_trb_event_channels];
@@ -74,6 +74,7 @@ extern void f_ladder_read(struct s_ladder *ladder, time_t timeout);
 extern void p_ladder_save_calibrate(struct s_ladder *ladder);
 extern void p_ladder_load_calibrate(struct s_ladder *ladder, struct o_stream *stream);
 extern void p_ladder_analyze_finished(struct s_ladder *ladder);
+extern void p_ladder_analyze_thread_calibrate_channels(struct s_ladder *ladder, float *values, size_t size);
 extern void p_ladder_analyze_thread_calibrate(struct s_ladder *ladder);
 extern void p_ladder_analyze_thread_data(struct s_ladder *ladder);
 extern void *f_ladder_analyze_thread(void *v_ladder);

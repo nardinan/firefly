@@ -174,33 +174,37 @@ void p_ladder_analyze_finished(struct s_ladder *ladder) { d_FP;
 	d_object_unlock(ladder->lock);
 }
 
+void p_ladder_analyze_thread_calibrate_channels(struct s_ladder *ladder, float *values, size_t size) { d_FP;
+	float total = 0, total_square = 0, pedestal, rms, fraction = (1.0/(float)size);
+	int index;
+	for (index = 0; index < size; index++) {
+		total += values[index];
+		total_square += values[index]*values[index];
+	}
+	pedestal = total/(float)size;
+	total *= fraction;
+	total_square *= fraction;
+	rms = sqrt(fabs((total_square-(total*total))));
+	for (index = 0; index < size; index++)
+		if ((values[index] > pedestal+(d_common_rms_k*rms)) || (values[index] < pedestal-(d_common_rms_k*rms)))
+			ladder->calibration.flags[index] |= e_trb_event_channel_damaged;
+}
+
 void p_ladder_analyze_thread_calibrate(struct s_ladder *ladder) { d_FP;
-	float pedestal = 0, rms, total = 0, total_square = 0, fraction = (1.0/(float)d_trb_event_channels);
-	int index, next, size, computed;
+	int next, size, computed;
 	d_ladder_safe_assign(ladder->calibration.lock, computed, ladder->calibration.computed);
 	if (!computed) {
 		d_ladder_safe_assign(ladder->calibration.lock, next, ladder->calibration.next);
 		d_ladder_safe_assign(ladder->calibration.lock, size, ladder->calibration.size);
 		if (next >= size) {
+			memset(ladder->calibration.flags, 0, (sizeof(int)*d_trb_event_channels));
 			d_object_lock(ladder->calibration.write_lock);
 			d_assert(p_trb_event_pedestal(ladder->calibration.events, next, ladder->calibration.pedestal));
 			d_assert(p_trb_event_sigma_raw(ladder->calibration.events, next, ladder->calibration.sigma_raw));
-			for (index = 0; index < d_trb_event_channels; index++) {
-				total += ladder->calibration.sigma_raw[index];
-				total_square += ladder->calibration.sigma_raw[index]*ladder->calibration.sigma_raw[index];
-			}
-			pedestal = total/(float)d_trb_event_channels;
-			total *= fraction;
-			total_square *= fraction;
-			rms = sqrt(fabs((total_square-(total*total))));
-			for (index = 0; index < d_trb_event_channels; index++) {
-				ladder->calibration.flags[index] = 0;
-				if ((ladder->calibration.sigma_raw[index] > pedestal+(d_common_rms_k*rms)) ||
-						(ladder->calibration.sigma_raw[index] < pedestal-(d_common_rms_k*rms)))
-					ladder->calibration.flags[index] |= e_trb_event_channel_damaged;
-			}
+			p_ladder_analyze_thread_calibrate_channels(ladder, ladder->calibration.sigma_raw, d_trb_event_channels);
 			d_assert(p_trb_event_sigma(ladder->calibration.events, next, d_common_sigma_k, ladder->calibration.sigma_raw,
 						ladder->calibration.pedestal, ladder->calibration.flags, ladder->calibration.sigma));
+			p_ladder_analyze_thread_calibrate_channels(ladder, ladder->calibration.sigma, d_trb_event_channels);
 			d_object_unlock(ladder->calibration.write_lock);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.computed, d_true);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.calibrated, d_true);
@@ -221,7 +225,6 @@ void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
 				d_object_lock(ladder->calibration.write_lock);
 				if (ladder->last_readed_kind != 0xa3) {
 					for (channel = 0; channel < d_trb_event_channels; channel++) {
-						ladder->data.occupancy[channel] = 0;
 						for (index = 0, value = 0, value_no_pedestal = 0; index < next; index++) {
 							value += ladder->data.events[index].values[channel];
 							value_no_pedestal += (ladder->data.events[index].values[channel]-
@@ -243,7 +246,7 @@ void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
 						if (entries > 0)
 							ladder->data.cn[va] = (common_noise_on_va/(float)entries);
 					}
-					ladder->data.cn_bucket_size = next;
+					ladder->data.buckets_size = next;
 					for (index = 0; index < next; index++)
 						for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
 							ladder->data.cn_bucket[index][va] = 0;
@@ -280,8 +283,7 @@ void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
 									ladder->data.occupancy[channel]++;
 							}
 						}
-					for (channel = 0; channel < d_trb_event_channels; channel++)
-						ladder->data.occupancy[channel] /= (float)next;
+					ladder->data.total_events += next;
 				} else {
 					memset(ladder->data.mean, 0, sizeof(float)*d_trb_event_channels);
 					memset(ladder->data.mean_no_pedestal, 0, sizeof(float)*d_trb_event_channels);
@@ -326,19 +328,21 @@ void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) {
 	int index;
 	d_object_lock(ladder->calibration.lock);
 	if (ladder->calibration.computed) {
-		f_interface_clean_calibration(charts);
-		for (index = 0; index < d_trb_event_channels; index++) {
-			f_chart_append_signal(charts[e_interface_alignment_pedestal], 0, index, ladder->calibration.pedestal[index]);
-			f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 1, index, ladder->calibration.sigma_raw[index]);
-			f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 0, index,
-					((ladder->calibration.flags[index]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?
-					charts[e_interface_alignment_sigma_raw]->axis_y.range[1]:0);
-			f_chart_append_signal(charts[e_interface_alignment_sigma], 0, index, ladder->calibration.sigma[index]);
-			f_chart_append_histogram(charts[e_interface_alignment_histogram_pedestal], 0, ladder->calibration.pedestal[index]);
-			f_chart_append_histogram(charts[e_interface_alignment_histogram_sigma_raw], 0, ladder->calibration.sigma_raw[index]);
-			f_chart_append_histogram(charts[e_interface_alignment_histogram_sigma], 0, ladder->calibration.sigma[index]);
+		if (!ladder->paused) {
+			f_interface_clean_calibration(charts);
+			for (index = 0; index < d_trb_event_channels; index++) {
+				f_chart_append_signal(charts[e_interface_alignment_pedestal], 0, index, ladder->calibration.pedestal[index]);
+				f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 1, index, ladder->calibration.sigma_raw[index]);
+				f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 0, index,
+						((ladder->calibration.flags[index]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?
+						charts[e_interface_alignment_sigma_raw]->axis_y.range[1]:0);
+				f_chart_append_signal(charts[e_interface_alignment_sigma], 0, index, ladder->calibration.sigma[index]);
+				f_chart_append_histogram(charts[e_interface_alignment_histogram_pedestal], 0, ladder->calibration.pedestal[index]);
+				f_chart_append_histogram(charts[e_interface_alignment_histogram_sigma_raw], 0, ladder->calibration.sigma_raw[index]);
+				f_chart_append_histogram(charts[e_interface_alignment_histogram_sigma], 0, ladder->calibration.sigma[index]);
+			}
+			charts[e_interface_alignment_sigma_raw]->kind[0] = e_chart_kind_histogram;
 		}
-		charts[e_interface_alignment_sigma_raw]->kind[0] = e_chart_kind_histogram;
 		ladder->calibration.next = 0;
 		ladder->calibration.computed = d_false;
 	}
@@ -346,39 +350,45 @@ void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) {
 }
 
 void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
-	int index, va;
+	int index, event, va;
 	float value;
 	d_object_lock(ladder->data.lock);
 	if (ladder->data.computed) {
-		f_interface_clean_data(charts);
-		f_interface_clean_common_noise(charts);
-		if (ladder->last_readed_kind != 0xa3) {
-			for (index = 0; index < d_trb_event_channels; index++) {
-				va = (index/d_trb_event_channels_on_va);
-				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 1, index, ladder->data.mean_no_pedestal[index]);
-				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 0, index,
-						((ladder->calibration.flags[index]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?
-						charts[e_interface_alignment_adc_pedestal]->axis_y.range[1]:0);
-				value = ladder->data.mean_no_pedestal[index]-ladder->data.cn[va];
-				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal_cn], 0, index, value);
-				f_chart_append_signal(charts[e_interface_alignment_signal], 0, index, value);
-				f_chart_append_histogram(charts[e_interface_alignment_histogram_signal], 0, value);
-				f_chart_append_signal(charts[e_interface_alignment_occupancy], 0, index, ladder->data.occupancy[index]);
-				f_chart_append_envelope(charts[e_interface_alignment_envelope_signal], 0, index, ladder->data.signal_bucket_minimum[index],
-						ladder->data.signal_bucket_maximum[index]);
-			}
-			charts[e_interface_alignment_adc_pedestal]->kind[0] = e_chart_kind_histogram;
-			for (index = 0; index < ladder->data.cn_bucket_size; index++) {
-				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_1], 0, ladder->data.cn_bucket[index][0]);
-				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_2], 0, ladder->data.cn_bucket[index][1]);
-				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_3], 0, ladder->data.cn_bucket[index][2]);
-				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_4], 0, ladder->data.cn_bucket[index][3]);
-				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_5], 0, ladder->data.cn_bucket[index][4]);
-				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_6], 0, ladder->data.cn_bucket[index][5]);
-			}
-		} else
-			for (index = 0; index < d_trb_event_channels; index++)
-				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 1, index, ladder->data.mean_no_pedestal[index]);
+		if (!ladder->paused) {
+			f_interface_clean_data(charts);
+			f_interface_clean_common_noise(charts);
+			f_chart_denormalize(charts[e_interface_alignment_histogram_signal]);
+			if (ladder->last_readed_kind != 0xa3) {
+				for (index = 0; index < d_trb_event_channels; index++) {
+					va = (index/d_trb_event_channels_on_va);
+					f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 1, index, ladder->data.mean_no_pedestal[index]);
+					f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 0, index,
+							((ladder->calibration.flags[index]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?
+							charts[e_interface_alignment_adc_pedestal]->axis_y.range[1]:0);
+					value = ladder->data.mean_no_pedestal[index]-ladder->data.cn[va];
+					f_chart_append_signal(charts[e_interface_alignment_adc_pedestal_cn], 0, index, value);
+					f_chart_append_signal(charts[e_interface_alignment_signal], 0, index, value);
+					for (event = 0; event < ladder->data.buckets_size; event++)
+						f_chart_append_histogram(charts[e_interface_alignment_histogram_signal], 0,
+								ladder->data.signal_bucket[event][index]);
+					f_chart_append_signal(charts[e_interface_alignment_occupancy], 0, index,
+							(ladder->data.occupancy[index]/(float)ladder->data.total_events));
+					f_chart_append_envelope(charts[e_interface_alignment_envelope_signal], 0, index,
+							ladder->data.signal_bucket_minimum[index], ladder->data.signal_bucket_maximum[index]);
+				}
+				charts[e_interface_alignment_adc_pedestal]->kind[0] = e_chart_kind_histogram;
+				for (index = 0; index < ladder->data.buckets_size; index++) {
+					f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_1], 0, ladder->data.cn_bucket[index][0]);
+					f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_2], 0, ladder->data.cn_bucket[index][1]);
+					f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_3], 0, ladder->data.cn_bucket[index][2]);
+					f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_4], 0, ladder->data.cn_bucket[index][3]);
+					f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_5], 0, ladder->data.cn_bucket[index][4]);
+					f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_6], 0, ladder->data.cn_bucket[index][5]);
+				}
+			} else
+				for (index = 0; index < d_trb_event_channels; index++)
+					f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 1, index, ladder->data.mean_no_pedestal[index]);
+		}
 		ladder->data.next = 0;
 		ladder->data.computed = d_false;
 	}
@@ -388,11 +398,12 @@ void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP
 void f_ladder_plot_adc(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
 	int index;
 	d_object_lock(ladder->lock);
-	if (ladder->evented) {
-		f_chart_flush(charts[e_interface_alignment_adc]);
-		for (index = 0; index < d_trb_event_channels; index++)
-			f_chart_append_signal(charts[e_interface_alignment_adc], 0, index, ladder->last_event.values[index]);
-	}
+	if (ladder->evented)
+		if (!ladder->paused) {
+			f_chart_flush(charts[e_interface_alignment_adc]);
+			for (index = 0; index < d_trb_event_channels; index++)
+				f_chart_append_signal(charts[e_interface_alignment_adc], 0, index, ladder->last_event.values[index]);
+		}
 	f_chart_redraw(charts[e_interface_alignment_adc]);
 	ladder->evented = d_false;
 	d_object_unlock(ladder->lock);
@@ -408,6 +419,7 @@ void f_ladder_plot(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
 	} else {
 		f_chart_flush(charts[e_interface_alignment_adc]);
 		f_interface_clean_data(charts);
+		f_interface_clean_data_histogram(charts);
 		f_interface_clean_common_noise(charts);
 		f_interface_clean_calibration(charts);
 	}
@@ -443,10 +455,16 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 	ladder->last_readed_time = current_time;
 	ladder->starting_time = current_time;
 	ladder->evented = d_false;
-	d_ladder_safe_assign(ladder->data.lock, ladder->data.next, 0);
-	d_ladder_safe_assign(ladder->data.lock, ladder->data.computed, d_false);
+	ladder->paused = d_false;
+	d_object_lock(ladder->data.lock);
+	ladder->data.next = 0;
+	ladder->data.computed = d_false;
+	ladder->data.total_events = 0;
+	memset(ladder->data.occupancy, 0, (sizeof(int)*d_trb_event_channels));
+	d_object_unlock(ladder->data.lock);
 	if (gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_action])) {
 		f_interface_clean_data(interface->charts);
+		f_interface_clean_data_histogram(interface->charts);
 		f_interface_clean_common_noise(interface->charts);
 		if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_calibration])) {
 			f_interface_clean_calibration(interface->charts);

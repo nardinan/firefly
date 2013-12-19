@@ -36,6 +36,7 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	g_signal_connect(G_OBJECT(result->interface->files[e_interface_file_calibration]), "file-set", G_CALLBACK(p_callback_calibration), result);
 	g_signal_connect(G_OBJECT(result->interface->window), "delete-event", G_CALLBACK(p_callback_exit), result);
 	g_signal_connect(G_OBJECT(result->interface->window), "expose-event", G_CALLBACK(p_callback_start), result);
+	g_signal_connect(G_OBJECT(result->interface->window), "key-press-event", G_CALLBACK(p_callback_space), result);
 	g_signal_connect(G_OBJECT(result->interface->scale_configuration->window), "delete-event", G_CALLBACK (p_callback_scale_exit), result);
 	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_automatic]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
@@ -79,6 +80,14 @@ void p_callback_exit(GtkWidget *widget, struct s_environment *environment) { d_F
 int p_callback_start(GtkWidget *widget, GdkEvent *event, struct s_environment *environment) {
 	d_object_trylock(environment->lock);
 	d_object_unlock(environment->lock);
+	return d_false;
+}
+
+int p_callback_space(GtkWidget *widget, GdkEvent *event, struct s_environment *environment) {
+	if (((GdkEventKey *)event)->keyval == ' ')
+		if ((environment->ladders[environment->current]->command == e_ladder_command_data) ||
+				(environment->ladders[environment->current]->command == e_ladder_command_automatic))
+			environment->ladders[environment->current]->paused = !environment->ladders[environment->current]->paused;
 	return d_false;
 }
 

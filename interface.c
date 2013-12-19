@@ -305,8 +305,11 @@ void f_interface_clean_data(struct s_chart **charts) {
 	f_chart_flush(charts[e_interface_alignment_adc_pedestal_cn]);
 	f_chart_flush(charts[e_interface_alignment_signal]);
 	f_chart_flush(charts[e_interface_alignment_occupancy]);
-	f_chart_flush(charts[e_interface_alignment_histogram_signal]);
 	f_chart_flush(charts[e_interface_alignment_envelope_signal]);
+}
+
+void f_interface_clean_data_histogram(struct s_chart **charts) {
+	f_chart_flush(charts[e_interface_alignment_histogram_signal]);
 }
 
 void f_interface_clean_common_noise(struct s_chart **charts) {
