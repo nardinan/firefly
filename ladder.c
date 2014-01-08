@@ -16,8 +16,72 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "ladder.h"
+void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *configuration) { d_FP;
+	struct o_stream *stream;
+	struct o_string *path;
+	struct o_dictionary *dictionary;
+	struct s_exception *exception = NULL;
+	d_try {
+		path = d_string_pure(configuration);
+		stream = f_stream_new_file(NULL, path, "r", 0777);
+		dictionary = f_dictionary_new(NULL);
+		if (dictionary->m_load(dictionary, stream)) {
+			d_object_lock(ladder->parameters_lock);
+			d_ladder_key_load_s(dictionary, directory, ladder);
+			d_ladder_key_load_d(dictionary, location_pointer, ladder);
+			d_ladder_key_load_d(dictionary, skip, ladder);
+			d_ladder_key_load_f(dictionary, sigma_raw_cut, ladder);
+			d_ladder_key_load_f(dictionary, sigma_raw_noise_cut_bottom, ladder);
+			d_ladder_key_load_f(dictionary, sigma_raw_noise_cut_top, ladder);
+			d_ladder_key_load_f(dictionary, sigma_k, ladder);
+			d_ladder_key_load_f(dictionary, sigma_cut, ladder);
+			d_ladder_key_load_f(dictionary, sigma_noise_cut_bottom, ladder);
+			d_ladder_key_load_f(dictionary, sigma_noise_cut_top, ladder);
+			d_object_unlock(ladder->parameters_lock);
+		}
+		d_release(dictionary);
+		d_release(stream);
+		d_release(path);
+	} d_catch (exception) {
+		d_exception_dump(stderr, exception);
+		d_raise;
+	} d_endtry;
+}
+
+void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *configuration) { d_FP;
+	struct o_pool *pool = f_pool_new(NULL);
+	struct o_string *path;
+	struct o_stream *stream;
+	struct s_exception *exception = NULL;
+	d_try {
+		path = d_string_pure(configuration);
+		stream = f_stream_new_file(NULL, path, "w", 0777);
+		d_pool_begin(pool) {
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "directory=%s\n", ladder->directory));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "location_pointer=%d\n", ladder->location_pointer));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "skip=%d\n", ladder->skip));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "sigma_raw_cut=%f\n", ladder->sigma_raw_cut));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "sigma_raw_noise_cut_bottom=%f\n", ladder->sigma_raw_noise_cut_bottom));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "sigma_raw_noise_cut_top=%f\n", ladder->sigma_raw_noise_cut_top));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "sigma_k=%f\n", ladder->sigma_k));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "sigma_cut=%f\n", ladder->sigma_cut));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "sigma_noise_cut_bottom=%f\n", ladder->sigma_noise_cut_bottom));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "sigma_noise_cut_top=%f\n", ladder->sigma_noise_cut_top));
+		} d_pool_end_flush;
+		d_release(stream);
+		d_release(path);
+		d_release(pool);
+	} d_catch(exception) {
+		d_exception_dump(stderr, exception);
+		d_raise;
+	} d_endtry;
+}
+
+
 struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) { d_FP;
 	struct s_ladder *result = supplied;
+	struct passwd *pw;
+	char configuration[d_string_buffer_size];
 	int index;
 	if (!result)
 		if (!(result = (struct s_ladder *) d_calloc(sizeof(struct s_ladder), 1)))
@@ -37,6 +101,11 @@ struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) {
 	d_assert(result->data.lock = f_object_new_pure(NULL));
 	for (index = 0; index < d_common_data_events; index++)
 		d_assert(f_trb_event_new(&(result->data.events[index])));
+	d_assert(result->parameters_lock = f_object_new_pure(NULL));
+	if ((pw = getpwuid(getuid()))) {
+		snprintf(configuration, d_string_buffer_size, "%s%s", pw->pw_dir, d_common_configuration);
+		p_ladder_new_configuration_load(result, configuration);
+	}
 	pthread_create(&(result->analyze_thread), NULL, f_ladder_analyze_thread, (void *)result);
 	return result;
 }
@@ -174,7 +243,8 @@ void p_ladder_analyze_finished(struct s_ladder *ladder) { d_FP;
 	d_object_unlock(ladder->lock);
 }
 
-void p_ladder_analyze_thread_calibrate_channels(struct s_ladder *ladder, float *values, size_t size) { d_FP;
+void p_ladder_analyze_thread_calibrate_channels(struct s_ladder *ladder, float sigma_k, float sigma_cut_bottom, float sigma_cut_top, float *values,
+		size_t size) { d_FP;
 	float total = 0, total_square = 0, pedestal, rms, fraction = (1.0/(float)size);
 	int index;
 	for (index = 0; index < size; index++) {
@@ -186,7 +256,8 @@ void p_ladder_analyze_thread_calibrate_channels(struct s_ladder *ladder, float *
 	total_square *= fraction;
 	rms = sqrt(fabs((total_square-(total*total))));
 	for (index = 0; index < size; index++)
-		if ((values[index] > pedestal+(d_common_rms_k*rms)) || (values[index] < pedestal-(d_common_rms_k*rms)))
+		if ((values[index] > pedestal+(sigma_k*rms)) || (values[index] < pedestal-(sigma_k*rms)) ||
+				(values[index] > sigma_cut_top) || (values[index] < sigma_cut_bottom))
 			ladder->calibration.flags[index] |= e_trb_event_channel_damaged;
 }
 
@@ -201,10 +272,12 @@ void p_ladder_analyze_thread_calibrate(struct s_ladder *ladder) { d_FP;
 			d_object_lock(ladder->calibration.write_lock);
 			d_assert(p_trb_event_pedestal(ladder->calibration.events, next, ladder->calibration.pedestal));
 			d_assert(p_trb_event_sigma_raw(ladder->calibration.events, next, ladder->calibration.sigma_raw));
-			p_ladder_analyze_thread_calibrate_channels(ladder, ladder->calibration.sigma_raw, d_trb_event_channels);
-			d_assert(p_trb_event_sigma(ladder->calibration.events, next, d_common_sigma_k, ladder->calibration.sigma_raw,
+			p_ladder_analyze_thread_calibrate_channels(ladder, ladder->sigma_raw_cut, ladder->sigma_raw_noise_cut_bottom,
+					ladder->sigma_raw_noise_cut_top, ladder->calibration.sigma_raw, d_trb_event_channels);
+			d_assert(p_trb_event_sigma(ladder->calibration.events, next, ladder->sigma_k, ladder->calibration.sigma_raw,
 						ladder->calibration.pedestal, ladder->calibration.flags, ladder->calibration.sigma));
-			p_ladder_analyze_thread_calibrate_channels(ladder, ladder->calibration.sigma, d_trb_event_channels);
+			p_ladder_analyze_thread_calibrate_channels(ladder, ladder->sigma_cut, ladder->sigma_noise_cut_bottom, ladder->sigma_noise_cut_top,
+					ladder->calibration.sigma, d_trb_event_channels);
 			d_object_unlock(ladder->calibration.write_lock);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.computed, d_true);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.calibrated, d_true);
@@ -239,7 +312,7 @@ void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
 								channel++)
 							if ((ladder->calibration.flags[channel]&e_trb_event_channel_damaged) != e_trb_event_channel_damaged)
 								if (fabs(ladder->data.mean_no_pedestal[channel]) <
-										(d_common_sigma_k*ladder->calibration.sigma[channel])) {
+										(ladder->sigma_k*ladder->calibration.sigma[channel])) {
 									common_noise_on_va += ladder->data.mean_no_pedestal[channel];
 									entries++;
 								}
@@ -253,7 +326,7 @@ void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
 							for (channel = startup, entries = 0, common_noise_on_va = 0;
 									channel < (startup+d_trb_event_channels_on_va); channel++)  {
 								value = ladder->data.events[index].values[channel]-ladder->calibration.pedestal[channel];
-								if (fabs(value) < (d_common_sigma_k*ladder->calibration.sigma[channel])) {
+								if (fabs(value) < (ladder->sigma_k*ladder->calibration.sigma[channel])) {
 									common_noise_on_va += value;
 									entries++;
 								}
@@ -279,7 +352,7 @@ void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
 										ladder->data.signal_bucket[index][channel];
 								ladder->data.signal_over_noise_bucket[index][channel] =
 									ladder->data.signal_bucket[index][channel]/ladder->calibration.sigma[channel];
-								if (ladder->data.signal_over_noise_bucket[index][channel] > d_common_occupancy_k)
+								if (ladder->data.signal_over_noise_bucket[index][channel] > ladder->occupancy_k)
 									ladder->data.occupancy[channel]++;
 							}
 						}
@@ -318,8 +391,10 @@ void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
 void *f_ladder_analyze_thread(void *v_ladder) { d_FP;
 	struct s_ladder *ladder = (struct s_ladder *)v_ladder;
 	while (usleep(d_common_timeout_analyze) == 0) {
+		d_object_lock(ladder->parameters_lock);
 		p_ladder_analyze_thread_calibrate(ladder);
 		p_ladder_analyze_thread_data(ladder);
+		d_object_unlock(ladder->parameters_lock);
 	}
 	pthread_exit(NULL);
 }
@@ -444,7 +519,7 @@ int f_ladder_device(struct s_ladder *ladder, struct o_trb *device) { d_FP;
 }
 
 void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
-	char *location, *kind;
+	char *kind;
 	size_t written = 0;
 	time_t current_time = time(NULL);
 	d_object_lock(ladder->lock);
@@ -478,8 +553,7 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 		} else
 			ladder->command = e_ladder_command_data;
 		if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_public])) {
-			if ((location = gtk_combo_box_get_active_text(interface->combos[e_interface_combo_location])))
-				ladder->output[written++] = location[0];
+			ladder->output[written++] = location_name[ladder->location_pointer][0];
 			if ((kind = gtk_combo_box_get_active_text(interface->combos[e_interface_combo_kind])))
 				ladder->output[written++] = kind[0];
 			written += strftime((ladder->output+written), (d_string_buffer_size-written), d_common_file_time_format,
@@ -518,7 +592,7 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) 
 					ladder->listening_channel = channel;
 				}
 				if (d_strlen(ladder->output) > 0) {
-					name = d_string(d_string_buffer_size, "%s%s", ladder->output, d_common_ext_data);
+					name = d_string(d_string_buffer_size, "%s/%s%s", ladder->directory, ladder->output, d_common_ext_data);
 					ladder->device->m_stream(ladder->device, NULL, name, "w", 0777);
 					d_release(name);
 				}

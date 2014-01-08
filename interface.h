@@ -19,7 +19,7 @@
 #define firefly_interface_h
 #include "components/chart.h"
 #include "common.h"
-extern const char *interface_name[];
+extern const char *interface_name[], *location_name[];
 typedef enum e_interface_labels {
 	e_interface_label_events = 0,
 	e_interface_label_size,
@@ -60,11 +60,25 @@ typedef enum e_interface_scale_spins {
 	e_interface_scale_spin_x_segments,
 	e_interface_scale_spin_NULL
 } e_interface_scale_spins;
+typedef enum e_interface_parameters_spins {
+	e_interface_parameters_spin_skip = 0,
+	e_interface_parameters_spin_sigma_raw_cut,
+	e_interface_parameters_spin_sigma_raw_noise_cut_bottom,
+	e_interface_parameters_spin_sigma_raw_noise_cut_top,
+	e_interface_parameters_spin_sigma_k,
+	e_interface_parameters_spin_sigma_cut,
+	e_interface_parameters_spin_sigma_noise_cut_bottom,
+	e_interface_parameters_spin_sigma_noise_cut_top,
+	e_interface_parameters_spin_NULL
+} e_interface_parameters_spins;
 typedef enum e_interface_combos {
-	e_interface_combo_location = 0,
-	e_interface_combo_kind,
+	e_interface_combo_kind = 0,
 	e_interface_combo_NULL
 } e_interface_combos;
+typedef enum e_interface_parameters_combos {
+	e_interface_parameters_combo_location = 0,
+	e_interface_parameters_combo_NULL
+} e_interface_parameters_combos;
 typedef enum e_interface_entries {
 	e_interface_entry_ladder = 0,
 	e_interface_entry_NULL
@@ -110,10 +124,19 @@ typedef struct s_interface_scale {
 	GtkButton *action, *export_csv, *export_png;
 	struct s_chart *hooked_chart;
 } s_interface_scale;
+typedef struct s_interface_parameters {
+	GtkBuilder *interface;
+	GtkWindow *window;
+	GtkSpinButton *spins[e_interface_parameters_spin_NULL];
+	GtkComboBox *combos[e_interface_parameters_combo_NULL];
+	GtkFileChooserButton *directory;
+	GtkButton *action;
+} s_interface_parameters;
 typedef struct s_interface {
 	GtkBuilder *interface;
 	GtkWindow *window;
 	GtkLabel *labels[e_interface_label_NULL], *connected_label;
+	GtkButton *configuration;
 	GtkToggleButton *switches[e_interface_switch_NULL], *toggles[e_interface_toggle_NULL];
 	GtkSpinButton *spins[e_interface_spin_NULL], *bucket_spins[e_interface_bucket_spin_NULL];
 	GtkComboBox *combos[e_interface_combo_NULL], *combo_charts;
@@ -124,8 +147,10 @@ typedef struct s_interface {
 	GtkProgressBar *progress_bar;
 	struct s_chart *charts[e_interface_alignment_NULL], *main_interface_chart;
 	struct s_interface_scale *scale_configuration;
+	struct s_interface_parameters *parameters_configuration;
 } s_interface;
-extern struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *main_interface, GtkBuilder *scale_interface);
+extern struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *main_interface, GtkBuilder *scale_interface,
+		GtkBuilder *parameters_interface);
 extern void f_interface_update_configuration(struct s_interface *interface, int deviced);
 extern void f_interface_lock(struct s_interface *interface, int lock);
 extern void f_interface_show(struct s_interface *interface, enum e_interface_alignments chart);

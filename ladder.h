@@ -17,6 +17,7 @@
  */
 #ifndef firefly_ladder_h
 #define firefly_ladder_h
+#include <pwd.h>
 #include "interface.h"
 #define d_ladder_trigger_internal 0x22
 #define d_ladder_trigger_external 0x11
@@ -25,6 +26,27 @@ do{\
 	d_object_lock(sep);\
 	(res) = (val);\
 	d_object_unlock(sep);\
+}while(0)
+#define d_ladder_key_load_s(dic,key,ld)\
+do{\
+	struct o_string *_k=d_string_pure(#key), *_v;\
+	if((_v=(struct o_string *)dic->m_get(dic,(struct o_object *)_k)))\
+		strncpy(ld->key,_v->content,d_string_buffer_size);\
+	d_release(_k);\
+}while(0)
+#define d_ladder_key_load_d(dic,key,ld)\
+do{\
+	struct o_string *_k=d_string_pure(#key), *_v;\
+	if((_v=(struct o_string *)dic->m_get(dic,(struct o_object *)_k)))\
+		ld->key=atoi(_v->content);\
+	d_release(_k);\
+}while(0)
+#define d_ladder_key_load_f(dic,key,ld)\
+do{\
+	struct o_string *_k=d_string_pure(#key), *_v;\
+	if((_v=(struct o_string *)dic->m_get(dic,(struct o_object *)_k)))\
+		ld->key=atof(_v->content);\
+	d_release(_k);\
 }while(0)
 typedef enum e_ladder_commands {
         e_ladder_command_stop = 0,
@@ -36,6 +58,12 @@ typedef struct s_ladder_histogram_value {
 	int value, occurrence, filled;
 } s_ladder_histogram_value;
 typedef struct s_ladder {
+	/* configuration values */
+	struct o_object *parameters_lock;
+	char directory[d_string_buffer_size];
+	unsigned int location_pointer, skip;
+	float sigma_raw_cut, sigma_raw_noise_cut_bottom, sigma_raw_noise_cut_top, sigma_k, sigma_cut, sigma_noise_cut_bottom, sigma_noise_cut_top;
+	/* end */
 	char output[d_string_buffer_size];
 	struct o_object *lock;
 	struct o_trb *device;
@@ -46,7 +74,7 @@ typedef struct s_ladder {
 	unsigned int last_readed_events, readed_events, damaged_events, event_size, listening_channel;
 	unsigned char last_readed_kind, last_readed_code;
 	int evented, deviced, paused, update_interface;
-	float hertz;
+	float hertz, occupancy_k;
 	pthread_t analyze_thread;
 	struct {
 		struct o_object *lock, *write_lock;
@@ -66,6 +94,8 @@ typedef struct s_ladder {
 		int computed;
 	} data;
 } s_ladder;
+extern void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *configuration);
+extern void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *confgiuration);
 extern struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device);
 extern int p_ladder_read_integrity(struct o_trb_event *event, unsigned char *last_readed_code);
 extern void p_ladder_read_calibrate(struct s_ladder *ladder);
@@ -74,7 +104,8 @@ extern void f_ladder_read(struct s_ladder *ladder, time_t timeout);
 extern void p_ladder_save_calibrate(struct s_ladder *ladder);
 extern void p_ladder_load_calibrate(struct s_ladder *ladder, struct o_stream *stream);
 extern void p_ladder_analyze_finished(struct s_ladder *ladder);
-extern void p_ladder_analyze_thread_calibrate_channels(struct s_ladder *ladder, float *values, size_t size);
+extern void p_ladder_analyze_thread_calibrate_channels(struct s_ladder *ladder, float sigma_k, float sigma_cut_bottom, float sigma_cut_top, float *values,
+		size_t size);
 extern void p_ladder_analyze_thread_calibrate(struct s_ladder *ladder);
 extern void p_ladder_analyze_thread_data(struct s_ladder *ladder);
 extern void *f_ladder_analyze_thread(void *v_ladder);

@@ -7,6 +7,7 @@ exec = firefly.bin
 
 all: $(objects)
 	$(cc) $(lflags) $(objects) -o $(exec) $(liblink)
+	if [ ! -f ~/.firefly.cfg ]; then cp firefly.cfg ~/.firefly.cfg; fi;
 
 chart.o: components/chart.c components/chart.h
 	$(cc) $(cflags) components/chart.c

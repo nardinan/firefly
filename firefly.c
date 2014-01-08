@@ -18,17 +18,22 @@
 #include "loop.h"
 int main (int argc, char *argv[]) {
 	struct s_environment *environment;
+	struct s_exception *exception = NULL;
 	int index;
-	gtk_init(&argc, &argv);
-	environment = f_environment_new(NULL, "UI/UI_main.glade", "UI/UI_scale_config.glade");
-	gtk_widget_show_all(GTK_WIDGET(environment->interface->window));
-	for (index = 1; index < argc; index++) {
-		if (argv[index][0] == 'M')
-			gtk_window_maximize(environment->interface->window);
-		if (argv[index][0] == 'F')
-			gtk_window_fullscreen(environment->interface->window);
-	}
-	g_idle_add(f_loop_iteration, (void *)environment);
-	gtk_main();
+	d_try {
+		gtk_init(&argc, &argv);
+		environment = f_environment_new(NULL, "UI/UI_main.glade", "UI/UI_scale_config.glade", "UI/UI_preferences_config.glade");
+		gtk_widget_show_all(GTK_WIDGET(environment->interface->window));
+		for (index = 1; index < argc; index++) {
+			if (argv[index][0] == 'M')
+				gtk_window_maximize(environment->interface->window);
+			if (argv[index][0] == 'F')
+				gtk_window_fullscreen(environment->interface->window);
+		}
+		g_idle_add((GSourceFunc)f_loop_iteration, (void *)environment);
+		gtk_main();
+	} d_catch(exception) {
+		d_exception_dump(stderr, exception);
+	} d_endtry;
 	return 0;
 }

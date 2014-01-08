@@ -20,15 +20,13 @@
 #include <serenity/ground/ground.h>
 #include <serenity/structures/structures.h>
 #include <serenity/structures/infn/infn.h>
+#define d_common_configuration "/.firefly.cfg"
 #define d_common_ext_data ".dat"
 #define d_common_ext_calibration ".cal"
 #define d_common_timeout 500
 #define d_common_timeout_loop 500
 #define d_common_timeout_analyze 50000
 #define d_common_timeout_device 1000000
-#define d_common_sigma_k 10.0
-#define d_common_rms_k 3.0
-#define d_common_occupancy_k 3.0
 #define d_common_file_time_format "_%m.%d.%Y-%H.%M.%S"
 #define d_common_interface_time_format "%d %b %Y %H:%M:%S"
 #define d_common_calibration_events 1024

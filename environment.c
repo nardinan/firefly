@@ -16,8 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "environment.h"
-struct s_environment *f_environment_new(struct s_environment *supplied, const char *builder_main_path, const char *builder_scale_path) { d_FP;
-	GtkBuilder *main_builder, *scale_builder;
+struct s_environment *f_environment_new(struct s_environment *supplied, const char *builder_main_path, const char *builder_scale_path,
+		const char *builder_parameters_path) { d_FP;
+	GtkBuilder *main_builder, *scale_builder, *parameters_builder;
 	struct s_environment *result = supplied;
 	struct s_environment_parameters *parameters;
 	int index;
@@ -28,16 +29,19 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	d_object_lock(result->lock);
 	d_assert(main_builder = gtk_builder_new());
 	d_assert(scale_builder = gtk_builder_new());
+	d_assert(parameters_builder = gtk_builder_new());
 	d_assert(gtk_builder_add_from_file(main_builder, builder_main_path, NULL));
 	d_assert(gtk_builder_add_from_file(scale_builder, builder_scale_path, NULL));
+	d_assert(gtk_builder_add_from_file(parameters_builder, builder_parameters_path, NULL));
 	d_assert(result->ladders[result->current] = f_ladder_new(NULL, NULL));
-	d_assert(result->interface = f_interface_new(NULL, main_builder, scale_builder));
+	d_assert(result->interface = f_interface_new(NULL, main_builder, scale_builder, parameters_builder));
 	f_interface_update_configuration(result->interface, result->ladders[result->current]->deviced);
 	g_signal_connect(G_OBJECT(result->interface->files[e_interface_file_calibration]), "file-set", G_CALLBACK(p_callback_calibration), result);
 	g_signal_connect(G_OBJECT(result->interface->window), "delete-event", G_CALLBACK(p_callback_exit), result);
 	g_signal_connect(G_OBJECT(result->interface->window), "expose-event", G_CALLBACK(p_callback_start), result);
 	g_signal_connect(G_OBJECT(result->interface->window), "key-press-event", G_CALLBACK(p_callback_space), result);
-	g_signal_connect(G_OBJECT(result->interface->scale_configuration->window), "delete-event", G_CALLBACK (p_callback_scale_exit), result);
+	g_signal_connect(G_OBJECT(result->interface->scale_configuration->window), "delete-event", G_CALLBACK(p_callback_hide_on_exit), result);
+	g_signal_connect(G_OBJECT(result->interface->parameters_configuration->window), "delete-event", G_CALLBACK(p_callback_hide_on_exit), result);
 	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_automatic]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_normal]), "toggled", G_CALLBACK(p_callback_refresh), result);
@@ -53,7 +57,7 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	g_signal_connect(G_OBJECT(result->interface->scale_configuration->action), "clicked", G_CALLBACK(p_callback_scale_action), result);
 	g_signal_connect(G_OBJECT(result->interface->scale_configuration->export_csv), "clicked", G_CALLBACK(p_callback_scale_export_csv), result);
 	g_signal_connect(G_OBJECT(result->interface->scale_configuration->export_png), "clicked", G_CALLBACK(p_callback_scale_export_png), result);
-	for (index = 0; index < e_interface_alignment_NULL; index++)
+	for (index = 0; index < e_interface_alignment_NULL; index++) {
 		if ((parameters = (struct s_environment_parameters *) d_calloc(sizeof(struct s_environment_parameters), 1))) {
 			parameters->environment = result;
 			parameters->attachment = (void *)result->interface->charts[index];
@@ -62,9 +66,12 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 					parameters);
 		} else
 			d_die(d_error_malloc);
-		d_assert(result->searcher = f_trbs_new(NULL));
-		result->searcher->m_async_search(result->searcher, p_callback_incoming_device, d_common_timeout_device, (void *)result);
-		return result;
+	}
+	g_signal_connect(G_OBJECT(result->interface->configuration), "clicked", G_CALLBACK(p_callback_parameters_show), result);
+	g_signal_connect(G_OBJECT(result->interface->parameters_configuration->action), "clicked", G_CALLBACK(p_callback_parameters_action), result);
+	d_assert(result->searcher = f_trbs_new(NULL));
+	result->searcher->m_async_search(result->searcher, p_callback_incoming_device, d_common_timeout_device, (void *)result);
+	return result;
 }
 
 int p_callback_incoming_device(struct o_trb *device, void *v_environment) { d_FP;
@@ -149,7 +156,7 @@ void p_callback_change_page(GtkWidget *widget, gpointer *page, unsigned int page
 		f_interface_show(environment->interface, selected);
 }
 
-int p_callback_scale_exit(GtkWidget *widget, struct s_environment *environment) {
+int p_callback_hide_on_exit(GtkWidget *widget, struct s_environment *environment) {
 	gtk_widget_hide_all(widget);
 	return d_true;
 }
@@ -171,7 +178,7 @@ void p_callback_scale_action(GtkWidget *widget, struct s_environment *environmen
 			gtk_spin_button_get_value_as_int(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_segments]);
 		environment->interface->scale_configuration->hooked_chart->show_borders =
 			gtk_toggle_button_get_active(environment->interface->scale_configuration->switches[e_interface_scale_switch_informations]);
-		p_callback_scale_exit(GTK_WIDGET(environment->interface->scale_configuration->window), environment);
+		p_callback_hide_on_exit(GTK_WIDGET(environment->interface->scale_configuration->window), environment);
 		f_chart_denormalize(environment->interface->scale_configuration->hooked_chart);
 		f_chart_integerize(environment->interface->scale_configuration->hooked_chart);
 	}
@@ -188,7 +195,8 @@ void p_callback_scale_export_csv(GtkWidget *widget, struct s_environment *enviro
 			if (environment->interface->scale_configuration->hooked_chart == environment->interface->charts[pointer])
 				break;
 		strftime(time_buffer, d_string_buffer_size, d_common_file_time_format, localtime(&(current_time)));
-		snprintf(name_buffer, d_string_buffer_size, "%s%s.csv", interface_name[pointer], time_buffer);
+		snprintf(name_buffer, d_string_buffer_size, "%s/%s%s.csv", environment->ladders[environment->current]->directory, interface_name[pointer],
+				time_buffer);
 		if ((stream = fopen(name_buffer, "w"))) {
 			for (code = 0; code < d_chart_max_nested; code++)
 				if (environment->interface->scale_configuration->hooked_chart->head[code])
@@ -228,7 +236,8 @@ void p_callback_scale_export_png(GtkWidget *widget, struct s_environment *enviro
 			if (environment->interface->scale_configuration->hooked_chart == environment->interface->charts[pointer])
 				break;
 		strftime(time_buffer, d_string_buffer_size, d_common_file_time_format, localtime(&(current_time)));
-		snprintf(name_buffer, d_string_buffer_size, "%s%s.png", interface_name[pointer], time_buffer);
+		snprintf(name_buffer, d_string_buffer_size, "%s/%s%s.png", environment->ladders[environment->current]->directory, interface_name[pointer],
+				time_buffer);
 		gtk_widget_get_allocation(GTK_WIDGET(environment->interface->scale_configuration->hooked_chart->plane), &dimension);
 		width = dimension.width;
 		height = dimension.height;
@@ -259,5 +268,71 @@ void p_callback_scale_show(GtkWidget *widget, GdkEvent *event, struct s_environm
 	gtk_widget_show_all(GTK_WIDGET(environment->interface->scale_configuration->window));
 	gtk_window_set_position(environment->interface->scale_configuration->window, GTK_WIN_POS_MOUSE);
 	gtk_window_present(environment->interface->scale_configuration->window);
+}
+
+void p_callback_parameters_action(GtkWidget *widget, struct s_environment *environment) {
+	struct passwd *pw;
+	float top, bottom;
+	char configuration[d_string_buffer_size];
+	d_object_lock(environment->ladders[environment->current]->parameters_lock);
+	environment->ladders[environment->current]->location_pointer =
+		gtk_combo_box_get_active(environment->interface->parameters_configuration->combos[e_interface_parameters_combo_location]);
+	strncpy(environment->ladders[environment->current]->directory,
+			gtk_file_chooser_get_current_folder(GTK_FILE_CHOOSER(environment->interface->parameters_configuration->directory)),
+			d_string_buffer_size);
+	environment->ladders[environment->current]->skip =
+		gtk_spin_button_get_value_as_int(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_skip]);
+	environment->ladders[environment->current]->sigma_raw_cut =
+		gtk_spin_button_get_value_as_float(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_raw_cut]);
+	bottom = gtk_spin_button_get_value_as_float(
+			environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_raw_noise_cut_bottom]);
+	top = gtk_spin_button_get_value_as_float(
+			environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_raw_noise_cut_top]);
+	environment->ladders[environment->current]->sigma_raw_noise_cut_bottom = d_min(top, bottom);
+	environment->ladders[environment->current]->sigma_raw_noise_cut_top = d_max(top, bottom);
+	environment->ladders[environment->current]->sigma_k =
+		gtk_spin_button_get_value_as_float(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_k]);
+	environment->ladders[environment->current]->sigma_cut =
+		gtk_spin_button_get_value_as_float(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_cut]);
+	bottom = gtk_spin_button_get_value_as_float(
+			environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_noise_cut_bottom]);
+	top = gtk_spin_button_get_value_as_float(
+			environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_noise_cut_top]);
+	environment->ladders[environment->current]->sigma_noise_cut_bottom = d_min(top, bottom);
+	environment->ladders[environment->current]->sigma_noise_cut_top = d_max(top, bottom);
+	d_object_unlock(environment->ladders[environment->current]->parameters_lock);
+	if ((pw = getpwuid(getuid()))) {
+		snprintf(configuration, d_string_buffer_size, "%s%s", pw->pw_dir, d_common_configuration);
+		p_ladder_new_configuration_save(environment->ladders[environment->current], configuration);
+	}
+	p_callback_hide_on_exit(GTK_WIDGET(environment->interface->parameters_configuration->window), environment);
+}
+
+void p_callback_parameters_show(GtkWidget *widget, struct s_environment *environment) {
+	d_object_lock(environment->ladders[environment->current]->parameters_lock);
+	gtk_combo_box_set_active(environment->interface->parameters_configuration->combos[e_interface_parameters_combo_location],
+			environment->ladders[environment->current]->location_pointer);
+	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(environment->interface->parameters_configuration->directory),
+			environment->ladders[environment->current]->directory);
+	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_skip],
+			environment->ladders[environment->current]->skip);
+	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_raw_cut],
+			environment->ladders[environment->current]->sigma_raw_cut);
+	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_raw_noise_cut_bottom],
+			environment->ladders[environment->current]->sigma_raw_noise_cut_bottom);
+	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_raw_noise_cut_top],
+			environment->ladders[environment->current]->sigma_raw_noise_cut_top);
+	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_k],
+			environment->ladders[environment->current]->sigma_k);
+	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_cut],
+			environment->ladders[environment->current]->sigma_cut);
+	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_noise_cut_bottom],
+			environment->ladders[environment->current]->sigma_noise_cut_bottom);
+	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_noise_cut_top],
+			environment->ladders[environment->current]->sigma_noise_cut_top);
+	d_object_unlock(environment->ladders[environment->current]->parameters_lock);
+	gtk_widget_show_all(GTK_WIDGET(environment->interface->parameters_configuration->window));
+	gtk_window_set_position(environment->interface->parameters_configuration->window, GTK_WIN_POS_CENTER_ON_PARENT);
+	gtk_window_present(environment->interface->parameters_configuration->window);
 }
 
