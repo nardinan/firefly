@@ -59,6 +59,7 @@ const char *interface_labels[] = {
 	"v_sigma_cut",
 	"v_sigma_noise_cut_bottom",
 	"v_sigma_noise_cut_top",
+	"v_occupancy_k",
 	NULL
 }, *interface_combos[] = {
 	"v_kind",

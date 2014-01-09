@@ -348,6 +348,36 @@
                         <property name="position">2</property>
                       </packing>
                     </child>
+                    <child>
+                      <object class="GtkHBox" id="v_occupancy_grid">
+                        <property name="visible">True</property>
+                        <property name="homogeneous">True</property>
+                        <child>
+                          <object class="GtkLabel" id="v_occupancy_k_label">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">Occupancy k</property>
+                          </object>
+                          <packing>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkSpinButton" id="v_occupancy_k">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="invisible_char">&#x25CF;</property>
+                            <property name="adjustment">v_occupancy_k_adjustement</property>
+                            <property name="digits">2</property>
+                          </object>
+                          <packing>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="position">3</property>
+                      </packing>
+                    </child>
                   </object>
                 </child>
               </object>
@@ -429,5 +459,10 @@
     <property name="upper">65536</property>
     <property name="step_increment">0.01</property>
     <property name="page_increment">1</property>
+  </object>
+  <object class="GtkAdjustment" id="v_occupancy_k_adjustement">
+    <property name="upper">100</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
   </object>
 </interface>

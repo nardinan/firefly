@@ -69,6 +69,7 @@ typedef enum e_interface_parameters_spins {
 	e_interface_parameters_spin_sigma_cut,
 	e_interface_parameters_spin_sigma_noise_cut_bottom,
 	e_interface_parameters_spin_sigma_noise_cut_top,
+	e_interface_parameters_spin_occupancy_k,
 	e_interface_parameters_spin_NULL
 } e_interface_parameters_spins;
 typedef enum e_interface_combos {

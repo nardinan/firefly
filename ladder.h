@@ -19,6 +19,7 @@
 #define firefly_ladder_h
 #include <pwd.h>
 #include "interface.h"
+#include "compressor/compression.h"
 #define d_ladder_trigger_internal 0x22
 #define d_ladder_trigger_external 0x11
 #define d_ladder_safe_assign(sep,res,val)\

@@ -300,6 +300,8 @@ void p_callback_parameters_action(GtkWidget *widget, struct s_environment *envir
 			environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_noise_cut_top]);
 	environment->ladders[environment->current]->sigma_noise_cut_bottom = d_min(top, bottom);
 	environment->ladders[environment->current]->sigma_noise_cut_top = d_max(top, bottom);
+	environment->ladders[environment->current]->occupancy_k = gtk_spin_button_get_value_as_float(
+			environment->interface->parameters_configuration->spins[e_interface_parameters_spin_occupancy_k]);
 	d_object_unlock(environment->ladders[environment->current]->parameters_lock);
 	if ((pw = getpwuid(getuid()))) {
 		snprintf(configuration, d_string_buffer_size, "%s%s", pw->pw_dir, d_common_configuration);
@@ -330,6 +332,8 @@ void p_callback_parameters_show(GtkWidget *widget, struct s_environment *environ
 			environment->ladders[environment->current]->sigma_noise_cut_bottom);
 	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_noise_cut_top],
 			environment->ladders[environment->current]->sigma_noise_cut_top);
+	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_occupancy_k],
+			environment->ladders[environment->current]->occupancy_k);
 	d_object_unlock(environment->ladders[environment->current]->parameters_lock);
 	gtk_widget_show_all(GTK_WIDGET(environment->interface->parameters_configuration->window));
 	gtk_window_set_position(environment->interface->parameters_configuration->window, GTK_WIN_POS_CENTER_ON_PARENT);

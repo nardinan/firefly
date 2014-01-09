@@ -37,6 +37,7 @@ void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *config
 			d_ladder_key_load_f(dictionary, sigma_cut, ladder);
 			d_ladder_key_load_f(dictionary, sigma_noise_cut_bottom, ladder);
 			d_ladder_key_load_f(dictionary, sigma_noise_cut_top, ladder);
+			d_ladder_key_load_f(dictionary, occupancy_k, ladder);
 			d_object_unlock(ladder->parameters_lock);
 		}
 		d_release(dictionary);
@@ -67,6 +68,7 @@ void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *config
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "sigma_cut=%f\n", ladder->sigma_cut));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "sigma_noise_cut_bottom=%f\n", ladder->sigma_noise_cut_bottom));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "sigma_noise_cut_top=%f\n", ladder->sigma_noise_cut_top));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "occupancy_k=%f\n", ladder->occupancy_k));
 		} d_pool_end_flush;
 		d_release(stream);
 		d_release(path);
@@ -193,31 +195,17 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 }
 
 void p_ladder_load_calibrate(struct s_ladder *ladder, struct o_stream *stream) { d_FP;
-	int channel;
-	struct o_string *readed_buffer, *buffer = NULL, *singleton;
-	struct o_array *elements;
-	d_object_lock(ladder->calibration.lock);
-	while ((readed_buffer = stream->m_read_line(stream, buffer, d_string_buffer_size))) {
-		if ((elements = readed_buffer->m_split(readed_buffer, ','))) {
-			if (elements->filled == 7) {
-				channel = d_array_cast(atoi, elements, singleton, 0, d_trb_event_channels);
-				if ((channel >= 0) && (channel < d_trb_event_channels)) {
-					ladder->calibration.pedestal[channel] = d_array_cast(atof, elements, singleton, 3, 0.0);
-					ladder->calibration.sigma_raw[channel] = d_array_cast(atof, elements, singleton, 4, 0.0);
-					ladder->calibration.sigma[channel] = d_array_cast(atof, elements, singleton, 5, 0.0);
-					ladder->calibration.flags[channel] = 0;
-					if (d_array_cast(atoi, elements, singleton, 6, 0))
-						ladder->calibration.flags[channel] = e_trb_event_channel_damaged;
-				}
-			}
-			d_release(elements);
-		}
-		buffer = readed_buffer;
-	}
-	d_release(buffer);
-	ladder->calibration.calibrated = d_true;
-	ladder->calibration.computed = d_true;
-	d_object_unlock(ladder->calibration.lock);
+	struct s_exception *exception = NULL;
+	d_try {
+		d_object_lock(ladder->calibration.lock);
+		f_read_calibration(stream, ladder->calibration.pedestal, ladder->calibration.sigma_raw, ladder->calibration.sigma, ladder->calibration.flags);
+		ladder->calibration.calibrated = d_true;
+		ladder->calibration.computed = d_true;
+		d_object_unlock(ladder->calibration.lock);
+	} d_catch (exception) {
+		d_exception_dump(stderr, exception);
+		d_raise;
+	} d_endtry;
 }
 
 void p_ladder_analyze_finished(struct s_ladder *ladder) { d_FP;
@@ -488,6 +476,7 @@ void f_ladder_plot(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
 	int index;
 	p_ladder_analyze_finished(ladder);
 	d_object_lock(ladder->lock);
+	p_ladder_plot_calibrate(ladder, charts);
 	if ((ladder->deviced) && (ladder->device)) {
 		p_ladder_plot_calibrate(ladder, charts);
 		p_ladder_plot_data(ladder, charts);
