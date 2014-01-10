@@ -56,3 +56,5 @@ cleandat:
 clean:
 	rm -f *.o
 	rm -f $(exec)
+	rm -f $(exec_compressor)
+	rm -f $(exec_analyzer)
