@@ -173,7 +173,7 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 	struct o_string *name, *string = NULL;
 	d_object_lock(ladder->calibration.lock);
 	if ((ladder->calibration.calibrated) && (d_strlen(ladder->output) > 0)) {
-		name = d_string(d_string_buffer_size, "%s%s", ladder->output, d_common_ext_calibration);
+		name = d_string(d_string_buffer_size, "%s/%s%s", ladder->directory, ladder->output, d_common_ext_calibration);
 		if ((stream = f_stream_new_file(NULL, name, "w", 0777))) {
 			d_object_lock(ladder->calibration.write_lock);
 			for (channel = 0; channel < d_trb_event_channels; channel++) {
