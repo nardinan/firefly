@@ -51,6 +51,7 @@ void p_chart_style_axis(struct o_dictionary *dictionary, const char postfix, str
 	p_chart_style_int(dictionary, "show_negative", postfix, &(axis->show_negative));
 	p_chart_style_int(dictionary, "show_positive", postfix, &(axis->show_positive));
 	p_chart_style_int(dictionary, "show_grid", postfix, &(axis->show_grid));
+	p_chart_style_int(dictionary, "logarithmic", postfix, &(axis->logarithmic));
 	p_chart_style_float(dictionary, "range_bottom", postfix, &(axis->range[0]));
 	p_chart_style_float(dictionary, "range_top", postfix, &(axis->range[1]));
 	p_chart_style_float(dictionary, "minimum_distance", postfix, &(axis->minimum_distance));
@@ -173,7 +174,7 @@ void f_chart_redraw(struct s_chart *chart) {
 
 void p_chart_redraw_axis_x(cairo_t *cr, struct s_chart *chart, float full_h, float full_w, unsigned int width, unsigned int height) {
 	float x_axis_position = height, value_step = (full_w/(float)chart->axis_x.segments), position_step = (width/(float)chart->axis_x.segments),
-	      current_value, current_position, current_label, last_label, size_label;
+	      current_value, current_position, current_label, last_label, size_label, real_position;
 	char buffer[d_string_buffer_size];
 	int written, purged;
 	cairo_set_source_rgb(cr, chart->axis_x.color.R, chart->axis_x.color.G, chart->axis_x.color.B);
@@ -184,44 +185,51 @@ void p_chart_redraw_axis_x(cairo_t *cr, struct s_chart *chart, float full_h, flo
 	cairo_move_to(cr, 0.0, x_axis_position);
 	cairo_line_to(cr, width, x_axis_position);
 	for (current_value = chart->axis_x.range[0], current_position = 0, last_label = 0; current_value < chart->axis_x.range[1]; current_value += value_step,
-			current_position += position_step)
-		if (((!d_positive(current_value)) && (chart->axis_x.show_negative)) || ((d_positive(current_value) && (chart->axis_x.show_positive)))) {
-			if (((last_label-current_position) == 0) || ((current_position-last_label) >= chart->axis_x.minimum_distance)) {
-				purged = d_false;
-				written = snprintf(buffer, d_string_buffer_size, "%.02f", current_value);
-				while ((written) && (!purged)) {
-					if ((buffer[written-1] == '0') || (buffer[written-1] == '.')) {
-						if (buffer[written-1] == '.')
-							purged = d_true;
-						buffer[written-1] = '\0';
-						written--;
-					} else
-						purged = d_true;
-				}
-				size_label = ((float)written*d_chart_font_size);
-				if ((current_label = x_axis_position+chart->axis_x.segments_length-chart->axis_x.offset+d_chart_font_size) > height)
-					current_label = x_axis_position-chart->axis_x.segments_length-chart->axis_x.offset-d_chart_font_size;
-				cairo_move_to(cr, (current_position-(size_label/2.0)), current_label);
-				cairo_show_text(cr, buffer);
-				if (current_label > x_axis_position) {
-					cairo_move_to(cr, current_position, x_axis_position-chart->axis_x.segments_length);
-					cairo_line_to(cr, current_position, current_label-d_chart_font_size);
-				} else {
-					cairo_move_to(cr, current_position, current_label+d_chart_font_size);
-					cairo_line_to(cr, current_position, x_axis_position+chart->axis_x.segments_length);
-				}
-				last_label = current_position;
-			} else {
-				cairo_move_to(cr, current_position, x_axis_position-chart->axis_x.segments_length);
-				cairo_line_to(cr, current_position, x_axis_position+chart->axis_x.segments_length);
-			}
+			current_position += position_step) {
+		real_position = current_position;
+		if (real_position != NAN) {
+			if (((current_value < 0) && (chart->axis_x.show_negative)) ||
+					((current_value >= 0) && (chart->axis_x.show_positive))) {
+						if ((last_label-real_position == 0) || (real_position-last_label >= chart->axis_x.minimum_distance)) {
+							purged = d_false;
+							written = snprintf(buffer, d_string_buffer_size, "%.02f", current_value);
+							while ((written) && (!purged)) {
+								if ((buffer[written-1] == '0') || (buffer[written-1] == '.')) {
+									if (buffer[written-1] == '.')
+										purged = d_true;
+									buffer[written-1] = '\0';
+									written--;
+								} else
+									purged = d_true;
+							}
+							size_label = ((float)written*d_chart_font_size);
+							if ((current_label = x_axis_position+chart->axis_x.segments_length-
+										chart->axis_x.offset+d_chart_font_size) > height)
+								current_label = x_axis_position-chart->axis_x.segments_length-
+									chart->axis_x.offset-d_chart_font_size;
+							cairo_move_to(cr, (real_position-(size_label/2.0)), current_label);
+							cairo_show_text(cr, buffer);
+							if (current_label > x_axis_position) {
+								cairo_move_to(cr, real_position, x_axis_position-chart->axis_x.segments_length);
+								cairo_line_to(cr, real_position, current_label-d_chart_font_size);
+							} else {
+								cairo_move_to(cr, real_position, current_label+d_chart_font_size);
+								cairo_line_to(cr, real_position, x_axis_position+chart->axis_x.segments_length);
+							}
+							last_label = real_position;
+						} else {
+							cairo_move_to(cr, real_position, x_axis_position-chart->axis_x.segments_length);
+							cairo_line_to(cr, real_position, x_axis_position+chart->axis_x.segments_length);
+						}
+					}
 		}
+	}
 	cairo_stroke(cr);
 }
 
 void p_chart_redraw_axis_y(cairo_t *cr, struct s_chart *chart, float full_h, float full_w, unsigned int width, unsigned int height) {
 	float y_axis_position = 0.0, value_step = (full_h/(float)chart->axis_y.segments), position_step = (height/(float)chart->axis_y.segments),
-	      current_value, current_position, current_label, last_label, size_label;
+	      current_value, current_position, current_label, last_label, size_label, real_position;
 	char buffer[d_string_buffer_size];
 	int written, purged;
 	cairo_set_source_rgb(cr, chart->axis_y.color.R, chart->axis_y.color.G, chart->axis_y.color.B);
@@ -232,77 +240,92 @@ void p_chart_redraw_axis_y(cairo_t *cr, struct s_chart *chart, float full_h, flo
 	cairo_move_to(cr, y_axis_position, 0.0);
 	cairo_line_to(cr, y_axis_position, height);
 	for (current_value = chart->axis_y.range[0], current_position = height, last_label = height; current_value < chart->axis_y.range[1];
-			current_value += value_step, current_position -= position_step)
-		if (((!d_positive(current_value)) && (chart->axis_y.show_negative)) || ((d_positive(current_value)) && (chart->axis_y.show_positive))) {
-			if (((last_label-current_position) == 0) || ((last_label-current_position) >= chart->axis_y.minimum_distance)) {
-				purged = d_false;
-				written = snprintf(buffer, d_string_buffer_size, "%.02f", current_value);
-				while ((written) && (!purged)) {
-					if ((buffer[written-1] == '0') || (buffer[written-1] == '.')) {
-						if (buffer[written-1] == '.')
+			current_value += value_step, current_position -= position_step) {
+		real_position = current_position;
+		if (real_position != NAN) {
+			if (((current_value < 0) && (chart->axis_y.show_negative)) ||
+					((current_value >= 0) && (chart->axis_y.show_positive))) {
+				if (((last_label-real_position) == 0) || ((last_label-real_position) >= chart->axis_y.minimum_distance)) {
+					purged = d_false;
+					written = snprintf(buffer, d_string_buffer_size, "%.02f", current_value);
+					while ((written) && (!purged)) {
+						if ((buffer[written-1] == '0') || (buffer[written-1] == '.')) {
+							if (buffer[written-1] == '.')
+								purged = d_true;
+							buffer[written-1] = '\0';
+							written--;
+						} else
 							purged = d_true;
-						buffer[written-1] = '\0';
-						written--;
-					} else
-						purged = d_true;
-				}
-				size_label = ((float)written*d_chart_font_size);
-				if ((current_label = y_axis_position-chart->axis_y.segments_length-size_label) < 0)
-					current_label = y_axis_position+chart->axis_y.segments_length+d_chart_font_size;
-				cairo_move_to(cr, current_label, (current_position+chart->axis_y.offset));
-				cairo_show_text(cr, buffer);
-				if (current_label > y_axis_position) {
-					cairo_move_to(cr, y_axis_position-chart->axis_y.segments_length, current_position);
-					cairo_line_to(cr, current_label, current_position);
+					}
+					size_label = ((float)written*d_chart_font_size);
+					if ((current_label = y_axis_position-chart->axis_y.segments_length-size_label) < 0)
+						current_label = y_axis_position+chart->axis_y.segments_length+d_chart_font_size;
+					cairo_move_to(cr, current_label, (real_position+chart->axis_y.offset));
+					cairo_show_text(cr, buffer);
+					if (current_label > y_axis_position) {
+						cairo_move_to(cr, y_axis_position-chart->axis_y.segments_length, real_position);
+						cairo_line_to(cr, current_label, real_position);
+					} else {
+						cairo_move_to(cr, current_label+size_label, real_position);
+						cairo_line_to(cr, y_axis_position+chart->axis_y.segments_length, real_position);
+					}
+					last_label = real_position;
 				} else {
-					cairo_move_to(cr, current_label+size_label, current_position);
-					cairo_line_to(cr, y_axis_position+chart->axis_y.segments_length, current_position);
+					cairo_move_to(cr, y_axis_position-chart->axis_y.segments_length, real_position);
+					cairo_line_to(cr, y_axis_position+chart->axis_y.segments_length, real_position);
 				}
-				last_label = current_position;
-			} else {
-				cairo_move_to(cr, y_axis_position-chart->axis_y.segments_length, current_position);
-				cairo_line_to(cr, y_axis_position+chart->axis_y.segments_length, current_position);
 			}
 		}
+	}
 	cairo_stroke(cr);
 }
 
 void p_chart_redraw_grid_x(cairo_t *cr, struct s_chart *chart, float full_h, float full_w, unsigned int width, unsigned int height) {
 	float value_step = (full_w/(float)chart->axis_x.segments), position_step = (width/(float)chart->axis_x.segments), current_value, current_position,
-	      last_label;
+	      last_label, real_position;
 	const double dash_pattern[] = {1.0};
 	if (chart->axis_x.show_grid) {
 		cairo_set_source_rgb(cr, chart->axis_x.color.R*0.5, chart->axis_x.color.G*0.5, chart->axis_x.color.B*0.5);
 		cairo_set_line_width(cr, chart->axis_x.size*0.5);
 		cairo_set_dash(cr, dash_pattern, 1, 0);
 		for (current_value = chart->axis_x.range[0], current_position = 0, last_label = 0; current_value < chart->axis_x.range[1];
-				current_value += value_step, current_position += position_step)
-			if (((!d_positive(current_value)) && (chart->axis_x.show_negative)) || ((d_positive(current_value)) && (chart->axis_x.show_positive)))
-				if (((last_label-current_position) == 0) || ((current_position-last_label) >= chart->axis_x.minimum_distance)) {
-					cairo_move_to(cr, current_position, 0.0);
-					cairo_line_to(cr, current_position, height);
-					last_label = current_position;
-				}
+				current_value += value_step, current_position += position_step) {
+			real_position = current_position;
+			if (real_position != NAN) {
+				if (((current_value < 0) && (chart->axis_x.show_negative)) ||
+						((current_value >= 0) && (chart->axis_x.show_positive)))
+					if ((last_label-real_position == 0) || (real_position-last_label >= chart->axis_x.minimum_distance)) {
+						cairo_move_to(cr, real_position, 0.0);
+						cairo_line_to(cr, real_position, height);
+						last_label = real_position;
+					}
+			}
+		}
 		cairo_stroke(cr);
 	}
 }
 
 void p_chart_redraw_grid_y(cairo_t *cr, struct s_chart *chart, float full_h, float full_w, unsigned int width, unsigned int height) {
 	float value_step = (full_h/(float)chart->axis_y.segments), position_step = (height/(float)chart->axis_y.segments), current_value, current_position,
-	      last_label;
+	      last_label, real_position;
 	const double dash_pattern[] = {1.0};
 	if (chart->axis_y.show_grid) {
 		cairo_set_source_rgb(cr, chart->axis_y.color.R*0.5, chart->axis_y.color.G*0.5, chart->axis_y.color.B*0.5);
 		cairo_set_line_width(cr, chart->axis_y.size*0.5);
 		cairo_set_dash(cr, dash_pattern, 1, 0);
 		for (current_value = chart->axis_y.range[0], current_position = height, last_label = height; current_value < chart->axis_y.range[1];
-				current_value += value_step, current_position -= position_step)
-			if (((!d_positive(current_value)) && (chart->axis_y.show_negative)) || ((d_positive(current_value)) && (chart->axis_y.show_positive)))
-				if (((last_label-current_position) == 0) || ((last_label-current_position) >= chart->axis_y.minimum_distance)) {
-					cairo_move_to(cr, 0.0, current_position);
-					cairo_line_to(cr, width, current_position);
-					last_label = current_position;
+				current_value += value_step, current_position -= position_step) {
+			real_position = current_position;
+			if (real_position != NAN) {
+			if (((current_value < 0) && (chart->axis_y.show_negative)) ||
+					((current_value >= 0) && (chart->axis_y.show_positive)))
+				if ((last_label-real_position == 0) || (last_label-real_position >= chart->axis_y.minimum_distance)) {
+					cairo_move_to(cr, 0.0, real_position);
+					cairo_line_to(cr, width, real_position);
+					last_label = real_position;
 				}
+			}
+		}
 		cairo_stroke(cr);
 	}
 }

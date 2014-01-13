@@ -76,11 +76,11 @@ void p_compress_event_cluster(struct s_singleton_cluster_details *cluster, unsig
 		}
 		cluster->values[index] = signal[local_strip];
 		signal_sum += signal[local_strip];
-		sigma_sum += sigma[local_strip];
+		sigma_sum += (sigma[local_strip]*sigma[local_strip]);
 		weighted_strip_sum += (signal[local_strip]*local_strip);
 	}
 	cluster->values[index] = common_noise[(last_channel/d_trb_event_channels_on_va)];
-	cluster->header.signal_over_noise = (signal_sum/sigma_sum);
+	cluster->header.signal_over_noise = (signal_sum/sqrtf(sigma_sum));
 	cluster->header.strips_gravity = (weighted_strip_sum/signal_sum);
 	cluster->header.main_strips_gravity = ((signal[affected_strips[0]]*(float)affected_strips[0])+(signal[affected_strips[1]]*(float)affected_strips[1]))/
 		(signal[affected_strips[0]]+signal[affected_strips[1]]);

@@ -88,6 +88,7 @@ struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) {
 	if (!result)
 		if (!(result = (struct s_ladder *) d_calloc(sizeof(struct s_ladder), 1)))
 			d_die(d_error_malloc);
+	result->stopped = d_true;
 	d_assert(result->lock = f_object_new_pure(NULL));
 	if (device) {
 		result->device = device;
@@ -151,8 +152,8 @@ void p_ladder_read_data(struct s_ladder *ladder) { d_FP;
 void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 	d_object_lock(ladder->lock);
 	ladder->evented = d_false;
-	if ((ladder->deviced) && (ladder->device))
-		if (ladder->command != e_ladder_command_stop)
+	if ((ladder->deviced) && (ladder->device)) {
+		if (ladder->command != e_ladder_command_stop) {
 			if ((ladder->device->m_event(ladder->device, &(ladder->last_event), timeout)))
 				if (ladder->last_event.filled) {
 					ladder->evented = d_true;
@@ -164,6 +165,11 @@ void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 					} else
 						p_ladder_read_data(ladder);
 				}
+		} else if (!ladder->stopped) {
+			ladder->device->m_stop(ladder->device, timeout);
+			ladder->stopped = d_true;
+		}
+	}
 	d_object_unlock(ladder->lock);
 }
 
@@ -478,14 +484,13 @@ void f_ladder_plot(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
 	d_object_lock(ladder->lock);
 	p_ladder_plot_calibrate(ladder, charts);
 	if ((ladder->deviced) && (ladder->device)) {
-		p_ladder_plot_calibrate(ladder, charts);
 		p_ladder_plot_data(ladder, charts);
 	} else {
 		f_chart_flush(charts[e_interface_alignment_adc]);
 		f_interface_clean_data(charts);
 		f_interface_clean_data_histogram(charts);
 		f_interface_clean_common_noise(charts);
-		f_interface_clean_calibration(charts);
+		//f_interface_clean_calibration(charts);
 	}
 	for (index = 0; index < e_interface_alignment_NULL; index++)
 		f_chart_redraw(charts[index]);
@@ -520,6 +525,7 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 	ladder->starting_time = current_time;
 	ladder->evented = d_false;
 	ladder->paused = d_false;
+	ladder->stopped = d_true;
 	d_object_lock(ladder->data.lock);
 	ladder->data.next = 0;
 	ladder->data.computed = d_false;
@@ -588,6 +594,7 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) 
 			}
 			ladder->device->m_setup(ladder->device, trigger, hold_delay, mode, dac, channel, d_common_timeout);
 			ladder->event_size = ladder->device->event_size;
+			ladder->stopped = d_false;
 		}
 	d_object_unlock(ladder->lock);
 }

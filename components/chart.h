@@ -27,7 +27,6 @@
 #define d_chart_font_size 7.0
 #define d_chart_font_height 12.0
 #define d_same_sign(a,b) (((a)>=0)^((b)<0))
-#define d_positive(a) ((a)>=0)
 typedef enum e_chart_kinds {
 	e_chart_kind_signal = 0,
 	e_chart_kind_histogram,
@@ -45,7 +44,7 @@ typedef struct s_chart_color {
 } s_chart_color;
 typedef struct s_chart_axis {
 	unsigned int segments;
-	int show_negative, show_positive, show_grid;
+	int show_negative, show_positive, show_grid, logarithmic;
 	float range[2], minimum_distance, segments_length, offset, size;
 	struct s_chart_color color;
 } s_chart_axis;
