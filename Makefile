@@ -65,6 +65,7 @@ clean:
 	rm -f *.o
 	rm -f *.fli
 	rm -f *.root
+	rm -f AutoDict_vector*
 	rm -f $(exec)
 	rm -f $(exec_compressor)
 	rm -f $(exec_analyzer)

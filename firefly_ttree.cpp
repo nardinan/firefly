@@ -2,6 +2,7 @@
 #include <TSystem.h>
 #include <TFile.h>
 #include <TTree.h>
+#include <TInterpreter.h>
 extern "C" {
 #include <stdio.h>
 #include <serenity/ground/ground.h>
@@ -11,24 +12,56 @@ extern "C" {
 }
 #define d_branch(ot,str,kin,ptr) (ot).Branch((str),(ptr),(kin))
 typedef struct s_tree_event {
-	unsigned int number, clusters, strips[d_trb_event_channels], first_strip[d_trb_event_channels];
-	float signal_over_noise[d_trb_event_channels], strips_gravity[d_trb_event_channels], main_strips_gravity[d_trb_event_channels],
-	      eta[d_trb_event_channels], values[d_trb_event_channels][d_trb_event_channels], cn[d_trb_event_channels];
+	unsigned int number, clusters;
+	std::vector<int> *strips, *first_strip;
+	std::vector<float> *signal_over_noise, *strips_gravity, *main_strips_gravity, *eta, *cn;
+	std::vector<std::vector<float> > *values;
 } s_tree_event;
 
-void p_fill_tree_branches(struct s_tree_event *aggregate, TTree &output_tree) {
-	char format_buffer[d_string_buffer_size];
-	snprintf(format_buffer, d_string_buffer_size, "values[clusters][%d]/F", d_trb_event_channels);
-	d_branch(output_tree, "event_number", "event_number/i", &(aggregate->number));
-	d_branch(output_tree, "clusters", "clusters/i", &(aggregate->clusters));
-	d_branch(output_tree, "strips", "strips[clusters]/i", aggregate->strips);
-	d_branch(output_tree, "first_strip", "first_strip[clusters]/i", aggregate->first_strip);
-	d_branch(output_tree, "signal_over_noise", "signal_over_noise[clusters]/F", aggregate->signal_over_noise);
-	d_branch(output_tree, "strips_gravity", "strips_gravity[clusters]/F", aggregate->strips_gravity);
-	d_branch(output_tree, "main_strips_gravity", "main_strips_gravity[clusters]/F", aggregate->main_strips_gravity);
-	d_branch(output_tree, "eta", "eta[clusters]/F", aggregate->eta);
-	d_branch(output_tree, "cn", "cn[clusters]/F", aggregate->cn);
-	d_branch(output_tree, "values", format_buffer, aggregate->values);
+void p_fill_tree_allocate(struct s_tree_event *aggregate) {
+	aggregate->strips = new std::vector<int>;
+	aggregate->first_strip = new std::vector<int>;
+	aggregate->signal_over_noise = new std::vector<float>;
+	aggregate->strips_gravity = new std::vector<float>;
+	aggregate->main_strips_gravity = new std::vector<float>;
+	aggregate->eta = new std::vector<float>;
+	aggregate->cn = new std::vector<float>;
+	aggregate->values = new std::vector<std::vector<float> >;
+}
+
+void p_fill_tree_branches(struct s_tree_event *aggregate, TTree &output_tree) {	
+	d_branch(output_tree, "event_number", "EvNo/i", &(aggregate->number));
+	d_branch(output_tree, "clusters", "nClus/i", &(aggregate->clusters));
+	output_tree.Branch("nStrips", &(aggregate->strips));
+	output_tree.Branch("fStrip", &(aggregate->first_strip));
+	output_tree.Branch("SoN", &(aggregate->signal_over_noise));
+	output_tree.Branch("CoG", &(aggregate->strips_gravity));
+	output_tree.Branch("CoGSeed", &(aggregate->main_strips_gravity));
+	output_tree.Branch("eta", &(aggregate->eta));
+	output_tree.Branch("cn", &(aggregate->cn));
+	output_tree.Branch("values", &(aggregate->values));
+}
+
+void p_fill_tree_delete(struct s_tree_event *aggregate) {
+	delete aggregate->strips;
+	delete aggregate->first_strip;
+	delete aggregate->signal_over_noise;
+	delete aggregate->strips_gravity;
+	delete aggregate->main_strips_gravity;
+	delete aggregate->eta;
+	delete aggregate->cn;
+	delete aggregate->values;
+}
+
+void p_fill_tree_clear(struct s_tree_event *aggregate) {
+	aggregate->strips->clear();
+	aggregate->first_strip->clear();
+	aggregate->signal_over_noise->clear();
+	aggregate->strips_gravity->clear();
+	aggregate->main_strips_gravity->clear();
+	aggregate->eta->clear();
+	aggregate->cn->clear();
+	aggregate->values->clear();
 }
 
 void f_fill_tree(struct o_string *data, TTree &output_tree) {
@@ -39,7 +72,9 @@ void f_fill_tree(struct o_string *data, TTree &output_tree) {
 	struct s_exception *exception = NULL;
 	struct s_tree_event aggregate;
 	int index, strip, current_event = 0;
+	p_fill_tree_allocate(&aggregate);
 	p_fill_tree_branches(&aggregate, output_tree);
+	std::vector<float> singleton;
 	d_try {
 		stream = f_stream_new_file(NULL, data, "rb", 0777);
 		if ((stream->m_read_raw(stream, (unsigned char *)&(file_header), sizeof(struct s_singleton_file_header)))) {
@@ -48,19 +83,21 @@ void f_fill_tree(struct o_string *data, TTree &output_tree) {
 					printf("\r%80s", "");
 					printf("\r[processing event %d]", current_event++);
 					fflush(stdout);
-					memset(&aggregate, 0, sizeof(struct s_tree_event));
 					aggregate.number = event_header.number;
 					aggregate.clusters = event_header.clusters;
+					p_fill_tree_clear(&aggregate);
 					for (index = 0; index < event_header.clusters; index++) {
-						aggregate.strips[index] = clusters[index].header.strips;
-						aggregate.first_strip[index] = clusters[index].first_strip;
-						aggregate.signal_over_noise[index] = clusters[index].header.signal_over_noise;
-						aggregate.strips_gravity[index] = clusters[index].header.strips_gravity;
-						aggregate.main_strips_gravity[index] = clusters[index].header.main_strips_gravity;
-						aggregate.eta[index] = clusters[index].header.eta;
+						aggregate.strips->push_back(clusters[index].header.strips);
+						aggregate.first_strip->push_back(clusters[index].first_strip);
+						aggregate.signal_over_noise->push_back(clusters[index].header.signal_over_noise);
+						aggregate.strips_gravity->push_back(clusters[index].header.strips_gravity);
+						aggregate.main_strips_gravity->push_back(clusters[index].header.main_strips_gravity);
+						aggregate.cn->push_back(clusters[index].values[clusters[index].header.strips]);
+						aggregate.eta->push_back(clusters[index].header.eta);
+						singleton.clear();
 						for (strip = 0; strip < clusters[index].header.strips; strip++)
-							aggregate.values[index][strip] = clusters[index].values[strip];
-						aggregate.cn[index] = clusters[index].values[clusters[index].header.strips];
+							singleton.push_back(clusters[index].values[strip]);
+						aggregate.values->push_back(singleton);
 					}
 					output_tree.Fill();
 					d_free(clusters);
@@ -74,6 +111,7 @@ void f_fill_tree(struct o_string *data, TTree &output_tree) {
 		d_exception_dump(stderr, exception);
 		d_raise;
 	} d_endtry;
+	p_fill_tree_delete(&aggregate);
 }
 
 int main (int argc, char *argv[]) {
@@ -83,6 +121,14 @@ int main (int argc, char *argv[]) {
 	TFile *output_file;
 	TTree *output_tree;
 	d_try {
+#if !defined(__CINT__)
+		if (!(gInterpreter->IsLoaded("vector")))
+			gInterpreter->ProcessLine("#include <vector>");
+		gSystem->Exec("rm -f AutoDict*vector*");
+		gInterpreter->GenerateDictionary("vector<vector<float> >", "vector");
+		gInterpreter->GenerateDictionary("vector<float>", "vector");
+		gInterpreter->GenerateDictionary("vector<int>", "vector");
+#endif
 		d_compress_argument(arguments, "-c", compressed, d_string_pure, "No compressed file specified (-c)");
 		d_compress_argument(arguments, "-o", output, d_string_pure, "No output file specified (-o)");
 		if ((compressed) && (output)) {
