@@ -1,6 +1,7 @@
 objects = chart.o interface.o compression.o ladder.o environment.o loop.o firefly.o
 objects_compressor = compression.o firefly_compress.o
-object_analyzer = compression.o firefly_analyzer.o
+objects_analyzer = compression.o firefly_analyzer.o
+objects_ttree = compression.o firefly_ttree.o
 cc = gcc -g
 cpp = g++ -g
 cflags = -Wall -I/usr/local/include `libusb-config --cflags` `pkg-config --cflags gtk+-2.0` -Wno-variadic-macros -Wno-missing-braces -Wno-gnu -c -pedantic
@@ -11,6 +12,7 @@ liblink_analyzer = $(liblink) `root-config --libs`
 exec = firefly.bin
 exec_compressor = firefly_compress.bin
 exec_analyzer = firefly_analyzer.bin
+exec_ttree = firefly_ttree.bin
 
 all: $(objects)
 	$(cc) $(lflags) $(objects) -o $(exec) $(liblink)
@@ -43,11 +45,17 @@ firefly_compress.o: firefly_compress.c compressor/compression.h
 firefly_analyzer.o: firefly_analyzer.cpp compressor/compression.h
 	$(cpp) $(cflags_analyzer) firefly_analyzer.cpp
 
+firefly_ttree.o: firefly_ttree.cpp compressor/compression.h
+	$(cpp) $(cflags_analyzer) firefly_ttree.cpp
+
 compressor: $(objects_compressor)
 	$(cc) $(lflags) $(objects_compressor) -o $(exec_compressor) $(liblink) 
 
-analyzer: $(object_analyzer)
-	$(cpp) $(lflags) $(object_analyzer) -o $(exec_analyzer) $(liblink_analyzer)
+analyzer: $(objects_analyzer)
+	$(cpp) $(lflags) $(objects_analyzer) -o $(exec_analyzer) $(liblink_analyzer)
+
+ttree: $(objects_ttree)
+	$(cpp) $(lflags) $(objects_ttree) -o $(exec_ttree) $(liblink_analyzer)
 
 cleandat:
 	rm -f *.dat
@@ -60,3 +68,4 @@ clean:
 	rm -f $(exec)
 	rm -f $(exec_compressor)
 	rm -f $(exec_analyzer)
+	rm -f $(exec_ttree)
