@@ -61,7 +61,7 @@ void p_compress_event_cluster(struct s_singleton_cluster_details *cluster, unsig
 	cluster->first_strip = first_channel;
 	cluster->header.strips = (last_channel-first_channel)+1;
 	for (index = 0, local_strip = first_channel; index < cluster->header.strips; index++, local_strip++) {
-		if (signal[local_strip] >= signal[affected_strips[0]]) {
+		if (signal[local_strip] > signal[affected_strips[0]]) {
 			affected_strips[0] = local_strip;
 			if (first_channel == last_channel)
 				affected_strips[1] = local_strip;
@@ -174,7 +174,8 @@ struct s_singleton_cluster_details *f_decompress_event(struct o_stream *stream, 
 
 void f_compress_data(struct o_string *input_path, struct o_string *output_path, float high_treshold, float low_treshold, float sigma_k, float *pedestal,
 		float *sigma) {
-	int buffer_fill = 0, event_number = 0, compressed_events = 0, last_clusters = 0, read_again = d_true, index, clusters;
+	int buffer_fill = 0, event_number = 0, compressed_events = 0, last_clusters = 0, read_again = d_true, index, clusters,
+		event_size = d_trb_event_size_normal;
 	float written_bytes = 0;
 	ssize_t readed = 0, input_file_size, output_file_size;
 	unsigned char *pointer, buffer[d_trb_buffer_size], kind = 0xa0;
@@ -197,13 +198,12 @@ void f_compress_data(struct o_string *input_path, struct o_string *output_path, 
 		written_bytes += sizeof(struct s_singleton_file_header);
 		while (read_again) {
 			event->filled = d_false;
-			while ((buffer_fill >= d_trb_event_size_normal) && (!event->filled)) {
+			while ((buffer_fill >= event_size) && (!event->filled)) {
 				if (event->m_load(event, buffer, kind, buffer_fill)) {
-					buffer_fill -= d_trb_event_size_normal;
-					memmove(buffer, (buffer+d_trb_event_size_normal), buffer_fill);
-				} else {
+					buffer_fill -= event_size;
+					memmove(buffer, (buffer+event_size), buffer_fill);
+				} else
 					buffer_fill = p_trb_event_align(buffer, buffer_fill);
-				}
 			}
 			if (event->filled) {
 				if ((clusters = f_compress_event(event, output_stream, time(NULL), event_number, high_treshold, low_treshold, sigma_k,
