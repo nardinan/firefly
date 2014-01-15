@@ -126,15 +126,16 @@ int p_ladder_read_integrity(struct o_trb_event *event, unsigned char *last_reade
 }
 
 void p_ladder_read_calibrate(struct s_ladder *ladder) { d_FP;
-	if (ladder->last_event.filled) {
-		if (p_ladder_read_integrity(&(ladder->last_event), &(ladder->last_readed_code))) {
-			d_object_lock(ladder->calibration.lock);
-			if (ladder->calibration.next < ladder->calibration.size)
-				memcpy(&(ladder->calibration.events[ladder->calibration.next++]), &(ladder->last_event), sizeof(struct o_trb_event));
-			d_object_unlock(ladder->calibration.lock);
-		} else
-			ladder->damaged_events++;
-	}
+	if (ladder->to_skip == 0)
+		if (ladder->last_event.filled) {
+			if (p_ladder_read_integrity(&(ladder->last_event), &(ladder->last_readed_code))) {
+				d_object_lock(ladder->calibration.lock);
+				if (ladder->calibration.next < ladder->calibration.size)
+					memcpy(&(ladder->calibration.events[ladder->calibration.next++]), &(ladder->last_event), sizeof(struct o_trb_event));
+				d_object_unlock(ladder->calibration.lock);
+			} else
+				ladder->damaged_events++;
+		}
 }
 
 void p_ladder_read_data(struct s_ladder *ladder) { d_FP;
@@ -162,6 +163,8 @@ void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 					if (ladder->command == e_ladder_command_calibration) {
 						if (ladder->last_readed_kind != 0xa3)
 							p_ladder_read_calibrate(ladder);
+						if (ladder->to_skip)
+							ladder->to_skip--;
 					} else
 						p_ladder_read_data(ladder);
 				}
@@ -519,6 +522,7 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 	ladder->readed_events = 0;
 	ladder->damaged_events = 0;
 	ladder->last_readed_events = 0;
+	ladder->to_skip = 0;
 	ladder->last_readed_code = 0x00;
 	ladder->last_readed_time = current_time;
 	ladder->starting_time = current_time;
@@ -535,6 +539,7 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 		f_interface_clean_data_histogram(interface->charts);
 		f_interface_clean_common_noise(interface->charts);
 		if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_calibration])) {
+			ladder->to_skip = ladder->skip;
 			f_interface_clean_calibration(interface->charts);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.next, 0);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.computed, d_false);
