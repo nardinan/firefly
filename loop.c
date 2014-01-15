@@ -21,7 +21,7 @@ struct s_loop_call steps[] = {
 	{"compute the speed of miniTRB incoming data (in Herz)", 0, 1000000, f_step_check_hertz},
 	{"read an event from miniTRB", 0, 1000, f_step_read},
 	{"redraw slow charts (i.e. Pedestal)", 0, 250000, f_step_plot_slow},
-	{"redraw fast charts (i.e. ADC)", 0, 100000, f_step_plot_fast},
+	{"redraw fast charts (i.e. ADC)", 0, 50000, f_step_plot_fast},
 	{"update 'statistics' panel and refresh other components", 0, 500000, f_step_interface},
 	{"update the progress bar", 0, 100000, f_step_progress},
 	{ NULL, 0, 0, NULL }

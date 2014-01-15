@@ -483,14 +483,13 @@ void f_ladder_plot(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
 	p_ladder_analyze_finished(ladder);
 	d_object_lock(ladder->lock);
 	p_ladder_plot_calibrate(ladder, charts);
-	if ((ladder->deviced) && (ladder->device)) {
+	if ((ladder->deviced) && (ladder->device))
 		p_ladder_plot_data(ladder, charts);
-	} else {
+	else {
 		f_chart_flush(charts[e_interface_alignment_adc]);
 		f_interface_clean_data(charts);
 		f_interface_clean_data_histogram(charts);
 		f_interface_clean_common_noise(charts);
-		//f_interface_clean_calibration(charts);
 	}
 	for (index = 0; index < e_interface_alignment_NULL; index++)
 		f_chart_redraw(charts[index]);
@@ -525,7 +524,6 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 	ladder->starting_time = current_time;
 	ladder->evented = d_false;
 	ladder->paused = d_false;
-	ladder->stopped = d_true;
 	d_object_lock(ladder->data.lock);
 	ladder->data.next = 0;
 	ladder->data.computed = d_false;
