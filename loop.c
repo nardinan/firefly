@@ -172,6 +172,7 @@ int f_step_interface(struct s_environment *environment, time_t current_time) { d
 }
 
 int f_step_progress(struct s_environment *environment, time_t current_time) { d_FP;
+	int readed;
 	float fraction = 0.0;
 	time_t total_time, elpased_time;
 	switch (environment->ladders[environment->current]->command) {
@@ -183,8 +184,9 @@ int f_step_progress(struct s_environment *environment, time_t current_time) { d_
 			break;
 		case e_ladder_command_calibration:
 			gtk_progress_bar_set_text(environment->interface->progress_bar, "CALIBRATION");
-			fraction = ((float)environment->ladders[environment->current]->readed_events/
-					(float)environment->ladders[environment->current]->calibration.size);
+			readed = environment->ladders[environment->current]->readed_events-environment->ladders[environment->current]->skip;
+			if (readed >= 0)
+				fraction = ((float)readed/(float)environment->ladders[environment->current]->calibration.size);
 			break;
 		default:
 			gtk_progress_bar_set_text(environment->interface->progress_bar, "DATA (auto)");
