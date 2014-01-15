@@ -109,7 +109,7 @@ int f_step_plot_slow(struct s_environment *environment, time_t current_time) { d
 }
 
 int f_step_interface(struct s_environment *environment, time_t current_time) { d_FP;
-	char buffer[d_string_buffer_size], *unity[] = {
+	char buffer[d_string_buffer_size], value[d_string_buffer_size], *unity[] = {
 		"Bytes",
 		"Kb",
 		"Mb",
@@ -127,9 +127,17 @@ int f_step_interface(struct s_environment *environment, time_t current_time) { d
 		strftime(buffer, d_string_buffer_size, d_common_interface_time_format,
 				localtime(&(environment->ladders[environment->current]->starting_time)));
 		gtk_label_set_text(environment->interface->labels[e_interface_label_start_time], buffer);
-		snprintf(buffer, d_string_buffer_size, "%d (~%.01fHz) [<span foreground='#990000'>%d</span>]",
-				environment->ladders[environment->current]->readed_events, environment->ladders[environment->current]->hertz,
-				environment->ladders[environment->current]->damaged_events);
+		if (environment->ladders[environment->current]->command == e_ladder_command_calibration) {
+			if (environment->ladders[environment->current]->to_skip > 0)
+				snprintf(value, d_string_buffer_size, "<span foreground='#990000'>%d</span>",
+						environment->ladders[environment->current]->readed_events);
+			else
+				snprintf(value, d_string_buffer_size, "<span foreground='#009900'>%d</span>",
+						environment->ladders[environment->current]->readed_events);
+		} else
+			snprintf(value, d_string_buffer_size, "%d", environment->ladders[environment->current]->readed_events);
+		snprintf(buffer, d_string_buffer_size, "%s (~%.01fHz) [<span foreground='#990000'>%d</span>]", value,
+				environment->ladders[environment->current]->hertz, environment->ladders[environment->current]->damaged_events);
 		gtk_label_set_markup(environment->interface->labels[e_interface_label_events], buffer);
 		if (strlen(environment->ladders[environment->current]->output) > 0) {
 			gtk_label_set_text(environment->interface->labels[e_interface_label_output], environment->ladders[environment->current]->output);

@@ -163,7 +163,7 @@ void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 					if (ladder->command == e_ladder_command_calibration) {
 						if (ladder->last_readed_kind != 0xa3)
 							p_ladder_read_calibrate(ladder);
-						if (ladder->to_skip)
+						if (ladder->to_skip > 0)
 							ladder->to_skip--;
 					} else
 						p_ladder_read_data(ladder);
