@@ -4,6 +4,7 @@
 #include <TGraph.h>
 #include <TStyle.h>
 #include <TFile.h>
+#include <TTree.h>
 extern "C" {
 #include <stdio.h>
 #include <serenity/ground/ground.h>                                                                                                                             
@@ -18,7 +19,7 @@ typedef struct s_chart_style {
 } s_chart_style;
 typedef struct s_charts {
 	TH1F *n_channels, *common_noise, *signal_over_noise, *total_signal_over_noise, *strips_gravity, *main_strips_gravity, *eta, *channel_one,
-		*channels_two_major, *channels_two_minimum;
+		*channels_two, *channels_two_major, *channels_two_minimum;
 	TH1F *last;
 } s_charts;
 void f_fill_histograms(struct o_string *data, struct s_charts *charts) {
@@ -27,12 +28,15 @@ void f_fill_histograms(struct o_string *data, struct s_charts *charts) {
 	struct s_singleton_event_header event_header;
 	struct s_singleton_cluster_details *clusters;
 	struct s_exception *exception = NULL;
-	int index, strip, current_strip;
+	int index, strip, current_strip, current_event = 0;
 	d_try {
 		stream = f_stream_new_file(NULL, data, "rb", 0777);
 		if ((stream->m_read_raw(stream, (unsigned char *)&(file_header), sizeof(struct s_singleton_file_header)))) {
 			if (file_header.endian_check == (unsigned short)d_compress_endian) {
 				while ((clusters = f_decompress_event(stream, &event_header))) {
+					printf("\r%80s", "");
+					printf("\r[processing event: %d]", current_event++);
+					fflush(stdout);
 					for (index = 0; index < event_header.clusters; index++) {
 						if (charts->total_signal_over_noise)
 							for (strip = 0, current_strip = clusters[index].first_strip;
@@ -45,10 +49,12 @@ void f_fill_histograms(struct o_string *data, struct s_charts *charts) {
 							charts->common_noise->Fill(clusters[index].values[clusters[index].header.strips]);
 						if (charts->signal_over_noise)
 							charts->signal_over_noise->Fill(clusters[index].header.signal_over_noise);
-						if ((charts->channel_one) && (charts->channels_two_major) && (charts->channels_two_minimum)) {
+						if ((charts->channel_one) && (charts->channels_two) && (charts->channels_two_major) &&
+								(charts->channels_two_minimum)) {
 							if (clusters[index].header.strips == 1) 
 								charts->channel_one->Fill(clusters[index].header.signal_over_noise);
 							else if (clusters[index].header.strips == 2) {
+								charts->channels_two->Fill(clusters[index].header.signal_over_noise);
 								current_strip = clusters[index].first_strip;
 								if (clusters[index].values[0] > clusters[index].values[1]) {
 									charts->channels_two_major->Fill(clusters[index].values[0]/
@@ -73,6 +79,7 @@ void f_fill_histograms(struct o_string *data, struct s_charts *charts) {
 					}
 					d_free(clusters);
 				}
+				printf("\n[done]\n");
 			} else
 				d_log(e_log_level_ever, "Wrong file format. Maybe this isn't a compressed data file ...\n");
 		}
@@ -123,13 +130,14 @@ void p_export_histograms_singleton(struct o_string *output, TH1F *chart, int log
 
 
 void f_export_histograms(struct o_string *output, struct s_charts *charts) {
-	p_export_histograms_singleton(output, charts->n_channels, d_false, d_true, d_false);
+	p_export_histograms_singleton(output, charts->n_channels, d_true, d_true, d_false);
 	p_export_histograms_singleton(output, charts->common_noise, d_false, d_false, d_false);
-	p_export_histograms_singleton(output, charts->signal_over_noise, d_false, d_false, d_false);
-	p_export_histograms_singleton(output, charts->total_signal_over_noise, d_false, d_false, d_false);
-	p_export_histograms_singleton(output, charts->channel_one, d_false, d_false, d_false);
-	p_export_histograms_singleton(output, charts->channels_two_major, d_false, d_false, d_false);
-	p_export_histograms_singleton(output, charts->channels_two_minimum, d_false, d_false, d_false);
+	p_export_histograms_singleton(output, charts->signal_over_noise, d_true, d_false, d_false);
+	p_export_histograms_singleton(output, charts->total_signal_over_noise, d_true, d_false, d_false);
+	p_export_histograms_singleton(output, charts->channel_one, d_true, d_false, d_false);
+	p_export_histograms_singleton(output, charts->channels_two, d_true, d_false, d_false);
+	p_export_histograms_singleton(output, charts->channels_two_major, d_true, d_false, d_false);
+	p_export_histograms_singleton(output, charts->channels_two_minimum, d_true, d_false, d_false);
 	p_export_histograms_singleton(output, charts->strips_gravity, d_false, d_false, d_false);
 	p_export_histograms_singleton(output, charts->main_strips_gravity, d_false, d_false, d_false);
 	p_export_histograms_singleton(output, charts->eta, d_false, d_false, d_true);
@@ -142,8 +150,8 @@ int main (int argc, char *argv[]) {
 	struct s_exception *exception = NULL;
 	int arguments = 0;
 	float range_start, range_end;
-	TFile *file = new TFile("output.root", "RECREATE");
-	file->cd();
+	TFile *output_file = new TFile("output.root", "RECREATE");
+	output_file->cd();
 	d_try {
 		d_compress_argument(arguments, "-c", compressed, d_string_pure, "No compressed file specified (-c)");
 		d_compress_argument(arguments, "-o", output, d_string_pure, "No output file specified (-o)");
@@ -184,6 +192,14 @@ int main (int argc, char *argv[]) {
 				f_create_histogram(
 						"Clusters' SN with #strips == 1",
 						"Clusters' SN with #strips == 1",
+						5000,
+						-100.0f,
+						800.0f,
+						common_style);
+			charts.channels_two =
+				f_create_histogram(
+						"Clusters' SN with #strips == 2",
+						"Clusters' SN with #strips == 2",
 						5000,
 						-100.0f,
 						800.0f,
@@ -234,6 +250,7 @@ int main (int argc, char *argv[]) {
 			range_end = charts.signal_over_noise->GetMean()+10.0*charts.signal_over_noise->GetRMS();
 			charts.signal_over_noise->GetXaxis()->SetRangeUser(range_start, range_end);
 			charts.channel_one->GetXaxis()->SetRangeUser(range_start, range_end);
+			charts.channels_two->GetXaxis()->SetRangeUser(range_start, range_end);
 			charts.channels_two_major->GetXaxis()->SetRangeUser(range_start, range_end);
 			charts.channels_two_minimum->GetXaxis()->SetRangeUser(range_start, range_end);
 			range_start = charts.total_signal_over_noise->GetMean()-5.0*charts.total_signal_over_noise->GetRMS();
@@ -247,8 +264,8 @@ int main (int argc, char *argv[]) {
 	} d_catch(exception) {
 		d_exception_dump(stderr, exception);
 	} d_endtry;
-	file->Write();
-	file->Close();
-	delete file;
+	output_file->Write();
+	output_file->Close();
+	delete output_file;
 	return 0;
 }
