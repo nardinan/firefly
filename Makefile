@@ -2,7 +2,7 @@ objects = chart.o interface.o compression.o ladder.o environment.o loop.o firefl
 objects_compressor = compression.o firefly_compress.o
 objects_analyzer = compression.o firefly_analyzer.o
 objects_ttree = compression.o firefly_ttree.o
-cc = gcc -g
+cc = gcc -g -std=c99
 cpp = g++ -g
 cflags = -Wall -I/usr/local/include `libusb-config --cflags` `pkg-config --cflags gtk+-2.0` -Wno-variadic-macros -Wno-missing-braces -Wno-gnu -c -pedantic
 cflags_analyzer = $(cflags) `root-config --cflags` -Wno-c++11-long-long
