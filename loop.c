@@ -194,8 +194,6 @@ int f_step_progress(struct s_environment *environment, time_t current_time) { d_
 			elpased_time = current_time-environment->ladders[environment->current]->starting_time;
 			fraction = ((float)elpased_time/(float)total_time);
 	}
-	if (environment->ladders[environment->current]->paused)
-		gtk_progress_bar_set_text(environment->interface->progress_bar, "FREEZED");
 	gtk_progress_bar_set_fraction(environment->interface->progress_bar, d_min(fraction, 1.0));
 	return 0;
 }

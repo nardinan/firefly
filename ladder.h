@@ -74,7 +74,7 @@ typedef struct s_ladder {
 	long long last_readed_time;
 	unsigned int last_readed_events, to_skip, readed_events, damaged_events, event_size, listening_channel;
 	unsigned char last_readed_kind, last_readed_code;
-	int evented, deviced, paused, stopped, update_interface;
+	int evented, deviced, stopped, update_interface;
 	float hertz;
 	pthread_t analyze_thread;
 	struct {
