@@ -1,4 +1,5 @@
 firefly
 =======
 
-DAMPE's miniTRB data acquisition system
+DAMPE's miniTRB data acquisition system.
+
