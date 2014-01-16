@@ -58,6 +58,7 @@ void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *config
 		path = d_string_pure(configuration);
 		stream = f_stream_new_file(NULL, path, "w", 0777);
 		d_pool_begin(pool) {
+			d_object_lock(ladder->parameters_lock);
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "directory=%s\n", ladder->directory));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "location_pointer=%d\n", ladder->location_pointer));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "skip=%d\n", ladder->skip));
@@ -69,6 +70,7 @@ void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *config
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "sigma_noise_cut_bottom=%f\n", ladder->sigma_noise_cut_bottom));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "sigma_noise_cut_top=%f\n", ladder->sigma_noise_cut_top));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "occupancy_k=%f\n", ladder->occupancy_k));
+			d_object_unlock(ladder->parameters_lock);
 		} d_pool_end_flush;
 		d_release(stream);
 		d_release(path);
