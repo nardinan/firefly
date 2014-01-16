@@ -134,6 +134,8 @@ void p_ladder_read_calibrate(struct s_ladder *ladder) { d_FP;
 				d_object_lock(ladder->calibration.lock);
 				if (ladder->calibration.next < ladder->calibration.size)
 					memcpy(&(ladder->calibration.events[ladder->calibration.next++]), &(ladder->last_event), sizeof(struct o_trb_event));
+				ladder->calibration.temperature[0] = ladder->last_event.temperature[0];
+				ladder->calibration.temperature[1] = ladder->last_event.temperature[1];
 				d_object_unlock(ladder->calibration.lock);
 			} else
 				ladder->damaged_events++;
@@ -188,6 +190,9 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 		name = d_string(d_string_buffer_size, "%s/%s%s", ladder->directory, ladder->output, d_common_ext_calibration);
 		if ((stream = f_stream_new_file(NULL, name, "w", 0777))) {
 			d_object_lock(ladder->calibration.write_lock);
+			string = f_string_new(string, d_string_buffer_size, "%s\n%s\n%03f\n%03f\n", ladder->name, location_name[ladder->location_pointer],
+					ladder->calibration.temperature[0], ladder->calibration.temperature[1]);
+			stream->m_write_string(stream, string);
 			for (channel = 0; channel < d_trb_event_channels; channel++) {
 				va = channel/d_trb_event_channels_on_va;
 				channel_on_va = channel%d_trb_event_channels_on_va;

@@ -47,12 +47,13 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration_debug]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_action]), "toggled", G_CALLBACK(p_callback_action), result);
-	g_signal_connect(G_OBJECT(result->interface->bucket_spins[e_interface_bucket_spin_calibration]), "value-changed", G_CALLBACK(p_callback_change_bucket),
-			result);
-	g_signal_connect(G_OBJECT(result->interface->bucket_spins[e_interface_bucket_spin_data]), "value-changed", G_CALLBACK(p_callback_change_bucket),
-			result);
+	g_signal_connect(G_OBJECT(result->interface->bucket_spins[e_interface_bucket_spin_calibration]), "value-changed",
+			G_CALLBACK(p_callback_change_bucket), result);
+	g_signal_connect(G_OBJECT(result->interface->bucket_spins[e_interface_bucket_spin_data]), "value-changed",
+			G_CALLBACK(p_callback_change_bucket), result);
 	g_signal_connect(G_OBJECT(result->interface->combo_charts), "changed", G_CALLBACK(p_callback_change_chart), result);
 	g_signal_connect(G_OBJECT(result->interface->notebook), "switch-page", G_CALLBACK(p_callback_change_page), result);
+	g_signal_connect(G_OBJECT(result->interface->entries[e_interface_entry_ladder]), "changed", G_CALLBACK(p_callback_change_entry), result);
 	g_signal_connect(G_OBJECT(result->interface->scale_configuration->action), "clicked", G_CALLBACK(p_callback_scale_action), result);
 	g_signal_connect(G_OBJECT(result->interface->scale_configuration->export_csv), "clicked", G_CALLBACK(p_callback_scale_export_csv), result);
 	g_signal_connect(G_OBJECT(result->interface->scale_configuration->export_png), "clicked", G_CALLBACK(p_callback_scale_export_png), result);
@@ -145,6 +146,14 @@ void p_callback_change_page(GtkWidget *widget, gpointer *page, unsigned int page
 		f_interface_show(environment->interface, e_interface_alignment_NULL);
 	else
 		f_interface_show(environment->interface, selected);
+}
+
+void p_callback_change_entry(GtkWidget *widget, struct s_environment *environment) {
+	const char *content = gtk_entry_get_text(GTK_ENTRY(widget));
+	if (d_strlen(content))
+		snprintf(environment->ladders[environment->current]->name, d_string_buffer_size, "%s", content);
+	else
+		memset(environment->ladders[environment->current]->name, 0, d_string_buffer_size);
 }
 
 int p_callback_hide_on_exit(GtkWidget *widget, struct s_environment *environment) {

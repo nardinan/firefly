@@ -65,7 +65,7 @@ typedef struct s_ladder {
 	unsigned int location_pointer, skip;
 	float sigma_raw_cut, sigma_raw_noise_cut_bottom, sigma_raw_noise_cut_top, sigma_k, sigma_cut, sigma_noise_cut_bottom, sigma_noise_cut_top, occupancy_k;
 	/* end */
-	char output[d_string_buffer_size];
+	char output[d_string_buffer_size], name[d_string_buffer_size];
 	struct o_object *lock;
 	struct o_trb *device;
 	struct o_trb_event last_event;
@@ -81,7 +81,7 @@ typedef struct s_ladder {
 		struct o_object *lock, *write_lock;
 		unsigned int next, size;
 		struct o_trb_event events[d_common_calibration_events];
-		float pedestal[d_trb_event_channels], sigma_raw[d_trb_event_channels], sigma[d_trb_event_channels];
+		float pedestal[d_trb_event_channels], sigma_raw[d_trb_event_channels], sigma[d_trb_event_channels], temperature[2];
 		int computed, calibrated, flags[d_trb_event_channels];
 	} calibration;
 	struct {
