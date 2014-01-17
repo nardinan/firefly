@@ -25,7 +25,7 @@
 #define d_common_ext_calibration ".cal"
 #define d_common_timeout 500
 #define d_common_timeout_loop 100
-#define d_common_timeout_analyze 150000
+#define d_common_timeout_analyze 500000
 #define d_common_timeout_device 1000000
 #define d_common_file_time_format "_%m.%d.%Y-%H.%M.%S"
 #define d_common_interface_time_format "%d %b %Y %H:%M:%S"

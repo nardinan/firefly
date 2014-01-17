@@ -1,4 +1,4 @@
-objects = chart.o interface.o compression.o ladder.o environment.o loop.o firefly.o
+objects = chart.o interface.o compression.o ladder.o analyzer.o environment.o loop.o firefly.o
 objects_compressor = compression.o firefly_compress.o
 objects_analyzer = compression.o firefly_analyzer.o
 objects_ttree = compression.o firefly_ttree.o
@@ -24,10 +24,13 @@ chart.o: components/chart.c components/chart.h
 interface.o: interface.c interface.h components/chart.h
 	$(cc) $(cflags) interface.c
 
-compression.o: compressor/compression.c compressor/compression.h
-	$(cc) $(cflags) compressor/compression.c
+compression.o: compression.c compression.h
+	$(cc) $(cflags) compression.c
 
-ladder.o: ladder.c ladder.h interface.h compressor/compression.h
+analyzer.o: analyzer.c analyzer.h ladder.h
+	$(cc) $(cflags) analyzer.c
+
+ladder.o: ladder.c ladder.h interface.h compression.h
 	$(cc) $(cflags) ladder.c
 
 environment.o: environment.c environment.h ladder.h
@@ -39,13 +42,13 @@ loop.o: loop.c loop.h environment.h
 firefly.o: firefly.c loop.h
 	$(cc) $(cflags) firefly.c
 
-firefly_compress.o: firefly_compress.c compressor/compression.h
+firefly_compress.o: firefly_compress.c compression.h
 	$(cc) $(cflags) firefly_compress.c
 
-firefly_analyzer.o: firefly_analyzer.cpp compressor/compression.h
+firefly_analyzer.o: firefly_analyzer.cpp compression.h
 	$(cpp) $(cflags_analyzer) firefly_analyzer.cpp
 
-firefly_ttree.o: firefly_ttree.cpp compressor/compression.h
+firefly_ttree.o: firefly_ttree.cpp compression.h
 	$(cpp) $(cflags_analyzer) firefly_ttree.cpp
 
 compressor: $(objects_compressor)

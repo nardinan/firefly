@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "ladder.h"
+#include "analyzer.h"
 void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *configuration) { d_FP;
 	struct o_stream *stream;
 	struct o_string *path;
@@ -111,7 +112,7 @@ struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) {
 		snprintf(configuration, d_string_buffer_size, "%s%s", pw->pw_dir, d_common_configuration);
 		p_ladder_new_configuration_load(result, configuration);
 	}
-	pthread_create(&(result->analyze_thread), NULL, f_ladder_analyze_thread, (void *)result);
+	pthread_create(&(result->analyze_thread), NULL, f_analyzer_thread, (void *)result);
 	return result;
 }
 
@@ -185,13 +186,21 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 	int channel, va, channel_on_va;
 	struct o_stream *stream;
 	struct o_string *name, *string = NULL;
+	char buffer[d_string_buffer_size];
 	d_object_lock(ladder->calibration.lock);
 	if ((ladder->calibration.calibrated) && (d_strlen(ladder->output) > 0)) {
 		name = d_string(d_string_buffer_size, "%s/%s%s", ladder->directory, ladder->output, d_common_ext_calibration);
 		if ((stream = f_stream_new_file(NULL, name, "w", 0777))) {
 			d_object_lock(ladder->calibration.write_lock);
-			string = f_string_new(string, d_string_buffer_size, "%s\n%s\n%03f\n%03f\n", ladder->name, location_name[ladder->location_pointer],
-					ladder->calibration.temperature[0], ladder->calibration.temperature[1]);
+			strftime(buffer, d_string_buffer_size, d_common_interface_time_format, localtime(&(ladder->starting_time)));
+			string = f_string_new(string, d_string_buffer_size, "%s\n%s\nstarting_time=%s\ntempR=%03f\ntempL=%03f\n", ladder->name,
+					location_name[ladder->location_pointer], buffer, ladder->calibration.temperature[0],
+					ladder->calibration.temperature[1]);
+			stream->m_write_string(stream, string);
+			string = f_string_new(string, d_string_buffer_size, "sigmaraw_cut=%03f\nsigmaraw_noise_cut=%03f-%03f\nsigma_cut=%03f\n"
+					"sigma_noise_cut=%03f-%03f\nsigma_k=%03f\noccupancy_k=%03f\n", ladder->sigma_raw_cut,
+					ladder->sigma_raw_noise_cut_bottom, ladder->sigma_raw_noise_cut_top, ladder->sigma_cut, ladder->sigma_noise_cut_bottom,
+					ladder->sigma_noise_cut_top, ladder->sigma_k, ladder->occupancy_k);
 			stream->m_write_string(stream, string);
 			for (channel = 0; channel < d_trb_event_channels; channel++) {
 				va = channel/d_trb_event_channels_on_va;
@@ -246,162 +255,6 @@ void p_ladder_analyze_finished(struct s_ladder *ladder) { d_FP;
 		}
 	}
 	d_object_unlock(ladder->lock);
-}
-
-void p_ladder_analyze_thread_calibrate_channels(struct s_ladder *ladder, float sigma_k, float sigma_cut_bottom, float sigma_cut_top, float *values,
-		size_t size) { d_FP;
-	float total = 0, total_square = 0, pedestal, rms, fraction = (1.0/(float)size);
-	int index;
-	for (index = 0; index < size; index++) {
-		total += values[index];
-		total_square += values[index]*values[index];
-	}
-	pedestal = total/(float)size;
-	total *= fraction;
-	total_square *= fraction;
-	rms = sqrt(fabs((total_square-(total*total))));
-	for (index = 0; index < size; index++)
-		if ((values[index] > pedestal+(sigma_k*rms)) || (values[index] < pedestal-(sigma_k*rms)) ||
-				(values[index] > sigma_cut_top) || (values[index] < sigma_cut_bottom))
-			ladder->calibration.flags[index] |= e_trb_event_channel_damaged;
-}
-
-void p_ladder_analyze_thread_calibrate(struct s_ladder *ladder) { d_FP;
-	int next, size, computed;
-	d_ladder_safe_assign(ladder->calibration.lock, computed, ladder->calibration.computed);
-	if (!computed) {
-		d_ladder_safe_assign(ladder->calibration.lock, next, ladder->calibration.next);
-		d_ladder_safe_assign(ladder->calibration.lock, size, ladder->calibration.size);
-		if (next >= size) {
-			memset(ladder->calibration.flags, 0, (sizeof(int)*d_trb_event_channels));
-			d_object_lock(ladder->calibration.write_lock);
-			d_assert(p_trb_event_pedestal(ladder->calibration.events, next, ladder->calibration.pedestal));
-			d_assert(p_trb_event_sigma_raw(ladder->calibration.events, next, ladder->calibration.sigma_raw));
-			p_ladder_analyze_thread_calibrate_channels(ladder, ladder->sigma_raw_cut, ladder->sigma_raw_noise_cut_bottom,
-					ladder->sigma_raw_noise_cut_top, ladder->calibration.sigma_raw, d_trb_event_channels);
-			d_assert(p_trb_event_sigma(ladder->calibration.events, next, ladder->sigma_k, ladder->calibration.sigma_raw,
-						ladder->calibration.pedestal, ladder->calibration.flags, ladder->calibration.sigma));
-			p_ladder_analyze_thread_calibrate_channels(ladder, ladder->sigma_cut, ladder->sigma_noise_cut_bottom, ladder->sigma_noise_cut_top,
-					ladder->calibration.sigma, d_trb_event_channels);
-			d_object_unlock(ladder->calibration.write_lock);
-			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.computed, d_true);
-			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.calibrated, d_true);
-		}
-	}
-}
-
-void p_ladder_analyze_thread_data(struct s_ladder *ladder) { d_FP;
-	int index, next, size, computed, channel, channel_on_event, va, startup, entries, not_first[d_trb_event_channels] = {d_false};
-	float value, value_no_pedestal, common_noise_on_va;
-	d_ladder_safe_assign(ladder->data.lock, computed, ladder->data.computed);
-	if (!computed) {
-		d_ladder_safe_assign(ladder->data.lock, next, ladder->data.next);
-		d_ladder_safe_assign(ladder->data.lock, size, ladder->data.size);
-		if (next >= size) {
-			d_object_lock(ladder->calibration.lock);
-			if (ladder->calibration.calibrated) {
-				d_object_lock(ladder->calibration.write_lock);
-				if (ladder->last_readed_kind != 0xa3) {
-					for (channel = 0; channel < d_trb_event_channels; channel++) {
-						for (index = 0, value = 0, value_no_pedestal = 0; index < next; index++) {
-							value += ladder->data.events[index].values[channel];
-							value_no_pedestal += (ladder->data.events[index].values[channel]-
-									ladder->calibration.pedestal[channel]);
-						}
-						ladder->data.mean[channel] = value/(float)next;
-						ladder->data.mean_no_pedestal[channel] = value_no_pedestal/(float)next;
-					}
-					for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
-						ladder->data.cn[va] = 0;
-						for (channel = startup, entries = 0, common_noise_on_va = 0; channel < (startup+d_trb_event_channels_on_va);
-								channel++)
-							if ((ladder->calibration.flags[channel]&e_trb_event_channel_damaged) != e_trb_event_channel_damaged)
-								if (fabs(ladder->data.mean_no_pedestal[channel]) <
-										(ladder->sigma_k*ladder->calibration.sigma[channel])) {
-									common_noise_on_va += ladder->data.mean_no_pedestal[channel];
-									entries++;
-								}
-						if (entries > 0)
-							ladder->data.cn[va] = (common_noise_on_va/(float)entries);
-					}
-					ladder->data.buckets_size = next;
-					for (index = 0; index < next; index++)
-						for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
-							ladder->data.cn_bucket[index][va] = 0;
-							for (channel = startup, entries = 0, common_noise_on_va = 0;
-									channel < (startup+d_trb_event_channels_on_va); channel++)  {
-								value = ladder->data.events[index].values[channel]-ladder->calibration.pedestal[channel];
-								if (fabs(value) < (ladder->sigma_k*ladder->calibration.sigma[channel])) {
-									common_noise_on_va += value;
-									entries++;
-								}
-							}
-							if (entries > 0)
-								ladder->data.cn_bucket[index][va] = (common_noise_on_va/(float)entries);
-							for (channel = startup; channel < (startup+d_trb_event_channels_on_va); channel++) {
-								ladder->data.signal_bucket[index][channel] = (ladder->data.events[index].values[channel]-
-										ladder->calibration.pedestal[channel]-ladder->data.cn_bucket[index][va]);
-								if (!not_first[channel]) {
-									ladder->data.signal_bucket_maximum[channel] =
-										ladder->data.signal_bucket[index][channel];
-									ladder->data.signal_bucket_minimum[channel] =
-										ladder->data.signal_bucket[index][channel];
-									not_first[channel] = d_true;
-								} else if (ladder->data.signal_bucket[index][channel] >
-										ladder->data.signal_bucket_maximum[channel])
-									ladder->data.signal_bucket_maximum[channel] =
-										ladder->data.signal_bucket[index][channel];
-								else if (ladder->data.signal_bucket[index][channel] <
-										ladder->data.signal_bucket_minimum[channel])
-									ladder->data.signal_bucket_minimum[channel] =
-										ladder->data.signal_bucket[index][channel];
-								ladder->data.signal_over_noise_bucket[index][channel] =
-									ladder->data.signal_bucket[index][channel]/ladder->calibration.sigma[channel];
-								if (ladder->data.signal_over_noise_bucket[index][channel] > ladder->occupancy_k)
-									ladder->data.occupancy[channel]++;
-							}
-						}
-					ladder->data.total_events += next;
-				} else {
-					memset(ladder->data.mean, 0, sizeof(float)*d_trb_event_channels);
-					memset(ladder->data.mean_no_pedestal, 0, sizeof(float)*d_trb_event_channels);
-					for (channel = 0, channel_on_event = ladder->listening_channel; channel < d_trb_event_samples_half; channel++) {
-						for (index = 0, value = 0, value_no_pedestal = 0; index < next; index++) {
-							value += ladder->data.events[index].values[channel];
-							value_no_pedestal += (ladder->data.events[index].values[channel]-
-									ladder->calibration.pedestal[channel_on_event]);
-						}
-						ladder->data.mean[channel] = value/(float)next;
-						ladder->data.mean_no_pedestal[channel] = value_no_pedestal/(float)next;
-					}
-					for (channel = d_trb_event_channels_half, channel_on_event = ladder->listening_channel+d_trb_event_channels_half;
-							channel < (d_trb_event_samples_half+d_trb_event_channels_half); channel++) {
-						for (index = 0, value = 0, value_no_pedestal = 0; index < next; index++) {
-							value += ladder->data.events[index].values[channel];
-							value_no_pedestal += (ladder->data.events[index].values[channel]-
-									ladder->calibration.pedestal[channel_on_event]);
-						}
-						ladder->data.mean[channel] = value/(float)next;
-						ladder->data.mean_no_pedestal[channel] = value_no_pedestal/(float)next;
-					}
-				}
-				d_object_unlock(ladder->calibration.write_lock);
-				d_ladder_safe_assign(ladder->data.lock, ladder->data.computed, d_true);
-			}
-			d_object_unlock(ladder->calibration.lock);
-		}
-	}
-}
-
-void *f_ladder_analyze_thread(void *v_ladder) { d_FP;
-	struct s_ladder *ladder = (struct s_ladder *)v_ladder;
-	while (usleep(d_common_timeout_analyze) == 0) {
-		d_object_lock(ladder->parameters_lock);
-		p_ladder_analyze_thread_calibrate(ladder);
-		p_ladder_analyze_thread_data(ladder);
-		d_object_unlock(ladder->parameters_lock);
-	}
-	pthread_exit(NULL);
 }
 
 void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
@@ -473,7 +326,6 @@ void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP
 
 void f_ladder_plot_adc(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
 	int index;
-	d_object_lock(ladder->lock);
 	if (ladder->evented) {
 		f_chart_flush(charts[e_interface_alignment_adc]);
 		for (index = 0; index < d_trb_event_channels; index++)
@@ -481,7 +333,6 @@ void f_ladder_plot_adc(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
 	}
 	f_chart_redraw(charts[e_interface_alignment_adc]);
 	ladder->evented = d_false;
-	d_object_unlock(ladder->lock);
 }
 
 void f_ladder_plot(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
@@ -521,7 +372,6 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 	char *kind;
 	size_t written = 0;
 	time_t current_time = time(NULL);
-	d_object_lock(ladder->lock);
 	ladder->readed_events = 0;
 	ladder->damaged_events = 0;
 	ladder->last_readed_events = 0;
@@ -562,7 +412,6 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 			memset(ladder->output, 0, d_string_buffer_size);
 	} else
 		ladder->command = e_ladder_command_stop;
-	d_object_unlock(ladder->lock);
 }
 
 void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) { d_FP;

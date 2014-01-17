@@ -339,4 +339,3 @@ void p_callback_parameters_show(GtkWidget *widget, struct s_environment *environ
 	gtk_window_set_position(environment->interface->parameters_configuration->window, GTK_WIN_POS_CENTER_ON_PARENT);
 	gtk_window_present(environment->interface->parameters_configuration->window);
 }
-

@@ -8,7 +8,7 @@ extern "C" {
 #include <serenity/ground/ground.h>
 #include <serenity/structures/structures.h>
 #include <serenity/structures/infn/infn.h>
-#include "compressor/compression.h"
+#include "compression.h"
 }
 #define d_branch(ot,str,kin,ptr) (ot).Branch((str),(ptr),(kin))
 typedef struct s_tree_event {

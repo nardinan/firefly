@@ -10,7 +10,7 @@ extern "C" {
 #include <serenity/ground/ground.h>                                                                                                                             
 #include <serenity/structures/structures.h>                                                                                                                     
 #include <serenity/structures/infn/infn.h> 
-#include "compressor/compression.h"
+#include "compression.h"
 }
 #define d_style_empty {NAN,NAN,NAN,NAN,kTRUE,kYellow,3010,kBlack,1.0}
 typedef struct s_chart_style {

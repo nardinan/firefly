@@ -1,4 +1,4 @@
-#include "compressor/compression.h"
+#include "compression.h"
 void f_check_compression(struct o_string *data) {
 	struct o_stream *stream;
 	struct s_singleton_file_header file_header;

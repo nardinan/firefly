@@ -19,7 +19,7 @@
 #define firefly_ladder_h
 #include <pwd.h>
 #include "interface.h"
-#include "compressor/compression.h"
+#include "compression.h"
 #define d_ladder_trigger_internal 0x22
 #define d_ladder_trigger_external 0x11
 #define d_ladder_safe_assign(sep,res,val)\
@@ -59,23 +59,18 @@ typedef struct s_ladder_histogram_value {
 	int value, occurrence, filled;
 } s_ladder_histogram_value;
 typedef struct s_ladder {
-	/* configuration values */
-	struct o_object *parameters_lock;
-	char directory[d_string_buffer_size];
-	unsigned int location_pointer, skip;
-	float sigma_raw_cut, sigma_raw_noise_cut_bottom, sigma_raw_noise_cut_top, sigma_k, sigma_cut, sigma_noise_cut_bottom, sigma_noise_cut_top, occupancy_k;
-	/* end */
-	char output[d_string_buffer_size], name[d_string_buffer_size];
-	struct o_object *lock;
+	char output[d_string_buffer_size], directory[d_string_buffer_size], name[d_string_buffer_size];
+	struct o_object *lock, *parameters_lock;
 	struct o_trb *device;
 	struct o_trb_event last_event;
 	enum e_ladder_commands command;
 	time_t starting_time, finish_time;
 	long long last_readed_time;
-	unsigned int last_readed_events, to_skip, readed_events, damaged_events, event_size, listening_channel;
+	unsigned int last_readed_events, readed_events, damaged_events, event_size, listening_channel, location_pointer, skip, to_skip;
 	unsigned char last_readed_kind, last_readed_code;
 	int evented, deviced, stopped, update_interface;
-	float hertz;
+	float hertz, sigma_raw_cut, sigma_raw_noise_cut_bottom, sigma_raw_noise_cut_top, sigma_k, sigma_cut, sigma_noise_cut_bottom, sigma_noise_cut_top,
+	      occupancy_k;
 	pthread_t analyze_thread;
 	struct {
 		struct o_object *lock, *write_lock;
@@ -105,11 +100,7 @@ extern void f_ladder_read(struct s_ladder *ladder, time_t timeout);
 extern void p_ladder_save_calibrate(struct s_ladder *ladder);
 extern void p_ladder_load_calibrate(struct s_ladder *ladder, struct o_stream *stream);
 extern void p_ladder_analyze_finished(struct s_ladder *ladder);
-extern void p_ladder_analyze_thread_calibrate_channels(struct s_ladder *ladder, float sigma_k, float sigma_cut_bottom, float sigma_cut_top, float *values,
-		size_t size);
-extern void p_ladder_analyze_thread_calibrate(struct s_ladder *ladder);
-extern void p_ladder_analyze_thread_data(struct s_ladder *ladder);
-extern void *f_ladder_analyze_thread(void *v_ladder);
+
 extern void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts);
 extern void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts);
 extern void f_ladder_plot_adc(struct s_ladder *ladder, struct s_chart **charts);
