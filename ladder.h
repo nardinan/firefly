@@ -69,8 +69,8 @@ typedef struct s_ladder {
 	unsigned int last_readed_events, readed_events, damaged_events, event_size, listening_channel, location_pointer, skip, to_skip;
 	unsigned char last_readed_kind, last_readed_code;
 	int evented, deviced, stopped, update_interface;
-	float hertz, sigma_raw_cut, sigma_raw_noise_cut_bottom, sigma_raw_noise_cut_top, sigma_k, sigma_cut, sigma_noise_cut_bottom, sigma_noise_cut_top,
-	      occupancy_k;
+	float hertz, last_hold_delay, sigma_raw_cut, sigma_raw_noise_cut_bottom, sigma_raw_noise_cut_top, sigma_k, sigma_cut, sigma_noise_cut_bottom,
+	      sigma_noise_cut_top, occupancy_k;
 	pthread_t analyze_thread;
 	struct {
 		struct o_object *lock, *write_lock;
@@ -100,7 +100,6 @@ extern void f_ladder_read(struct s_ladder *ladder, time_t timeout);
 extern void p_ladder_save_calibrate(struct s_ladder *ladder);
 extern void p_ladder_load_calibrate(struct s_ladder *ladder, struct o_stream *stream);
 extern void p_ladder_analyze_finished(struct s_ladder *ladder);
-
 extern void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts);
 extern void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts);
 extern void f_ladder_plot_adc(struct s_ladder *ladder, struct s_chart **charts);

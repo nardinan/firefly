@@ -193,9 +193,9 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 		if ((stream = f_stream_new_file(NULL, name, "w", 0777))) {
 			d_object_lock(ladder->calibration.write_lock);
 			strftime(buffer, d_string_buffer_size, d_common_interface_time_format, localtime(&(ladder->starting_time)));
-			string = f_string_new(string, d_string_buffer_size, "%s\n%s\nstarting_time=%s\ntempR=%03f\ntempL=%03f\n", ladder->name,
-					location_name[ladder->location_pointer], buffer, ladder->calibration.temperature[0],
-					ladder->calibration.temperature[1]);
+			string = f_string_new(string, d_string_buffer_size, "%s\n%s\nstarting_time=%s\ntemp_right=%03f\ntemp_left=%03f\nhold_delay=%03f",
+					ladder->name, location_name[ladder->location_pointer], buffer, ladder->calibration.temperature[0],
+					ladder->calibration.temperature[1], ladder->last_hold_delay);
 			stream->m_write_string(stream, string);
 			string = f_string_new(string, d_string_buffer_size, "sigmaraw_cut=%03f\nsigmaraw_noise_cut=%03f-%03f\nsigma_cut=%03f\n"
 					"sigma_noise_cut=%03f-%03f\nsigma_k=%03f\noccupancy_k=%03f\n", ladder->sigma_raw_cut,
@@ -417,12 +417,11 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
 	unsigned char trigger = d_ladder_trigger_internal, dac = 0x00, channel = 0x00;
 	enum e_trb_mode mode = e_trb_mode_normal;
-	float hold_delay;
 	struct o_string *name;
 	d_object_lock(ladder->lock);
 	if ((ladder->deviced) && (ladder->device))
 		if (ladder->command != e_ladder_command_stop) {
-			hold_delay = (float)gtk_spin_button_get_value(interface->spins[e_interface_spin_delay]);
+			ladder->last_hold_delay = (float)gtk_spin_button_get_value(interface->spins[e_interface_spin_delay]);
 			if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_internal]))
 				trigger = d_ladder_trigger_internal;
 			else
@@ -446,7 +445,7 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) 
 					d_release(name);
 				}
 			}
-			ladder->device->m_setup(ladder->device, trigger, hold_delay, mode, dac, channel, d_common_timeout);
+			ladder->device->m_setup(ladder->device, trigger, ladder->last_hold_delay, mode, dac, channel, d_common_timeout);
 			ladder->event_size = ladder->device->event_size;
 			ladder->stopped = d_false;
 		}
