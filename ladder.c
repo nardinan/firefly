@@ -39,6 +39,7 @@ void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *config
 			d_ladder_key_load_f(dictionary, sigma_noise_cut_bottom, ladder);
 			d_ladder_key_load_f(dictionary, sigma_noise_cut_top, ladder);
 			d_ladder_key_load_f(dictionary, occupancy_k, ladder);
+			d_ladder_key_load_d(dictionary, save_calibration_raw, ladder);
 			d_object_unlock(ladder->parameters_lock);
 		}
 		d_release(dictionary);
@@ -71,6 +72,7 @@ void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *config
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "sigma_noise_cut_bottom=%f\n", ladder->sigma_noise_cut_bottom));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "sigma_noise_cut_top=%f\n", ladder->sigma_noise_cut_top));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "occupancy_k=%f\n", ladder->occupancy_k));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "save_calibration_raw=%d\n", ladder->save_calibration_raw));
 			d_object_unlock(ladder->parameters_lock);
 		} d_pool_end_flush;
 		d_release(stream);
@@ -193,19 +195,19 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 		if ((stream = f_stream_new_file(NULL, name, "w", 0777))) {
 			d_object_lock(ladder->calibration.write_lock);
 			strftime(buffer, d_string_buffer_size, d_common_interface_time_format, localtime(&(ladder->starting_time)));
-			string = f_string_new(string, d_string_buffer_size, "%s\n%s\nstarting_time=%s\ntemp_right=%03f\ntemp_left=%03f\nhold_delay=%03f",
+			string = f_string_new(string, d_string_buffer_size, "%s\n%s\nstarting_time=%s\ntemp_right=%.03f\ntemp_left=%.03f\nhold_delay=%.03f\n",
 					ladder->name, location_entries[ladder->location_pointer].name, buffer, ladder->calibration.temperature[0],
 					ladder->calibration.temperature[1], ladder->last_hold_delay);
 			stream->m_write_string(stream, string);
-			string = f_string_new(string, d_string_buffer_size, "sigmaraw_cut=%03f\nsigmaraw_noise_cut=%03f-%03f\nsigma_cut=%03f\n"
-					"sigma_noise_cut=%03f-%03f\nsigma_k=%03f\noccupancy_k=%03f\n", ladder->sigma_raw_cut,
+			string = f_string_new(string, d_string_buffer_size, "sigmaraw_cut=%.03f\nsigmaraw_noise_cut=%.03f-%.03f\nsigma_cut=%.03f\n"
+					"sigma_noise_cut=%.03f-%.03f\nsigma_k=%.03f\noccupancy_k=%.03f\n", ladder->sigma_raw_cut,
 					ladder->sigma_raw_noise_cut_bottom, ladder->sigma_raw_noise_cut_top, ladder->sigma_cut, ladder->sigma_noise_cut_bottom,
 					ladder->sigma_noise_cut_top, ladder->sigma_k, ladder->occupancy_k);
 			stream->m_write_string(stream, string);
 			for (channel = 0; channel < d_trb_event_channels; channel++) {
 				va = channel/d_trb_event_channels_on_va;
 				channel_on_va = channel%d_trb_event_channels_on_va;
-				string = f_string_new(string, d_string_buffer_size, "%d, %d, %d, %03f, %03f, %03f, %d\n", channel, va, channel_on_va,
+				string = f_string_new(string, d_string_buffer_size, "%d, %d, %d, %.03f, %.03f, %.03f, %d\n", channel, va, channel_on_va,
 						ladder->calibration.pedestal[channel], ladder->calibration.sigma_raw[channel],
 						ladder->calibration.sigma[channel],
 						((ladder->calibration.flags[channel]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?1:0);
@@ -367,7 +369,7 @@ void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *inte
 	if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_public])) {
 		selected_kind = gtk_combo_box_get_active(interface->combos[e_interface_combo_kind]);
 		written = snprintf(ladder->name, d_string_buffer_size, "%s", kind_entries[selected_kind].code);
-		if ((selected_kind == d_interface_index_prototype) && (selected_kind == d_interface_index_ladder)) {
+		if ((selected_kind == d_interface_index_prototype) || (selected_kind == d_interface_index_ladder)) {
 			selected_assembly = gtk_combo_box_get_active(interface->combos[e_interface_combo_assembly]);
 			selected_quality = gtk_combo_box_get_active(interface->combos[e_interface_combo_quality]);
 			written += snprintf(ladder->name+written, d_string_buffer_size-written, "%s%s", assembly_entries[selected_assembly].code,
@@ -378,13 +380,13 @@ void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *inte
 				(gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_top]))?'T':'B');
 		snprintf(ladder->ladder_directory, d_string_buffer_size, "%s/%s", ladder->directory, ladder->name);
 		mkdir(ladder->ladder_directory, 0777);
-		if (ladder->command != e_ladder_command_calibration) {
+		if (ladder->command == e_ladder_command_calibration) {
 			for (index = 0; index < e_interface_test_toggle_NULL; index++)
 				if (gtk_check_menu_item_get_active(interface->test_modes[index])) {
 					test_code = test_entries[index];
 					break;
 				}
-			if (test_code) {
+			if (test_code != 0x00) {
 				snprintf(ladder->ladder_directory, d_string_buffer_size, "%s/%s/%s", ladder->directory, ladder->name, d_ladder_directory_test);
 				mkdir(ladder->ladder_directory, 0777);
 			}
@@ -393,12 +395,12 @@ void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *inte
 			mkdir(ladder->ladder_directory, 0777);
 		}
 		if (test_code)
-			snprintf(buffer_name, d_string_buffer_size, "%s_%c", ladder->name, test_code);
+			snprintf(buffer_name, d_string_buffer_size, "%s_%s_%c", ladder->name, location_entries[ladder->location_pointer].code, test_code);
 		else
-			snprintf(buffer_name, d_string_buffer_size, "%s", ladder->name);
+			snprintf(buffer_name, d_string_buffer_size, "%s_%s", ladder->name, location_entries[ladder->location_pointer].code);
 		index = 0;
 		while (!founded) {
-			snprintf(buffer_output, d_string_buffer_size, "ls %s/%s_%03d*", ladder->ladder_directory, buffer_name, index);
+			snprintf(buffer_output, d_string_buffer_size, "ls %s/%s_%03d* 2>/dev/null", ladder->ladder_directory, buffer_name, index);
 			if ((stream = popen(buffer_output, "r")) != NULL) {
 				if (fgets(buffer_input, d_string_buffer_size, stream) == NULL) {
 					snprintf(ladder->output, d_string_buffer_size, "%s_%03d", buffer_name, index);
@@ -451,7 +453,7 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
 	unsigned char trigger = d_ladder_trigger_internal, dac = 0x00, channel = 0x00;
 	enum e_trb_mode mode = e_trb_mode_normal;
-	struct o_string *name;
+	struct o_string *name = NULL;
 	d_object_lock(ladder->lock);
 	if ((ladder->deviced) && (ladder->device))
 		if (ladder->command != e_ladder_command_stop) {
@@ -473,11 +475,13 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) 
 					channel = gtk_spin_button_get_value(interface->spins[e_interface_spin_channel]);
 					ladder->listening_channel = channel;
 				}
-				if (d_strlen(ladder->output) > 0) {
+				if (d_strlen(ladder->output) > 0)
 					name = d_string(d_string_buffer_size, "%s/%s%s", ladder->ladder_directory, ladder->output, d_common_ext_data);
-					ladder->device->m_stream(ladder->device, NULL, name, "w", 0777);
-					d_release(name);
-				}
+			} else if ((ladder->save_calibration_raw) && (d_strlen(ladder->output) > 0))
+				name = d_string(d_string_buffer_size, "%s/%s%s", ladder->ladder_directory, ladder->output, d_common_ext_calibration_raw);
+			if (name) {
+				ladder->device->m_stream(ladder->device, NULL, name, "w", 0777);
+				d_release(name);
 			}
 			ladder->device->m_setup(ladder->device, trigger, ladder->last_hold_delay, mode, dac, channel, d_common_timeout);
 			ladder->event_size = ladder->device->event_size;

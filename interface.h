@@ -142,6 +142,7 @@ typedef struct s_interface_parameters {
 	GtkWindow *window;
 	GtkSpinButton *spins[e_interface_parameters_spin_NULL];
 	GtkComboBox *combos[e_interface_parameters_combo_NULL];
+	GtkToggleButton *save_raw;
 	GtkFileChooserButton *directory;
 	GtkButton *action;
 } s_interface_parameters;

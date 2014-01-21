@@ -23,6 +23,7 @@
 #define d_common_configuration "/.firefly.cfg"
 #define d_common_ext_data ".dat"
 #define d_common_ext_calibration ".cal"
+#define d_common_ext_calibration_raw ".craw"
 #define d_common_timeout 500
 #define d_common_timeout_loop 100
 #define d_common_timeout_analyze 500000

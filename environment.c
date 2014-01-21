@@ -271,6 +271,8 @@ void p_callback_parameters_action(GtkWidget *widget, struct s_environment *envir
 	strncpy(environment->ladders[environment->current]->directory,
 			gtk_file_chooser_get_current_folder(GTK_FILE_CHOOSER(environment->interface->parameters_configuration->directory)),
 			d_string_buffer_size);
+	environment->ladders[environment->current]->save_calibration_raw =
+		gtk_toggle_button_get_active(environment->interface->parameters_configuration->save_raw);
 	environment->ladders[environment->current]->skip =
 		gtk_spin_button_get_value_as_int(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_skip]);
 	environment->ladders[environment->current]->sigma_raw_cut =
@@ -307,6 +309,8 @@ void p_callback_parameters_show(GtkWidget *widget, struct s_environment *environ
 			environment->ladders[environment->current]->location_pointer);
 	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(environment->interface->parameters_configuration->directory),
 			environment->ladders[environment->current]->directory);
+	gtk_toggle_button_set_active(environment->interface->parameters_configuration->save_raw,
+			environment->ladders[environment->current]->save_calibration_raw);
 	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_skip],
 			environment->ladders[environment->current]->skip);
 	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_raw_cut],
