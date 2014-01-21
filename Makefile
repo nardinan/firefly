@@ -16,7 +16,7 @@ exec_ttree = firefly_ttree.bin
 
 all: $(objects)
 	$(cc) $(lflags) $(objects) -o $(exec) $(liblink)
-	if [ ! -f ~/.firefly.cfg ]; then cp firefly.cfg ~/.firefly.cfg; fi;
+	if [ ! -f /root/.firefly.cfg ]; then cp firefly.cfg /root/.firefly.cfg; fi;
 
 chart.o: components/chart.c components/chart.h
 	$(cc) $(cflags) components/chart.c
