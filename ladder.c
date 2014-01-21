@@ -189,12 +189,12 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 	char buffer[d_string_buffer_size];
 	d_object_lock(ladder->calibration.lock);
 	if ((ladder->calibration.calibrated) && (d_strlen(ladder->output) > 0)) {
-		name = d_string(d_string_buffer_size, "%s/%s%s", ladder->directory, ladder->output, d_common_ext_calibration);
+		name = d_string(d_string_buffer_size, "%s/%s%s", ladder->ladder_directory, ladder->output, d_common_ext_calibration);
 		if ((stream = f_stream_new_file(NULL, name, "w", 0777))) {
 			d_object_lock(ladder->calibration.write_lock);
 			strftime(buffer, d_string_buffer_size, d_common_interface_time_format, localtime(&(ladder->starting_time)));
 			string = f_string_new(string, d_string_buffer_size, "%s\n%s\nstarting_time=%s\ntemp_right=%03f\ntemp_left=%03f\nhold_delay=%03f",
-					ladder->name, location_name[ladder->location_pointer], buffer, ladder->calibration.temperature[0],
+					ladder->name, location_entries[ladder->location_pointer].name, buffer, ladder->calibration.temperature[0],
 					ladder->calibration.temperature[1], ladder->last_hold_delay);
 			stream->m_write_string(stream, string);
 			string = f_string_new(string, d_string_buffer_size, "sigmaraw_cut=%03f\nsigmaraw_noise_cut=%03f-%03f\nsigma_cut=%03f\n"
@@ -235,17 +235,9 @@ void p_ladder_load_calibrate(struct s_ladder *ladder, struct o_stream *stream) {
 }
 
 void p_ladder_analyze_finished(struct s_ladder *ladder) { d_FP;
-	time_t current_time = time(NULL);
 	int calibrated;
 	d_object_lock(ladder->lock);
-	if (ladder->command == e_ladder_command_automatic) {
-		if (current_time >= ladder->finish_time) {
-			ladder->command = e_ladder_command_stop;
-			if ((ladder->deviced) && (ladder->device))
-				ladder->device->m_close_stream(ladder->device);
-			ladder->update_interface = d_true;
-		}
-	} else if (ladder->command == e_ladder_command_calibration) {
+	if (ladder->command == e_ladder_command_calibration) {
 		d_ladder_safe_assign(ladder->calibration.lock, calibrated, ladder->calibration.calibrated);
 		if (calibrated) {
 			ladder->command = e_ladder_command_stop;
@@ -368,9 +360,61 @@ int f_ladder_device(struct s_ladder *ladder, struct o_trb *device) { d_FP;
 	return result;
 }
 
+void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
+	int written, selected_kind, selected_assembly, selected_quality, index, founded = d_false;
+	char test_code = 0x00, buffer_output[d_string_buffer_size], buffer_input[d_string_buffer_size], buffer_name[d_string_buffer_size];
+	FILE *stream;
+	if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_public])) {
+		selected_kind = gtk_combo_box_get_active(interface->combos[e_interface_combo_kind]);
+		written = snprintf(ladder->name, d_string_buffer_size, "%s", kind_entries[selected_kind].code);
+		if ((selected_kind == d_interface_index_prototype) && (selected_kind == d_interface_index_ladder)) {
+			selected_assembly = gtk_combo_box_get_active(interface->combos[e_interface_combo_assembly]);
+			selected_quality = gtk_combo_box_get_active(interface->combos[e_interface_combo_quality]);
+			written += snprintf(ladder->name+written, d_string_buffer_size-written, "%s%s", assembly_entries[selected_assembly].code,
+					quality_entries[selected_quality].code);
+		}
+		written += snprintf(ladder->name+written, d_string_buffer_size-written, "%d%c",
+				gtk_spin_button_get_value_as_int(interface->spins[e_interface_spin_serial]),
+				(gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_top]))?'T':'B');
+		snprintf(ladder->ladder_directory, d_string_buffer_size, "%s/%s", ladder->directory, ladder->name);
+		mkdir(ladder->ladder_directory, 0777);
+		if (ladder->command != e_ladder_command_calibration) {
+			for (index = 0; index < e_interface_test_toggle_NULL; index++)
+				if (gtk_check_menu_item_get_active(interface->test_modes[index])) {
+					test_code = test_entries[index];
+					break;
+				}
+			if (test_code) {
+				snprintf(ladder->ladder_directory, d_string_buffer_size, "%s/%s/%s", ladder->directory, ladder->name, d_ladder_directory_test);
+				mkdir(ladder->ladder_directory, 0777);
+			}
+		} else {
+			snprintf(ladder->ladder_directory, d_string_buffer_size, "%s/%s/%s", ladder->directory, ladder->name, d_ladder_directory_data);
+			mkdir(ladder->ladder_directory, 0777);
+		}
+		if (test_code)
+			snprintf(buffer_name, d_string_buffer_size, "%s_%c", ladder->name, test_code);
+		else
+			snprintf(buffer_name, d_string_buffer_size, "%s", ladder->name);
+		index = 0;
+		while (!founded) {
+			snprintf(buffer_output, d_string_buffer_size, "ls %s/%s_%03d*", ladder->ladder_directory, buffer_name, index);
+			if ((stream = popen(buffer_output, "r")) != NULL) {
+				if (fgets(buffer_input, d_string_buffer_size, stream) == NULL) {
+					snprintf(ladder->output, d_string_buffer_size, "%s_%03d", buffer_name, index);
+					founded = d_true;
+				}
+				pclose(stream);
+			}
+			index++;
+		}
+	} else {
+		memset(ladder->ladder_directory, 0, d_string_buffer_size);
+		memset(ladder->output, 0, d_string_buffer_size);
+	}
+}
+
 void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
-	char *kind;
-	size_t written = 0;
 	time_t current_time = time(NULL);
 	ladder->readed_events = 0;
 	ladder->damaged_events = 0;
@@ -397,19 +441,9 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.calibrated, d_false);
 			d_ladder_safe_assign(ladder->parameters_lock, ladder->to_skip, ladder->skip);
 			ladder->command = e_ladder_command_calibration;
-		} else if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_automatic])) {
-			ladder->finish_time = ladder->starting_time+gtk_spin_button_get_value_as_int(interface->spins[e_interface_spin_automatic_time]);
-			ladder->command = e_ladder_command_automatic;
 		} else
 			ladder->command = e_ladder_command_data;
-		if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_public])) {
-			ladder->output[written++] = location_name[ladder->location_pointer][0];
-			if ((kind = gtk_combo_box_get_active_text(interface->combos[e_interface_combo_kind])))
-				ladder->output[written++] = kind[0];
-			written += strftime((ladder->output+written), (d_string_buffer_size-written), d_common_file_time_format,
-					localtime(&(ladder->starting_time)));
-		} else
-			memset(ladder->output, 0, d_string_buffer_size);
+		p_ladder_configure_output(ladder, interface);
 	} else
 		ladder->command = e_ladder_command_stop;
 }
@@ -440,7 +474,7 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) 
 					ladder->listening_channel = channel;
 				}
 				if (d_strlen(ladder->output) > 0) {
-					name = d_string(d_string_buffer_size, "%s/%s%s", ladder->directory, ladder->output, d_common_ext_data);
+					name = d_string(d_string_buffer_size, "%s/%s%s", ladder->ladder_directory, ladder->output, d_common_ext_data);
 					ladder->device->m_stream(ladder->device, NULL, name, "w", 0777);
 					d_release(name);
 				}

@@ -41,8 +41,8 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	g_signal_connect(G_OBJECT(result->interface->window), "expose-event", G_CALLBACK(p_callback_start), result);
 	g_signal_connect(G_OBJECT(result->interface->scale_configuration->window), "delete-event", G_CALLBACK(p_callback_hide_on_exit), result);
 	g_signal_connect(G_OBJECT(result->interface->parameters_configuration->window), "delete-event", G_CALLBACK(p_callback_hide_on_exit), result);
-	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_automatic]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
+	g_signal_connect(G_OBJECT(result->interface->preferences), "activate", G_CALLBACK(p_callback_parameters_show), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_normal]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration_debug]), "toggled", G_CALLBACK(p_callback_refresh), result);
@@ -52,8 +52,8 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	g_signal_connect(G_OBJECT(result->interface->bucket_spins[e_interface_bucket_spin_data]), "value-changed",
 			G_CALLBACK(p_callback_change_bucket), result);
 	g_signal_connect(G_OBJECT(result->interface->combo_charts), "changed", G_CALLBACK(p_callback_change_chart), result);
+	g_signal_connect(G_OBJECT(result->interface->combos[e_interface_combo_kind]), "changed", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->notebook), "switch-page", G_CALLBACK(p_callback_change_page), result);
-	g_signal_connect(G_OBJECT(result->interface->entries[e_interface_entry_ladder]), "changed", G_CALLBACK(p_callback_change_entry), result);
 	g_signal_connect(G_OBJECT(result->interface->scale_configuration->action), "clicked", G_CALLBACK(p_callback_scale_action), result);
 	g_signal_connect(G_OBJECT(result->interface->scale_configuration->export_csv), "clicked", G_CALLBACK(p_callback_scale_export_csv), result);
 	g_signal_connect(G_OBJECT(result->interface->scale_configuration->export_png), "clicked", G_CALLBACK(p_callback_scale_export_png), result);
@@ -67,7 +67,6 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 		} else
 			d_die(d_error_malloc);
 	}
-	g_signal_connect(G_OBJECT(result->interface->configuration), "clicked", G_CALLBACK(p_callback_parameters_show), result);
 	g_signal_connect(G_OBJECT(result->interface->parameters_configuration->action), "clicked", G_CALLBACK(p_callback_parameters_action), result);
 	d_assert(result->searcher = f_trbs_new(NULL));
 	result->searcher->m_async_search(result->searcher, p_callback_incoming_device, d_common_timeout_device, (void *)result);
@@ -148,14 +147,6 @@ void p_callback_change_page(GtkWidget *widget, gpointer *page, unsigned int page
 		f_interface_show(environment->interface, selected);
 }
 
-void p_callback_change_entry(GtkWidget *widget, struct s_environment *environment) {
-	const char *content = gtk_entry_get_text(GTK_ENTRY(widget));
-	if (d_strlen(content))
-		snprintf(environment->ladders[environment->current]->name, d_string_buffer_size, "%s", content);
-	else
-		memset(environment->ladders[environment->current]->name, 0, d_string_buffer_size);
-}
-
 int p_callback_hide_on_exit(GtkWidget *widget, struct s_environment *environment) {
 	gtk_widget_hide_all(widget);
 	return d_true;
@@ -195,8 +186,8 @@ void p_callback_scale_export_csv(GtkWidget *widget, struct s_environment *enviro
 			if (environment->interface->scale_configuration->hooked_chart == environment->interface->charts[pointer])
 				break;
 		strftime(time_buffer, d_string_buffer_size, d_common_file_time_format, localtime(&(current_time)));
-		snprintf(name_buffer, d_string_buffer_size, "%s/%s%s.csv", environment->ladders[environment->current]->directory, interface_name[pointer],
-				time_buffer);
+		snprintf(name_buffer, d_string_buffer_size, "%s/%s%s.csv", environment->ladders[environment->current]->ladder_directory,
+				interface_name[pointer], time_buffer);
 		if ((stream = fopen(name_buffer, "w"))) {
 			for (code = 0; code < d_chart_max_nested; code++)
 				if (environment->interface->scale_configuration->hooked_chart->head[code])
@@ -236,8 +227,8 @@ void p_callback_scale_export_png(GtkWidget *widget, struct s_environment *enviro
 			if (environment->interface->scale_configuration->hooked_chart == environment->interface->charts[pointer])
 				break;
 		strftime(time_buffer, d_string_buffer_size, d_common_file_time_format, localtime(&(current_time)));
-		snprintf(name_buffer, d_string_buffer_size, "%s/%s%s.png", environment->ladders[environment->current]->directory, interface_name[pointer],
-				time_buffer);
+		snprintf(name_buffer, d_string_buffer_size, "%s/%s%s.png", environment->ladders[environment->current]->ladder_directory,
+				interface_name[pointer], time_buffer);
 		gtk_widget_get_allocation(GTK_WIDGET(environment->interface->scale_configuration->hooked_chart->plane), &dimension);
 		width = dimension.width;
 		height = dimension.height;

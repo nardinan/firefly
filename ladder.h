@@ -18,8 +18,11 @@
 #ifndef firefly_ladder_h
 #define firefly_ladder_h
 #include <pwd.h>
+#include <sys/stat.h>
 #include "interface.h"
 #include "compression.h"
+#define d_ladder_directory_test "test"
+#define d_ladder_directory_data "data"
 #define d_ladder_trigger_internal 0x22
 #define d_ladder_trigger_external 0x11
 #define d_ladder_safe_assign(sep,res,val)\
@@ -59,7 +62,7 @@ typedef struct s_ladder_histogram_value {
 	int value, occurrence, filled;
 } s_ladder_histogram_value;
 typedef struct s_ladder {
-	char output[d_string_buffer_size], directory[d_string_buffer_size], name[d_string_buffer_size];
+	char output[d_string_buffer_size], directory[d_string_buffer_size], ladder_directory[d_string_buffer_size], name[d_string_buffer_size];
 	struct o_object *lock, *parameters_lock;
 	struct o_trb *device;
 	struct o_trb_event last_event;
@@ -105,6 +108,7 @@ extern void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts)
 extern void f_ladder_plot_adc(struct s_ladder *ladder, struct s_chart **charts);
 extern void f_ladder_plot(struct s_ladder *ladder, struct s_chart **charts);
 extern int f_ladder_device(struct s_ladder *ladder, struct o_trb *device);
+extern void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *interface);
 extern void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *interface);
 extern void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface);
 #endif

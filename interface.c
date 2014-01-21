@@ -26,7 +26,6 @@ const char *interface_labels[] = {
 }, *interface_switches[] = {
 	"v_public",
 	"v_internal",
-	"v_automatic",
 	"v_calibration",
 	NULL
 }, *interface_scale_switches[] = {
@@ -36,7 +35,7 @@ const char *interface_labels[] = {
 	"v_dac",
 	"v_channel",
 	"v_delay",
-	"v_automatic_time",
+	"v_ladder_serial",
 	NULL
 }, *interface_bucket_spins[] = {
 	"v_data_bucket",
@@ -63,18 +62,25 @@ const char *interface_labels[] = {
 	NULL
 }, *interface_combos[] = {
 	"v_kind",
+	"v_assembly",
+	"v_quality",
 	NULL
 }, *interface_parameters_combos[] = {
 	"v_location",
-	NULL
-}, *interface_entries[] = {
-	"v_ladder_name",
 	NULL
 }, *interface_toggles[] = {
 	"v_mode_normal",
 	"v_mode_calibration",
 	"v_mode_calibration_debug",
+	"v_ladder_top",
+	"v_ladder_bottom",
 	"v_action_button",
+	NULL
+}, *interface_test_toggles[] = {
+	"v_test_z",
+	"v_test_a",
+	"v_test_b",
+	"v_test_c",
 	NULL
 }, *interface_files[] = {
 	"v_calibration_file",
@@ -140,13 +146,29 @@ const char *interface_labels[] = {
 	"common_noise_va4",
 	"common_noise_va5",
 	"common_noise_va6"
-}, *location_name[] = {
-	"Perugia",
-	"Geneva",
-	"Beijing",
-	NULL
 };
-
+struct s_interface_key_value location_entries[] = {
+	{"PG", "Perugia"},
+	{"GE", "Geneva"},
+	{"BE", "Beijing"},
+	{NULL, NULL}
+}, kind_entries[] = {
+	{"H", "Hybrid"},
+	{"P", "Prototype"},
+	{"L", "Ladder"},
+	{NULL, NULL}
+}, assembly_entries[] = {
+	{"PG", "Perugia"},
+	{"GE", "Geneva"},
+	{NULL, NULL}
+}, quality_entries[] = {
+	{"ME", "Mechanical"},
+	{"EL", "Electrical"},
+	{"QM", "Qualification model"},
+	{"FM", "Flight model"},
+	{NULL, NULL}
+};
+const char test_entries[] = {0x00, 'a', 'b', 'c'};
 struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *main_interface, GtkBuilder *scale_interface,
 		GtkBuilder *parameters_interface) { d_FP;
 	struct s_interface *result = supplied;
@@ -169,12 +191,14 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	d_assert(result->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(main_interface), "v_main_window")));
 	d_assert(result->scale_configuration->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(scale_interface), "v_scale_window")));
 	d_assert(result->parameters_configuration->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(parameters_interface), "v_preferences_window")));
+	for (index = 0; interface_test_toggles[index]; index++)
+		d_assert(result->test_modes[index] = GTK_CHECK_MENU_ITEM(gtk_builder_get_object(GTK_BUILDER(main_interface), interface_test_toggles[index])));
 	for (index = 0; interface_labels[index]; index++)
 		d_assert(result->labels[index] = GTK_LABEL(gtk_builder_get_object(main_interface, interface_labels[index])));
 	d_assert(result->connected_label = GTK_LABEL(gtk_builder_get_object(main_interface, "v_connected_device_label")));
+	d_assert(result->preferences = GTK_MENU_ITEM(gtk_builder_get_object(main_interface, "v_edit_preferences")));
 	for (index = 0; interface_switches[index]; index++)
 		d_assert(result->switches[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(main_interface, interface_switches[index])));
-	d_assert(result->configuration = GTK_BUTTON(gtk_builder_get_object(main_interface, "v_configure")));
 	for (index = 0; interface_scale_switches[index]; index++)
 		d_assert(result->scale_configuration->switches[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(scale_interface,
 						interface_scale_switches[index])));
@@ -185,9 +209,9 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	gtk_spin_button_set_value(result->spins[e_interface_spin_dac], 10.0);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_channel], 0.0);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_delay], 6.6);
-	gtk_spin_button_set_value(result->spins[e_interface_spin_automatic_time], 60.0);
 	gtk_spin_button_set_value(result->bucket_spins[e_interface_bucket_spin_data], d_common_data_events_default);
 	gtk_spin_button_set_value(result->bucket_spins[e_interface_bucket_spin_calibration], d_common_calibration_events_default);
+	gtk_spin_button_set_value(result->spins[e_interface_spin_serial], 0.0);
 	for (index = 0; interface_scale_spins[index]; index++)
 		d_assert(result->scale_configuration->spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(scale_interface, interface_scale_spins[index])));
 	for (index = 0; interface_parameters_spins[index]; index++)
@@ -197,21 +221,29 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 		d_assert(result->combos[index] = GTK_COMBO_BOX(gtk_builder_get_object(main_interface, interface_combos[index])));
 		gtk_combo_box_set_active(GTK_COMBO_BOX(result->combos[index]), 0);
 	}
+	for (index = 0; kind_entries[index].name; index++)
+		gtk_combo_box_insert_text(result->combos[e_interface_combo_kind], index, kind_entries[index].name);
+	gtk_combo_box_set_active(result->combos[e_interface_combo_kind], 0);
+	for (index = 0; quality_entries[index].name; index++)
+		gtk_combo_box_insert_text(result->combos[e_interface_combo_quality], index, quality_entries[index].name);
+	gtk_combo_box_set_active(result->combos[e_interface_combo_quality], 0);
+	for (index = 0; assembly_entries[index].name; index++)
+		gtk_combo_box_insert_text(result->combos[e_interface_combo_assembly], index, assembly_entries[index].name);
+	gtk_combo_box_set_active(result->combos[e_interface_combo_assembly], 0);
 	for (index = 0; interface_parameters_combos[index]; index++) {
 		d_assert(result->parameters_configuration->combos[index] = GTK_COMBO_BOX(gtk_builder_get_object(parameters_interface,
 						interface_parameters_combos[index])));
 		gtk_combo_box_set_active(GTK_COMBO_BOX(result->parameters_configuration->combos[index]), 0);
 	}
 	d_assert(result->combo_charts = GTK_COMBO_BOX(gtk_builder_get_object(main_interface, "v_charts_list")));
-	for (index = 0; interface_entries[index]; index++)
-		d_assert(result->entries[index] = GTK_ENTRY(gtk_builder_get_object(main_interface, interface_entries[index])));
 	for (index = 0; interface_toggles[index]; index++)
 		d_assert(result->toggles[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(main_interface, interface_toggles[index])));
 	for (index = 0; interface_files[index]; index++)
 		d_assert(result->files[index] = GTK_FILE_CHOOSER_BUTTON(gtk_builder_get_object(main_interface, interface_files[index])));
 	d_assert(result->parameters_configuration->directory = GTK_FILE_CHOOSER_BUTTON(gtk_builder_get_object(parameters_interface, "v_workspace")));
-	for (index = 0; location_name[index]; index++)
-		gtk_combo_box_insert_text(result->parameters_configuration->combos[e_interface_parameters_combo_location], index, location_name[index]);
+	for (index = 0; location_entries[index].code; index++)
+		gtk_combo_box_insert_text(result->parameters_configuration->combos[e_interface_parameters_combo_location], index,
+				location_entries[index].name);
 	for (index = 0; interface_alignments[index]; index++) {
 		gtk_combo_box_insert_text(result->combo_charts, index, interface_name[index]);
 		d_assert(result->alignments[index] = GTK_ALIGNMENT(gtk_builder_get_object(main_interface, interface_alignments[index])));
@@ -250,6 +282,7 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 }
 
 void f_interface_update_configuration(struct s_interface *interface, int deviced) { d_FP;
+	int selected = 0;
 	if (deviced) {
 		gtk_label_set_markup(interface->connected_label, "<span background='#00FF00'>miniTRB is <b>online</b></span>");
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[e_interface_toggle_action]), TRUE);
@@ -269,10 +302,6 @@ void f_interface_update_configuration(struct s_interface *interface, int deviced
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_dac]), TRUE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_channel]), TRUE);
 		}
-		if ((gtk_toggle_button_get_active(interface->switches[e_interface_switch_automatic])))
-			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_automatic_time]), TRUE);
-		else
-			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_automatic_time]), FALSE);
 		if ((gtk_toggle_button_get_active(interface->switches[e_interface_switch_calibration]))) {
 			gtk_toggle_button_set_active(interface->switches[e_interface_switch_public], TRUE); /* write data on calibration mode */
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->files[e_interface_file_calibration]), FALSE);
@@ -281,15 +310,20 @@ void f_interface_update_configuration(struct s_interface *interface, int deviced
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[e_interface_toggle_calibration_debug]), FALSE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_dac]), FALSE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_channel]), FALSE);
-			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_automatic_time]), FALSE);
-			gtk_widget_set_sensitive(GTK_WIDGET(interface->switches[e_interface_switch_automatic]), FALSE);
 		} else {
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->files[e_interface_file_calibration]), TRUE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[e_interface_toggle_normal]), TRUE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[e_interface_toggle_calibration]), TRUE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[e_interface_toggle_calibration_debug]), TRUE);
-			gtk_widget_set_sensitive(GTK_WIDGET(interface->switches[e_interface_switch_automatic]), TRUE);
 		}
+	}
+	selected = gtk_combo_box_get_active(interface->combos[e_interface_combo_kind]);
+	if ((selected == d_interface_index_prototype) || (selected == d_interface_index_ladder)) {
+		gtk_widget_set_sensitive(GTK_WIDGET(interface->combos[e_interface_combo_assembly]), TRUE);
+		gtk_widget_set_sensitive(GTK_WIDGET(interface->combos[e_interface_combo_quality]), TRUE);
+	} else {
+		gtk_widget_set_sensitive(GTK_WIDGET(interface->combos[e_interface_combo_assembly]), FALSE);
+		gtk_widget_set_sensitive(GTK_WIDGET(interface->combos[e_interface_combo_quality]), FALSE);
 	}
 }
 
@@ -301,8 +335,6 @@ void f_interface_lock(struct s_interface *interface, int lock) { d_FP;
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[index]), (!lock));
 	for (index = 0; index < e_interface_combo_NULL; index++)
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->combos[index]), (!lock));
-	for (index = 0; index < e_interface_entry_NULL; index++)
-		gtk_widget_set_sensitive(GTK_WIDGET(interface->entries[index]), (!lock));
 	for (index = 0; index < e_interface_toggle_action; index++)
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[index]), (!lock));
 	for (index = 0; index < e_interface_file_NULL; index++)
@@ -357,3 +389,4 @@ void f_interface_clean_common_noise(struct s_chart **charts) {
 	f_chart_flush(charts[e_interface_alignment_histogram_cn_5]);
 	f_chart_flush(charts[e_interface_alignment_histogram_cn_6]);
 }
+

@@ -214,97 +214,97 @@ int main (int argc, char *argv[]) {
 				f_create_histogram(
 						"NChannels",
 						"Number of channels;# Channels;# Entries",
-						d_trb_event_channels,
+						40.0,//d_trb_event_channels,
 						0.0,
-						d_trb_event_channels,
+						40.0,//d_trb_event_channels,
 						common_style);
 			charts.common_noise =
 				f_create_histogram(
 						"CNoise",
 						"Common Noise;CN;# Entries",
 						2000,
-						-100.0f,
-						100.0f,
+						-60.0,//-100.0f,
+						60.0,//100.0f,
 						common_style);
 			charts.signals = 
 				f_create_histogram(
 						"SElements",
 						"Signal of cluster (foreach event, foreach cluster)",
 						2000,
-						-100.0f,
-						500.0f,
+						0.0,//-100.0f,
+						400.0,//500.0f,
 						common_style);
 			charts.signal_one =
 				f_create_histogram(
 						"SCluster1",
 						"Signal of clusters with #strips == 1",
 						2000,
-						-100.0f,
-						500.0f,
+						0.0,//-100.0f,
+						400.0,//500.0f,
 						common_style);
 			charts.signals_two =
 				f_create_histogram(
 						"SCluster2",
 						"Signal of clusters with #strips == 2",
 						2000,
-						-100.0f,
-						500.0f,
+						0.0,//-100.0f,
+						400.0,//500.0f,
 						common_style);
 			charts.signals_two_major =
 				f_create_histogram(
 						"SCluster2main",
 						"Signal of strip with #strips == 2 (main strip)",
 						2000,
-						-100.0f,
-						500.0f,
+						0.0,//-100.0f,
+						100.0,//500.0f,
 						common_style);
 			charts.signals_two_minor =
 				f_create_histogram(
 						"SCluster2minor",
 						"Signal of strip with #strips == 2 (secondary strip)",
 						2000,
-						-100.0f,
-						500.0f,
+						0.0,//-100.0f,
+						100.0,//500.0f,
 						common_style);
 			charts.signal_over_noise =
 				f_create_histogram(
 						"SN",
 						"signal over noise of cluster;SN;# Entries",
 						2000,
-						-100.0f,
-						500.0f,
+						0.0,//-100.0f,
+						100.0,//500.0f,
 						common_style);
 			charts.channel_one =
 				f_create_histogram(
 						"SN of cluster with #strips == 1",
 						"SN of cluster with #strips == 1",
 						5000,
-						-100.0f,
-						500.0f,
+						0.0,//-100.0f,
+						100.0,//500.0f,
 						common_style);
 			charts.channels_two =
 				f_create_histogram(
 						"SN of cluster with #strips == 2",
 						"SN of cluster with #strips == 2",
 						5000,
-						-100.0f,
-						500.0f,
+						0.0,//-100.0f,
+						100.0,//500.0f,
 						common_style);
 			charts.channels_two_major =
 				f_create_histogram(
 						"SN of strip with #strips == 2 (main strip SN)",
 						"SN of strip with #strips == 2 (main strip SN)",
 						5000,
-						-100.0f,
-						500.0f,
+						0.0,//-100.0f,
+						100.0,//500.0f,
 						common_style);
 			charts.channels_two_minor =
 				f_create_histogram(
 						"SN of strip with #strips == 2 (secondary strip SN)",
 						"SN of strip with #strips == 2 (secondary strip SN)",
 						5000,
-						-100.0f,
-						500.0f,
+						0.0,//-100.0f,
+						100.0,//500.0f,
 						common_style);
 			charts.strips_gravity =
 				f_create_histogram(

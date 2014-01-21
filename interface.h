@@ -19,7 +19,13 @@
 #define firefly_interface_h
 #include "components/chart.h"
 #include "common.h"
-extern const char *interface_name[], *location_name[];
+#define d_interface_index_prototype 1
+#define d_interface_index_ladder 2
+extern const char *interface_name[], test_entries[];
+typedef struct s_interface_key_value {
+	char *code, *name;
+} s_interface_key_value;
+extern struct s_interface_key_value location_entries[], kind_entries[], assembly_entries[], quality_entries[];
 typedef enum e_interface_labels {
 	e_interface_label_events = 0,
 	e_interface_label_size,
@@ -31,7 +37,6 @@ typedef enum e_interface_labels {
 typedef enum e_interface_switches {
 	e_interface_switch_public = 0,
 	e_interface_switch_internal,
-	e_interface_switch_automatic,
 	e_interface_switch_calibration,
 	e_interface_switch_NULL
 } e_interface_switches;
@@ -43,7 +48,7 @@ typedef enum e_interface_spins {
 	e_interface_spin_dac = 0,
 	e_interface_spin_channel,
 	e_interface_spin_delay,
-	e_interface_spin_automatic_time,
+	e_interface_spin_serial,
 	e_interface_spin_NULL
 } e_interface_spins;
 typedef enum e_interface_bucket_spins {
@@ -74,23 +79,30 @@ typedef enum e_interface_parameters_spins {
 } e_interface_parameters_spins;
 typedef enum e_interface_combos {
 	e_interface_combo_kind = 0,
+	e_interface_combo_assembly,
+	e_interface_combo_quality,
 	e_interface_combo_NULL
 } e_interface_combos;
 typedef enum e_interface_parameters_combos {
 	e_interface_parameters_combo_location = 0,
 	e_interface_parameters_combo_NULL
 } e_interface_parameters_combos;
-typedef enum e_interface_entries {
-	e_interface_entry_ladder = 0,
-	e_interface_entry_NULL
-} e_interface_entries;
 typedef enum e_interface_toggles {
 	e_interface_toggle_normal = 0,
 	e_interface_toggle_calibration,
 	e_interface_toggle_calibration_debug,
+	e_interface_toggle_top,
+	e_interface_toggle_bottom,
 	e_interface_toggle_action,
 	e_interface_toggle_NULL
 } e_interface_toggles;
+typedef enum e_interface_test_toggles {
+	e_interface_test_toggle_unofficial = 0,
+	e_interface_test_toggle_a,
+	e_interface_test_toggle_b,
+	e_interface_test_toggle_c,
+	e_interface_test_toggle_NULL
+} e_interface_test_toggles;
 typedef enum e_interface_files {
 	e_interface_file_calibration = 0,
 	e_interface_file_NULL
@@ -137,11 +149,11 @@ typedef struct s_interface {
 	GtkBuilder *interface;
 	GtkWindow *window;
 	GtkLabel *labels[e_interface_label_NULL], *connected_label;
-	GtkButton *configuration;
+	GtkMenuItem *preferences;
+	GtkCheckMenuItem *test_modes[e_interface_test_toggle_NULL];
 	GtkToggleButton *switches[e_interface_switch_NULL], *toggles[e_interface_toggle_NULL];
 	GtkSpinButton *spins[e_interface_spin_NULL], *bucket_spins[e_interface_bucket_spin_NULL];
 	GtkComboBox *combos[e_interface_combo_NULL], *combo_charts;
-	GtkEntry *entries[e_interface_entry_NULL];
 	GtkFileChooserButton *files[e_interface_file_NULL];
 	GtkAlignment *alignments[e_interface_alignment_NULL], *main_interface_alignment;
 	GtkNotebook *notebook;

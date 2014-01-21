@@ -1,9 +1,9 @@
 segments_x=20.0
-segments_y=10.0
+segments_y=41.0
 range_bottom_x=-200.0
 range_top_x=200.0
 range_bottom_y=0.0
-range_top_y=200.0
+range_top_y=4100.0
 color_R_0_z=0.0
 color_G_0_z=0.0
 color_B_0_z=0.6
