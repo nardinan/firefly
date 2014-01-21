@@ -151,6 +151,7 @@ struct s_interface_key_value location_entries[] = {
 	{"PG", "Perugia"},
 	{"GE", "Geneva"},
 	{"BE", "Beijing"},
+	{"HSA", "Hybrid SA"},
 	{NULL, NULL}
 }, kind_entries[] = {
 	{"H", "Hybrid"},
