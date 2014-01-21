@@ -375,7 +375,7 @@ void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *inte
 			written += snprintf(ladder->name+written, d_string_buffer_size-written, "%s%s", assembly_entries[selected_assembly].code,
 					quality_entries[selected_quality].code);
 		}
-		written += snprintf(ladder->name+written, d_string_buffer_size-written, "%d%c",
+		written += snprintf(ladder->name+written, d_string_buffer_size-written, "%03d%c",
 				gtk_spin_button_get_value_as_int(interface->spins[e_interface_spin_serial]),
 				(gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_top]))?'T':'B');
 		snprintf(ladder->ladder_directory, d_string_buffer_size, "%s/%s", ladder->directory, ladder->name);
