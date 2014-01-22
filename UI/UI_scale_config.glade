@@ -228,7 +228,7 @@
             </child>
             <child>
               <object class="GtkCheckButton" id="v_informations">
-                <property name="label" translatable="yes">Show maximum and minimum</property>
+                <property name="label" translatable="yes">Show informations</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>

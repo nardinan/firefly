@@ -378,9 +378,10 @@ void p_chart_normalize(struct s_chart *chart, float full_h, float full_w, unsign
 int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 	GtkAllocation dimension;
 	struct s_chart *chart = (struct s_chart *)v_chart;
-	float full_w = fabs(chart->axis_x.range[1]-chart->axis_x.range[0]), full_h = fabs(chart->axis_y.range[1]-chart->axis_y.range[0]), arc_size = (2.0*G_PI),
-	      min_value[d_chart_max_nested] = {0}, max_value[d_chart_max_nested] = {0}, min_channel[d_chart_max_nested] = {0},
-	      max_channel[d_chart_max_nested] = {0};
+	float full_w = fabs(chart->axis_x.range[1]-chart->axis_x.range[0]), full_h = fabs(chart->axis_y.range[1]-chart->axis_y.range[0]),
+	      arc_size = (2.0*G_PI), min_value[d_chart_max_nested] = {0}, max_value[d_chart_max_nested] = {0}, min_channel[d_chart_max_nested] = {0},
+	      max_channel[d_chart_max_nested] = {0}, rms[d_chart_max_nested] = {0}, pedestal[d_chart_max_nested] = {0}, total, total_square, elements,
+	      fraction, value;
 	int index, code, first;
 	char buffer[d_string_buffer_size];
 	if ((chart->cairo_brush = gdk_cairo_create(chart->plane->window))) {
@@ -398,8 +399,25 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 			if (chart->head[code]) {
 				cairo_set_source_rgb(chart->cairo_brush, chart->data.color[code].R, chart->data.color[code].G, chart->data.color[code].B);
 				cairo_set_line_width(chart->cairo_brush, chart->data.line_size[code]);
-				for (index = 0, first = d_true; index < chart->head[code]; index++)
+				for (index = 0, total = 0, total_square = 0, elements = 0, first = d_true; index < chart->head[code]; index++) {
 					if (chart->values[code][index].normalized.done) {
+						switch (chart->kind[code]) {
+							case e_chart_kind_signal:
+								value = chart->values[code][index].y;
+								elements++;
+								break;
+							case e_chart_kind_histogram:
+								value = chart->values[code][index].x*chart->values[code][index].y;
+								elements += chart->values[code][index].y;
+								break;
+							case e_chart_kind_envelope:
+								value = chart->values[code][index].x*fabs(chart->values[code][index].y-
+										chart->values[code][index].w);
+								elements += fabs(chart->values[code][index].y-chart->values[code][index].w);
+								break;
+						}
+						total += value;
+						total_square += value*value;
 						if (first) {
 							min_value[code] = chart->values[code][index].y;
 							max_value[code] = chart->values[code][index].y;
@@ -431,6 +449,12 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 								chart->data.dot_size[code], 0, arc_size);
 						first = d_false;
 					}
+				}
+				fraction = (1.0/elements);
+				total *= fraction;
+				total_square *= fraction;
+				rms[code] = sqrtf(fabs(total_square-(total*total)));
+				pedestal[code] = total;
 				if (chart->show_borders) {
 					cairo_move_to(chart->cairo_brush, (chart->border_x-d_chart_font_size), (chart->border_y+(code*d_chart_font_height)));
 					cairo_show_text(chart->cairo_brush, "@");
@@ -442,8 +466,8 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 			for (code = 0; code < d_chart_max_nested; code++)
 				if (chart->head[code]) {
 					cairo_move_to(chart->cairo_brush, chart->border_x+d_chart_font_size, (chart->border_y+(code*d_chart_font_height)));
-					snprintf(buffer, d_string_buffer_size, "minimum: %.02f (ch %.0f) | maximum: %.02f (ch %.0f)", min_value[code],
-							min_channel[code], max_value[code], max_channel[code]);
+					snprintf(buffer, d_string_buffer_size, "min: %.02f (%.0f)| max: %.02f (%.0f)| mean: %.02f | RMS: %.02f ", min_value[code],
+							min_channel[code], max_value[code], max_channel[code], pedestal[code], rms[code]);;
 					cairo_show_text(chart->cairo_brush, buffer);
 				}
 		}
