@@ -159,7 +159,6 @@ void p_ladder_read_data(struct s_ladder *ladder) { d_FP;
 
 void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 	d_object_lock(ladder->lock);
-	ladder->evented = d_false;
 	if ((ladder->deviced) && (ladder->device)) {
 		if (ladder->command != e_ladder_command_stop) {
 			if ((ladder->device->m_event(ladder->device, &(ladder->last_event), timeout)))
