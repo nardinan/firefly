@@ -19,6 +19,8 @@
 #define firefly_ladder_h
 #include <pwd.h>
 #include <sys/stat.h>
+#include "phys.ksu.edu/ow-functions.h"
+#include "phys.ksu.edu/dev-functions.h"
 #include "interface.h"
 #include "compression.h"
 #define d_ladder_directory_test "test"
@@ -93,6 +95,8 @@ typedef struct s_ladder {
 		int computed;
 	} data;
 } s_ladder;
+extern owDevice v_temperature[MAX_DEVICES];
+extern unsigned int v_sensors;
 extern void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *configuration);
 extern void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *confgiuration);
 extern struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device);

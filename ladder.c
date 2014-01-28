@@ -17,6 +17,8 @@
  */
 #include "ladder.h"
 #include "analyzer.h"
+owDevice v_temperature[MAX_DEVICES];
+unsigned int v_sensors = 0;
 void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *configuration) { d_FP;
 	struct o_stream *stream;
 	struct o_string *path;
@@ -84,7 +86,6 @@ void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *config
 	} d_endtry;
 }
 
-
 struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) { d_FP;
 	struct s_ladder *result = supplied;
 	struct passwd *pw;
@@ -137,8 +138,6 @@ void p_ladder_read_calibrate(struct s_ladder *ladder) { d_FP;
 				d_object_lock(ladder->calibration.lock);
 				if (ladder->calibration.next < ladder->calibration.size)
 					memcpy(&(ladder->calibration.events[ladder->calibration.next++]), &(ladder->last_event), sizeof(struct o_trb_event));
-				ladder->calibration.temperature[0] = ladder->last_event.temperature[0];
-				ladder->calibration.temperature[1] = ladder->last_event.temperature[1];
 				d_object_unlock(ladder->calibration.lock);
 			} else
 				ladder->damaged_events++;
@@ -184,7 +183,7 @@ void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 }
 
 void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
-	int channel, va, channel_on_va;
+	int channel, va, channel_on_va, sensors, current_sensor, index;
 	struct o_stream *stream;
 	struct o_string *name, *string = NULL;
 	char buffer[d_string_buffer_size];
@@ -193,6 +192,21 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 		name = d_string(d_string_buffer_size, "%s/%s%s", ladder->ladder_directory, ladder->output, d_common_ext_calibration);
 		if ((stream = f_stream_new_file(NULL, name, "w", 0777))) {
 			d_object_lock(ladder->calibration.write_lock);
+			ladder->calibration.temperature[0] = 0;
+			ladder->calibration.temperature[1] = 0;
+			for (sensors = 0, current_sensor = 0; sensors < v_sensors; sensors++) {
+				for (index = 0; index < SERIAL_SIZE; index++)
+					snprintf(buffer+(strlen("0x00")*index), d_string_buffer_size-(strlen("0x00")*index), "0x%02x",
+							v_temperature[sensors].SN[index]);
+				string = f_string_new(string, d_string_buffer_size, "sensor_serial=%s\n", buffer);
+				stream->m_write_string(stream, string);
+				if ((v_temperature[sensors].SN[0] == 0x10) || (v_temperature[sensors].SN[0] == 0x22) || (v_temperature[sensors].SN[0] == 0x28))
+					if (current_sensor < 2) {
+						readDevice(&(v_temperature[sensors]), &(ladder->calibration.temperature[current_sensor]));
+						current_sensor++;
+					}
+
+			}
 			strftime(buffer, d_string_buffer_size, d_common_interface_time_format, localtime(&(ladder->starting_time)));
 			string = f_string_new(string, d_string_buffer_size, "%s\n%s\nstarting_time=%s\ntemp_right=%.03f\ntemp_left=%.03f\nhold_delay=%.03f\n",
 					ladder->name, location_entries[ladder->location_pointer].name, buffer, ladder->calibration.temperature[0],
@@ -347,10 +361,15 @@ void f_ladder_plot(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
 }
 
 int f_ladder_device(struct s_ladder *ladder, struct o_trb *device) { d_FP;
-	int result = d_false;
+	int result = d_false, index;
 	while ((!result) && (usleep(d_common_timeout_device) == 0)) {
 		d_object_lock(ladder->lock);
 		if (!ladder->deviced) {
+			if (acquireAdapter() == 0) {
+				v_sensors = makeDeviceList(v_temperature);
+				for (index = 0; index < v_sensors; index++)
+					setupDevice(&(v_temperature[index]));
+			}
 			ladder->device = device;
 			ladder->deviced = d_true;
 			ladder->update_interface = d_true;

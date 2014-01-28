@@ -1,10 +1,10 @@
-objects = chart.o interface.o compression.o ladder.o analyzer.o environment.o loop.o firefly.o
+objects = chart.o interface.o compression.o ladder.o analyzer.o environment.o loop.o firefly.o dev-functions.o ow-functions.o
 objects_compressor = compression.o firefly_compress.o
 objects_analyzer = compression.o firefly_analyzer.o
 objects_ttree = compression.o firefly_ttree.o
 cc = gcc -g -std=c99
 cpp = g++ -g
-cflags = -Wall -I/usr/local/include `libusb-config --cflags` `pkg-config --cflags gtk+-2.0` -Wno-variadic-macros -Wno-missing-braces -Wno-gnu -c -pedantic
+cflags = -Wall -I/usr/local/include `libusb-config --cflags` `pkg-config --cflags gtk+-2.0` -Wno-variadic-macros -Wno-missing-braces -Wno-gnu -Wno-pointer-sign -c -pedantic
 cflags_analyzer = $(cflags) `root-config --cflags` -Wno-c++11-long-long
 lflags = -Wall
 liblink = -L../serenity -L/usr/lib64 -lm `libusb-config --libs` `pkg-config --libs gtk+-2.0` -L/usr/lib -lpthread -lserenity_ground -lserenity_structures -lserenity_crypto -lserenity_infn
@@ -30,7 +30,7 @@ compression.o: compression.c compression.h
 analyzer.o: analyzer.c analyzer.h ladder.h
 	$(cc) $(cflags) analyzer.c
 
-ladder.o: ladder.c ladder.h interface.h compression.h
+ladder.o: ladder.c ladder.h interface.h compression.h phys.ksu.edu/ow-functions.h phys.ksu.edu/dev-functions.h
 	$(cc) $(cflags) ladder.c
 
 environment.o: environment.c environment.h ladder.h
@@ -38,6 +38,12 @@ environment.o: environment.c environment.h ladder.h
 
 loop.o: loop.c loop.h environment.h
 	$(cc) $(cflags) loop.c
+
+ow-functions.o: phys.ksu.edu/ow-functions.c phys.ksu.edu/ow-functions.h
+	$(cc) $(cflags) phys.ksu.edu/ow-functions.c
+
+dev-functions.o: phys.ksu.edu/dev-functions.c phys.ksu.edu/dev-functions.h phys.ksu.edu/ow-functions.h
+	$(cc) $(cflags) phys.ksu.edu/dev-functions.c
 
 firefly.o: firefly.c loop.h
 	$(cc) $(cflags) firefly.c
