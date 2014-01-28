@@ -112,6 +112,9 @@ void f_chart_append_signal(struct s_chart *chart, unsigned int code, float x, fl
 		chart->head[code]++;
 	} else
 		d_log(d_log_level_default, "[WARNING] - d_chart_bucket too small");
+	chart->total[code] += y;
+	chart->total_square[code] += y*y;
+	chart->elements[code]++;
 }
 
 void f_chart_append_histogram(struct s_chart *chart, unsigned int code, float value) {
@@ -124,6 +127,10 @@ void f_chart_append_histogram(struct s_chart *chart, unsigned int code, float va
 		bin = (normalized*(float)chart->bins[code]);
 		chart->values[code][bin].y++;
 	}
+	chart->total[code] += value;
+	chart->total_square[code] += value*value;
+	chart->elements[code]++;
+
 }
 
 void f_chart_append_envelope(struct s_chart *chart, unsigned int code, float x, float max, float min) {
@@ -143,6 +150,9 @@ void f_chart_flush(struct s_chart *chart) {
 	for (code = 0; code < d_chart_max_nested; code++) {
 		chart->kind[code] = e_chart_kind_signal;
 		chart->head[code] = 0;
+		chart->total[code] = 0;
+		chart->total_square[code] = 0;
+		chart->elements[code] = 0;
 	}
 }
 
@@ -190,38 +200,38 @@ void p_chart_redraw_axis_x(cairo_t *cr, struct s_chart *chart, float full_h, flo
 		if (real_position != NAN) {
 			if (((current_value < 0) && (chart->axis_x.show_negative)) ||
 					((current_value >= 0) && (chart->axis_x.show_positive))) {
-						if ((last_label-real_position == 0) || (real_position-last_label >= chart->axis_x.minimum_distance)) {
-							purged = d_false;
-							written = snprintf(buffer, d_string_buffer_size, "%.02f", current_value);
-							while ((written) && (!purged)) {
-								if ((buffer[written-1] == '0') || (buffer[written-1] == '.')) {
-									if (buffer[written-1] == '.')
-										purged = d_true;
-									buffer[written-1] = '\0';
-									written--;
-								} else
-									purged = d_true;
-							}
-							size_label = ((float)written*d_chart_font_size);
-							if ((current_label = x_axis_position+chart->axis_x.segments_length-
-										chart->axis_x.offset+d_chart_font_size) > height)
-								current_label = x_axis_position-chart->axis_x.segments_length-
-									chart->axis_x.offset-d_chart_font_size;
-							cairo_move_to(cr, (real_position-(size_label/2.0)), current_label);
-							cairo_show_text(cr, buffer);
-							if (current_label > x_axis_position) {
-								cairo_move_to(cr, real_position, x_axis_position-chart->axis_x.segments_length);
-								cairo_line_to(cr, real_position, current_label-d_chart_font_size);
-							} else {
-								cairo_move_to(cr, real_position, current_label+d_chart_font_size);
-								cairo_line_to(cr, real_position, x_axis_position+chart->axis_x.segments_length);
-							}
-							last_label = real_position;
-						} else {
-							cairo_move_to(cr, real_position, x_axis_position-chart->axis_x.segments_length);
-							cairo_line_to(cr, real_position, x_axis_position+chart->axis_x.segments_length);
-						}
+				if ((last_label-real_position == 0) || (real_position-last_label >= chart->axis_x.minimum_distance)) {
+					purged = d_false;
+					written = snprintf(buffer, d_string_buffer_size, "%.02f", current_value);
+					while ((written) && (!purged)) {
+						if ((buffer[written-1] == '0') || (buffer[written-1] == '.')) {
+							if (buffer[written-1] == '.')
+								purged = d_true;
+							buffer[written-1] = '\0';
+							written--;
+						} else
+							purged = d_true;
 					}
+					size_label = ((float)written*d_chart_font_size);
+					if ((current_label = x_axis_position+chart->axis_x.segments_length-
+								chart->axis_x.offset+d_chart_font_size) > height)
+						current_label = x_axis_position-chart->axis_x.segments_length-
+							chart->axis_x.offset-d_chart_font_size;
+					cairo_move_to(cr, (real_position-(size_label/2.0)), current_label);
+					cairo_show_text(cr, buffer);
+					if (current_label > x_axis_position) {
+						cairo_move_to(cr, real_position, x_axis_position-chart->axis_x.segments_length);
+						cairo_line_to(cr, real_position, current_label-d_chart_font_size);
+					} else {
+						cairo_move_to(cr, real_position, current_label+d_chart_font_size);
+						cairo_line_to(cr, real_position, x_axis_position+chart->axis_x.segments_length);
+					}
+					last_label = real_position;
+				} else {
+					cairo_move_to(cr, real_position, x_axis_position-chart->axis_x.segments_length);
+					cairo_line_to(cr, real_position, x_axis_position+chart->axis_x.segments_length);
+				}
+			}
 		}
 	}
 	cairo_stroke(cr);
@@ -317,13 +327,13 @@ void p_chart_redraw_grid_y(cairo_t *cr, struct s_chart *chart, float full_h, flo
 				current_value += value_step, current_position -= position_step) {
 			real_position = current_position;
 			if (real_position != NAN) {
-			if (((current_value < 0) && (chart->axis_y.show_negative)) ||
-					((current_value >= 0) && (chart->axis_y.show_positive)))
-				if ((last_label-real_position == 0) || (last_label-real_position >= chart->axis_y.minimum_distance)) {
-					cairo_move_to(cr, 0.0, real_position);
-					cairo_line_to(cr, width, real_position);
-					last_label = real_position;
-				}
+				if (((current_value < 0) && (chart->axis_y.show_negative)) ||
+						((current_value >= 0) && (chart->axis_y.show_positive)))
+					if ((last_label-real_position == 0) || (last_label-real_position >= chart->axis_y.minimum_distance)) {
+						cairo_move_to(cr, 0.0, real_position);
+						cairo_line_to(cr, width, real_position);
+						last_label = real_position;
+					}
 			}
 		}
 		cairo_stroke(cr);
@@ -380,8 +390,7 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 	struct s_chart *chart = (struct s_chart *)v_chart;
 	float full_w = fabs(chart->axis_x.range[1]-chart->axis_x.range[0]), full_h = fabs(chart->axis_y.range[1]-chart->axis_y.range[0]),
 	      arc_size = (2.0*G_PI), min_value[d_chart_max_nested] = {0}, max_value[d_chart_max_nested] = {0}, min_channel[d_chart_max_nested] = {0},
-	      max_channel[d_chart_max_nested] = {0}, rms[d_chart_max_nested] = {0}, pedestal[d_chart_max_nested] = {0}, total, total_square, elements,
-	      fraction, value;
+	      max_channel[d_chart_max_nested] = {0}, rms[d_chart_max_nested], pedestal[d_chart_max_nested], total_square, fraction;
 	int index, code, first;
 	char buffer[d_string_buffer_size];
 	if ((chart->cairo_brush = gdk_cairo_create(chart->plane->window))) {
@@ -399,25 +408,8 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 			if (chart->head[code]) {
 				cairo_set_source_rgb(chart->cairo_brush, chart->data.color[code].R, chart->data.color[code].G, chart->data.color[code].B);
 				cairo_set_line_width(chart->cairo_brush, chart->data.line_size[code]);
-				for (index = 0, total = 0, total_square = 0, elements = 0, first = d_true; index < chart->head[code]; index++) {
+				for (index = 0, first = d_true; index < chart->head[code]; index++) {
 					if (chart->values[code][index].normalized.done) {
-						switch (chart->kind[code]) {
-							case e_chart_kind_signal:
-								value = chart->values[code][index].y;
-								elements++;
-								break;
-							case e_chart_kind_histogram:
-								value = chart->values[code][index].x*chart->values[code][index].y;
-								elements += chart->values[code][index].y;
-								break;
-							case e_chart_kind_envelope:
-								value = chart->values[code][index].x*fabs(chart->values[code][index].y-
-										chart->values[code][index].w);
-								elements += fabs(chart->values[code][index].y-chart->values[code][index].w);
-								break;
-						}
-						total += value;
-						total_square += value*value;
 						if (first) {
 							min_value[code] = chart->values[code][index].y;
 							max_value[code] = chart->values[code][index].y;
@@ -450,11 +442,12 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 						first = d_false;
 					}
 				}
-				fraction = (1.0/elements);
-				total *= fraction;
-				total_square *= fraction;
-				rms[code] = sqrtf(fabs(total_square-(total*total)));
-				pedestal[code] = total;
+				if (chart->elements) {
+					pedestal[code] = (chart->total[code]/(float)chart->elements[code]);
+					fraction = (1.0/(float)chart->elements[code]);
+					total_square = (chart->total_square[code]*fraction);
+					rms[code] = sqrtf(fabs(total_square-(pedestal[code]*pedestal[code])));
+				}
 				if (chart->show_borders) {
 					cairo_move_to(chart->cairo_brush, (chart->border_x-d_chart_font_size), (chart->border_y+(code*d_chart_font_height)));
 					cairo_show_text(chart->cairo_brush, "@");
@@ -466,8 +459,13 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 			for (code = 0; code < d_chart_max_nested; code++)
 				if (chart->head[code]) {
 					cairo_move_to(chart->cairo_brush, chart->border_x+d_chart_font_size, (chart->border_y+(code*d_chart_font_height)));
-					snprintf(buffer, d_string_buffer_size, "min: %.02f (%.0f)| max: %.02f (%.0f)| mean: %.02f | RMS: %.02f ", min_value[code],
-							min_channel[code], max_value[code], max_channel[code], pedestal[code], rms[code]);;
+					if (chart->kind[code] == e_chart_kind_envelope)
+						snprintf(buffer, d_string_buffer_size, "min %.02f (%.0f)| max: %.02f (%.0f)", min_value[code],
+								min_channel[code], max_value[code], max_channel[code]);
+					else
+						snprintf(buffer, d_string_buffer_size, "min: %.02f (%.0f)| max: %.02f (%.0f)| mean: %.02f | RMS: %.02f ",
+								min_value[code], min_channel[code], max_value[code], max_channel[code], pedestal[code],
+								rms[code]);
 					cairo_show_text(chart->cairo_brush, buffer);
 				}
 		}

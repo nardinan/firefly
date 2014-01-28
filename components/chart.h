@@ -62,6 +62,7 @@ typedef struct s_chart {
 		struct s_chart_color color[d_chart_max_nested];
 	} data;
 	struct s_chart_value values[d_chart_max_nested][d_chart_bucket];
+	float total[d_chart_max_nested], total_square[d_chart_max_nested], elements[d_chart_max_nested];
 } s_chart;
 extern struct s_chart *f_chart_new(struct s_chart *supplied);
 extern void p_chart_style_float(struct o_dictionary *dictionary, const char *key, const char postfix, float *value);
