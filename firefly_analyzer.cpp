@@ -18,8 +18,8 @@ typedef struct s_chart_style {
 	int show_stats, fill_color, fill_style, line_color, line_width;
 } s_chart_style;
 typedef struct s_charts {
-	TH1F *n_channels, *common_noise, *signals, *signals_array[5], *signal_over_noise, *strips_gravity, *main_strips_gravity, *eta, *channel_one,
-		*channels_two, *channels_two_major, *channels_two_minor, *signal_one, *signals_two, *signals_two_major, *signals_two_minor;
+	TH1F *n_channels, *common_noise, *signals, *signals_array[5], *signal_over_noise, *strips_gravity, *main_strips_gravity, *eta, *eta_array[5],
+	     *channel_one, *channels_two, *channels_two_major, *channels_two_minor, *signal_one, *signals_two, *signals_two_major, *signals_two_minor;
 	TH1F *last;
 } s_charts;
 void f_fill_histograms(struct o_string *data, struct s_charts *charts) {
@@ -90,8 +90,11 @@ void f_fill_histograms(struct o_string *data, struct s_charts *charts) {
 						if (charts->main_strips_gravity)
 							charts->main_strips_gravity->Fill(clusters[index].header.main_strips_gravity);
 						if (charts->eta)
-							if (charts->eta >= 0)
+							if (charts->eta >= 0) {
 								charts->eta->Fill(clusters[index].header.eta);
+								if ((clusters[index].header.strips >= 1) && (clusters[index].header.strips <= 5))
+									charts->eta_array[clusters[index].header.strips-1]->Fill(clusters[index].header.eta);
+							}
 					}
 					d_free(clusters);
 				}
@@ -186,6 +189,7 @@ void p_export_histograms_singleton(struct o_string *output, int log_y, int first
 void f_export_histograms(struct o_string *output, struct s_charts *charts) {
 	p_export_histograms_singleton(output, d_true, d_true, d_false, 1, charts->n_channels);
 	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->common_noise);
+	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->signals);
 	p_export_histograms_singleton(output, d_true, d_false, d_false, 6, charts->signals, charts->signals_array[0], charts->signals_array[1],
 			charts->signals_array[2], charts->signals_array[3], charts->signals_array[4]);
 	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->signal_one);
@@ -199,22 +203,28 @@ void f_export_histograms(struct o_string *output, struct s_charts *charts) {
 	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->channels_two_minor);
 	p_export_histograms_singleton(output, d_false, d_false, d_false, 1, charts->strips_gravity);
 	p_export_histograms_singleton(output, d_false, d_false, d_false, 1, charts->main_strips_gravity);
-	p_export_histograms_singleton(output, d_false, d_false, d_true, 1, charts->eta);
+	p_export_histograms_singleton(output, d_false, d_false, d_false, 1, charts->eta);
+	p_export_histograms_singleton(output, d_false, d_false, d_true, 6, charts->eta, charts->eta_array[0], charts->eta_array[1], charts->eta_array[2],
+			charts->eta_array[3], charts->eta_array[4]);
 }
 
 int main (int argc, char *argv[]) {
 	struct s_charts charts;
 	struct s_chart_style common_style = d_style_empty;
-	struct o_string *compressed = NULL, *output = NULL;
+	struct o_string *compressed = NULL, *output = NULL, *output_root = NULL, *extension = f_string_new_constant(NULL, ".root");
 	struct s_exception *exception = NULL;
 	int arguments = 0, index;
 	float range_start, range_end;
-	TFile *output_file = new TFile("output.root", "RECREATE");
-	output_file->cd();
+	TFile *output_file;
 	d_try {
 		d_compress_argument(arguments, "-c", compressed, d_string_pure, "No compressed file specified (-c)");
 		d_compress_argument(arguments, "-o", output, d_string_pure, "No output file specified (-o)");
 		if ((compressed) && (output)) {
+			output_root = d_clone(output, struct o_string);
+			output_root->m_append(output_root, extension);
+			output_file = new TFile(output_root->content, "RECREATE");
+			d_release(output_root);
+			output_file->cd();
 			charts.n_channels =
 				f_create_histogram(
 						"NChannels",
@@ -375,6 +385,46 @@ int main (int argc, char *argv[]) {
 						0.0f,
 						1.0f,
 						common_style);
+			charts.eta_array[0] =
+				f_create_histogram(
+						"ETA1",
+						"Eta with #strips == 1",
+						500,
+						0.0f,
+						1.0f,
+						common_style);
+			charts.eta_array[1] =
+				f_create_histogram(
+						"ETA2",
+						"Eta with #strips == 2",
+						500,
+						0.0f,
+						1.0f,
+						common_style);
+			charts.eta_array[2] =
+				f_create_histogram(
+						"ETA3",
+						"Eta with #strips == 3",
+						500,
+						0.0f,
+						1.0f,
+						common_style);
+			charts.eta_array[3] =
+				f_create_histogram(
+						"ETA4",
+						"Eta with #strips == 4",
+						500,
+						0.0f,
+						1.0f,
+						common_style);
+			charts.eta_array[4] =
+				f_create_histogram(
+						"ETA5",
+						"Eta with #strips == 5",
+						500,
+						0.0f,
+						1.0f,
+						common_style);
 			f_fill_histograms(compressed, &charts);
 			range_start = charts.signal_over_noise->GetMean()-5.0*charts.signal_over_noise->GetRMS();
 			range_end = charts.signal_over_noise->GetMean()+10.0*charts.signal_over_noise->GetRMS();
@@ -393,6 +443,9 @@ int main (int argc, char *argv[]) {
 			charts.signals_two_major->GetXaxis()->SetRangeUser(range_start, range_end);
 			charts.signals_two_minor->GetXaxis()->SetRangeUser(range_start, range_end);
 			f_export_histograms(output, &charts);
+			output_file->Write();
+			output_file->Close();
+			delete output_file;
 		} else
 			d_log(e_log_level_ever, "Missing arguments", NULL);
 		d_release(compressed);
@@ -400,8 +453,6 @@ int main (int argc, char *argv[]) {
 	} d_catch(exception) {
 		d_exception_dump(stderr, exception);
 	} d_endtry;
-	output_file->Write();
-	output_file->Close();
-	delete output_file;
+	d_release(extension);
 	return 0;
 }

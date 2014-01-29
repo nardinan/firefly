@@ -119,7 +119,7 @@ int f_compress_event(struct o_trb_event *event, struct o_stream *stream, time_t 
 		}
 		if (entries)
 			common_noise[va] = (common_noise_on_va/(float)entries);
-		if ((isnan(max_common_noise) == 0) && (common_noise[va] > max_common_noise)) {
+		if ((isnan(max_common_noise) == 0) && ((common_noise[va] > max_common_noise) || (common_noise[va] < (max_common_noise*-1.0)))) {
 			discard = d_true;
 			break;
 		}
