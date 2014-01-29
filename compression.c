@@ -16,6 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "compression.h"
+unsigned int min_strip = 0, max_strip = d_trb_event_channels, max_strips = NAN;
+float max_common_noise = NAN;
 unsigned int f_get_parameter(const char *flag, int argc, char *argv[]) {
 	unsigned int index, result = d_parameter_invalid;
 	for (index = 0; (index < argc) && (result == d_parameter_invalid); index++)
@@ -57,11 +59,11 @@ void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_r
 void p_compress_event_cluster(struct s_singleton_cluster_details *cluster, unsigned int first_channel, unsigned int last_channel, float *sigma, float *signal,
 		float *common_noise) {
 	float signal_sum = 0, sigma_sum = 0, weighted_strip_sum = 0, numerator;
-	int index, local_strip, affected_strips[2] = {0, 0};
+	int index, local_strip, affected_strips[2] = {first_channel, first_channel};
 	cluster->first_strip = first_channel;
 	cluster->header.strips = (last_channel-first_channel)+1;
 	for (index = 0, local_strip = first_channel; index < cluster->header.strips; index++, local_strip++) {
-		if (signal[local_strip] > signal[affected_strips[0]]) {
+		if (signal[local_strip] >= signal[affected_strips[0]]) {
 			affected_strips[0] = local_strip;
 			if (first_channel == last_channel)
 				affected_strips[1] = local_strip;
@@ -96,7 +98,7 @@ void p_compress_event_cluster(struct s_singleton_cluster_details *cluster, unsig
 
 int f_compress_event(struct o_trb_event *event, struct o_stream *stream, time_t timestamp, unsigned int number, float high_treshold, float low_treshold,
 		float sigma_k, float *pedestal, float *sigma) {
-	int index, channel, va, startup, entries, first_channel, last_channel, peak_readed = d_false;
+	int index, channel, va, startup, entries, first_channel, last_channel, peak_readed = d_false, discard = d_false;
 	float value, common_noise_on_va, common_noise[d_trb_event_vas], signal[d_trb_event_channels], signal_over_noise;
 	struct s_singleton_event_header event_header = {
 		d_compress_tag,
@@ -117,32 +119,49 @@ int f_compress_event(struct o_trb_event *event, struct o_stream *stream, time_t 
 		}
 		if (entries)
 			common_noise[va] = (common_noise_on_va/(float)entries);
+		if ((isnan(max_common_noise) == 0) && (common_noise[va] > max_common_noise)) {
+			discard = d_true;
+			break;
+		}
 	}
-	for (channel = 0; channel < d_trb_event_channels; channel++) {
-		signal[channel] = event->values[channel]-pedestal[channel]-common_noise[(channel/d_trb_event_channels_on_va)];
-		signal_over_noise = signal[channel]/sigma[channel];
-		if (signal_over_noise >= low_treshold) {
-			if (signal_over_noise >= high_treshold)
-				peak_readed = d_true;
-			if (first_channel < 0)
-				first_channel = channel;
-			last_channel = channel;
-		} else {
-			if (peak_readed) {
+	if (!discard) {
+		for (channel = min_strip; channel < max_strip; channel++) {
+			signal[channel] = event->values[channel]-pedestal[channel]-common_noise[(channel/d_trb_event_channels_on_va)];
+			signal_over_noise = signal[channel]/sigma[channel];
+			if (signal_over_noise >= low_treshold) {
+				if (signal_over_noise >= high_treshold)
+					peak_readed = d_true;
+				if (first_channel < 0)
+					first_channel = channel;
+				last_channel = channel;
+			} else {
+				if (peak_readed) {
+					if ((isnan(max_strips) != 0) || (((last_channel-first_channel)+1) <= max_strips)) {
+						p_compress_event_cluster(&(clusters[event_header.clusters]), first_channel, last_channel, sigma, signal,
+								common_noise);
+						event_header.bytes_to_next += sizeof(struct s_singleton_event_header)+((sizeof(float)*
+									(clusters[event_header.clusters].header.strips+1))+sizeof(unsigned int));
+						event_header.clusters++;
+					}
+				}
+				first_channel = last_channel = -1;
+				peak_readed = d_false;
+			}
+		}
+		if (peak_readed) { /* last event if it's continue over last strip */
+			if ((isnan(max_strips) != 0) || (((last_channel-first_channel)+1) <= max_strips)) {
 				p_compress_event_cluster(&(clusters[event_header.clusters]), first_channel, last_channel, sigma, signal, common_noise);
 				event_header.bytes_to_next += sizeof(struct s_singleton_event_header)+((sizeof(float)*
 							(clusters[event_header.clusters].header.strips+1))+sizeof(unsigned int));
 				event_header.clusters++;
 			}
-			first_channel = last_channel = -1;
-			peak_readed = d_false;
 		}
-	}
-	if (event_header.clusters) {
-		stream->m_write(stream, sizeof(struct s_singleton_event_header), &event_header);
-		for (index = 0; index < event_header.clusters; index++)
-			stream->m_write(stream, sizeof(struct s_singleton_cluster_header)+(sizeof(float)*(clusters[index].header.strips+1))+
-					sizeof(unsigned int), &(clusters[index]));
+		if (event_header.clusters) {
+			stream->m_write(stream, sizeof(struct s_singleton_event_header), &event_header);
+			for (index = 0; index < event_header.clusters; index++)
+				stream->m_write(stream, sizeof(struct s_singleton_cluster_header)+(sizeof(float)*(clusters[index].header.strips+1))+
+						sizeof(unsigned int), &(clusters[index]));
+		}
 	}
 	return event_header.clusters;
 }
@@ -175,7 +194,7 @@ struct s_singleton_cluster_details *f_decompress_event(struct o_stream *stream, 
 void f_compress_data(struct o_string *input_path, struct o_string *output_path, float high_treshold, float low_treshold, float sigma_k, float *pedestal,
 		float *sigma) {
 	int buffer_fill = 0, event_number = 0, compressed_events = 0, last_clusters = 0, read_again = d_true, index, clusters,
-		event_size = d_trb_event_size_normal;
+	event_size = d_trb_event_size_normal;
 	float written_bytes = 0;
 	ssize_t readed = 0, input_file_size, output_file_size;
 	unsigned char *pointer, buffer[d_trb_buffer_size], kind = 0xa0;

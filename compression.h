@@ -52,6 +52,8 @@ typedef struct s_singleton_cluster_details {
 	float values[d_trb_event_channels+1];
 } s_singleton_cluster_details;
 #pragma pack(pop)
+extern unsigned int min_strip, max_strip, max_strips;
+extern float max_common_noise;
 extern unsigned int f_get_parameter(const char *flag, int argc, char **argv);
 extern void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_raw, float *sigma, int *flag);
 extern void p_compress_event_cluster(struct s_singleton_cluster_details *cluster, unsigned int first_channel, unsigned int last_channel, float *sigma,

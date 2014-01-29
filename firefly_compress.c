@@ -39,6 +39,10 @@ int main (int argc, char *argv[]) {
 		d_compress_argument(arguments, "-o", output, d_string_pure, "No output file specified (-o)");
 		d_compress_argument(arguments, "-T", high_treshold, atof, "No high treshold specified: using default one (8.0)");
 		d_compress_argument(arguments, "-t", low_treshold, atof, "No low treshold specified: using default one (3.0)");
+		d_compress_argument(arguments, "-max-cn", max_common_noise, atof, "No maximum CN specified (-max-cn)");
+		d_compress_argument(arguments, "-max-strips", max_strips, atoi, "No maximum number of strips per cluster specified (-max-strips)");
+		d_compress_argument(arguments, "-r", min_strip, atoi, "No range (lower strip) specified: using default one (0) (-r)");
+		d_compress_argument(arguments, "-R", max_strip, atoi, "No range (upper strip) specified: using default one (384) (-R)");
 		if ((calibration) && (data) && (output)) {
 			stream = f_stream_new_file(NULL, calibration, "r", 0777);
 			f_read_calibration(stream, pedestal, sigma_raw, sigma, flags);
