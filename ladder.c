@@ -198,7 +198,7 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 				for (index = 0; index < SERIAL_SIZE; index++)
 					snprintf(buffer+(strlen("0x00")*index), d_string_buffer_size-(strlen("0x00")*index), "0x%02x",
 							v_temperature[sensors].SN[index]);
-				string = f_string_new(string, d_string_buffer_size, "sensor_serial=%s\n", buffer);
+				string = f_string_new(string, d_string_buffer_size, "temp_SN=%s\n", buffer);
 				stream->m_write_string(stream, string);
 				if ((v_temperature[sensors].SN[0] == 0x10) || (v_temperature[sensors].SN[0] == 0x22) || (v_temperature[sensors].SN[0] == 0x28))
 					if (current_sensor < 2) {
@@ -207,6 +207,9 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 					}
 
 			}
+			string = f_string_new(string, d_string_buffer_size, "bias_volt=%sV\nleak_curr=%suA\n",
+					((ladder->voltage)?ladder->voltage:"<undefined>"), ((ladder->current)?ladder->current:"<undefined>"));
+			stream->m_write_string(stream, string);
 			strftime(buffer, d_string_buffer_size, d_common_interface_time_format, localtime(&(ladder->starting_time)));
 			string = f_string_new(string, d_string_buffer_size, "%s\n%s\nstarting_time=%s\ntemp_right=%.03f\ntemp_left=%.03f\nhold_delay=%.03f\n",
 					ladder->name, location_entries[ladder->location_pointer].name, buffer, ladder->calibration.temperature[0],
@@ -436,6 +439,7 @@ void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *inte
 
 void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
 	time_t current_time = time(NULL);
+	int index;
 	ladder->readed_events = 0;
 	ladder->damaged_events = 0;
 	ladder->last_readed_events = 0;
@@ -449,6 +453,11 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 	ladder->data.computed = d_false;
 	ladder->data.total_events = 0;
 	memset(ladder->data.occupancy, 0, (sizeof(int)*d_trb_event_channels));
+	memset(ladder->current, 0, (sizeof(char)*d_string_buffer_size));
+	memset(ladder->voltage, 0, (sizeof(char)*d_string_buffer_size));
+	memset(ladder->voltage, 0, (sizeof(char)*d_string_buffer_size));
+	for (index = 0; index != e_interface_informations_entry_NULL; index++)
+		gtk_entry_set_text(interface->informations_configuration->entries[index], "");
 	d_object_unlock(ladder->data.lock);
 	if (gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_action])) {
 		f_interface_clean_data(interface->charts);

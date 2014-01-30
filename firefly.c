@@ -22,7 +22,8 @@ int main (int argc, char *argv[]) {
 	int index;
 	d_try {
 		gtk_init(&argc, &argv);
-		environment = f_environment_new(NULL, "UI/UI_main.glade", "UI/UI_scale_config.glade", "UI/UI_preferences_config.glade");
+		environment = f_environment_new(NULL, "UI/UI_main.glade", "UI/UI_scale_config.glade", "UI/UI_preferences_config.glade",
+				"UI/UI_informations_config.glade");
 		gtk_widget_show_all(GTK_WIDGET(environment->interface->window));
 		for (index = 1; index < argc; index++) {
 			if (argv[index][0] == 'M')

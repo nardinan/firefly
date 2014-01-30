@@ -40,7 +40,7 @@ typedef struct s_environment_parameters {
 	void *attachment;
 } s_environment_parameters;
 extern struct s_environment *f_environment_new(struct s_environment *supplied, const char *buider_main_path, const char *buider_scale_path,
-		const char *builder_parameters_path);
+		const char *builder_parameters_path, const char *builder_informations_path);
 extern int p_callback_incoming_device(struct o_trb *device, void *v_environment);
 extern void p_callback_exit(GtkWidget *widget, struct s_environment *environment);
 extern int p_callback_start(GtkWidget *widget, GdkEvent *event, struct s_environment *environment);

@@ -85,6 +85,11 @@ const char *interface_labels[] = {
 }, *interface_files[] = {
 	"v_calibration_file",
 	NULL
+}, *interface_informations_entries[] = {
+	"v_voltage",
+	"v_current",
+	"v_note",
+	NULL
 }, *interface_alignments[] = {
 	"v_data_adc_alignment",
 	"v_data_adc_pedestal_alignment",
@@ -170,7 +175,7 @@ struct s_interface_key_value location_entries[] = {
 };
 const char test_entries[] = {0x00, 'a', 'b', 'c'};
 struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *main_interface, GtkBuilder *scale_interface,
-		GtkBuilder *parameters_interface) { d_FP;
+		GtkBuilder *parameters_interface, GtkBuilder *informations_interface) { d_FP;
 	struct s_interface *result = supplied;
 	struct o_stream *stream;
 	struct o_string *path;
@@ -185,12 +190,17 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	if (!result->parameters_configuration)
 		if (!(result->parameters_configuration = (struct s_interface_parameters *) d_calloc(sizeof(struct s_interface_parameters), 1)))
 			d_die(d_error_malloc);
+	if (!result->informations_configuration)
+		if (!(result->informations_configuration = (struct s_interface_informations *) d_calloc(sizeof(struct s_interface_informations), 1)))
+			d_die(d_error_malloc);
 	d_assert(result->interface = main_interface);
 	d_assert(result->scale_configuration->interface = scale_interface);
 	d_assert(result->parameters_configuration->interface = parameters_interface);
+	d_assert(result->informations_configuration->interface = informations_interface);
 	d_assert(result->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(main_interface), "v_main_window")));
 	d_assert(result->scale_configuration->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(scale_interface), "v_scale_window")));
 	d_assert(result->parameters_configuration->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(parameters_interface), "v_preferences_window")));
+	d_assert(result->informations_configuration->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(informations_interface), "v_dialog")));
 	for (index = 0; interface_test_toggles[index]; index++)
 		d_assert(result->test_modes[index] = GTK_CHECK_MENU_ITEM(gtk_builder_get_object(GTK_BUILDER(main_interface), interface_test_toggles[index])));
 	for (index = 0; interface_labels[index]; index++)
@@ -278,6 +288,11 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	d_assert(result->scale_configuration->export_csv = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_export_CSV")));
 	d_assert(result->scale_configuration->export_png = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_export_PNG")));
 	d_assert(result->parameters_configuration->action = GTK_BUTTON(gtk_builder_get_object(parameters_interface, "v_action")));
+	d_assert(result->informations_configuration->action = GTK_BUTTON(gtk_builder_get_object(informations_interface, "v_ok")));
+	d_assert(result->informations_configuration->cancel = GTK_BUTTON(gtk_builder_get_object(informations_interface, "v_cancel")));
+	for (index = 0; interface_informations_entries[index]; index++)
+		d_assert(result->informations_configuration->entries[index] = GTK_ENTRY(gtk_builder_get_object(informations_interface,
+						interface_informations_entries[index])));
 	f_interface_show(result, e_interface_alignment_adc);
 	return result;
 }

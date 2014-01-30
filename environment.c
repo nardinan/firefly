@@ -17,8 +17,8 @@
  */
 #include "environment.h"
 struct s_environment *f_environment_new(struct s_environment *supplied, const char *builder_main_path, const char *builder_scale_path,
-		const char *builder_parameters_path) { d_FP;
-	GtkBuilder *main_builder, *scale_builder, *parameters_builder;
+		const char *builder_parameters_path, const char *builder_informations_path) { d_FP;
+	GtkBuilder *main_builder, *scale_builder, *parameters_builder, *informations_builder;
 	struct s_environment *result = supplied;
 	struct s_environment_parameters *parameters;
 	int index;
@@ -30,11 +30,13 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	d_assert(main_builder = gtk_builder_new());
 	d_assert(scale_builder = gtk_builder_new());
 	d_assert(parameters_builder = gtk_builder_new());
+	d_assert(informations_builder = gtk_builder_new());
 	d_assert(gtk_builder_add_from_file(main_builder, builder_main_path, NULL));
 	d_assert(gtk_builder_add_from_file(scale_builder, builder_scale_path, NULL));
 	d_assert(gtk_builder_add_from_file(parameters_builder, builder_parameters_path, NULL));
+	d_assert(gtk_builder_add_from_file(informations_builder, builder_informations_path, NULL));
 	d_assert(result->ladders[result->current] = f_ladder_new(NULL, NULL));
-	d_assert(result->interface = f_interface_new(NULL, main_builder, scale_builder, parameters_builder));
+	d_assert(result->interface = f_interface_new(NULL, main_builder, scale_builder, parameters_builder, informations_builder));
 	f_interface_update_configuration(result->interface, result->ladders[result->current]->deviced);
 	g_signal_connect(G_OBJECT(result->interface->files[e_interface_file_calibration]), "file-set", G_CALLBACK(p_callback_calibration), result);
 	g_signal_connect(G_OBJECT(result->interface->window), "delete-event", G_CALLBACK(p_callback_exit), result);

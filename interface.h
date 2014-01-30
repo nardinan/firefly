@@ -107,6 +107,12 @@ typedef enum e_interface_files {
 	e_interface_file_calibration = 0,
 	e_interface_file_NULL
 } e_interface_files;
+typedef enum e_interface_informations_entries {
+	e_interface_informations_entry_voltage = 0,
+	e_interface_informations_entry_current,
+	e_interface_informations_entry_note,
+	e_interface_informations_entry_NULL
+} e_interface_informations_entries;
 typedef enum e_interface_alignments {
 	e_interface_alignment_adc = 0,
 	e_interface_alignment_adc_pedestal,
@@ -129,6 +135,12 @@ typedef enum e_interface_alignments {
 	e_interface_alignment_histogram_cn_6,
 	e_interface_alignment_NULL
 } e_interface_alignments;
+typedef struct s_interface_informations {
+	GtkBuilder *interface;
+	GtkWindow *window;
+	GtkEntry *entries[e_interface_informations_entry_NULL];
+	GtkButton *action, *cancel;
+} s_interface_informations;
 typedef struct s_interface_scale {
 	GtkBuilder *interface;
 	GtkWindow *window;
@@ -162,9 +174,10 @@ typedef struct s_interface {
 	struct s_chart *charts[e_interface_alignment_NULL], *main_interface_chart;
 	struct s_interface_scale *scale_configuration;
 	struct s_interface_parameters *parameters_configuration;
+	struct s_interface_informations *informations_configuration;
 } s_interface;
 extern struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *main_interface, GtkBuilder *scale_interface,
-		GtkBuilder *parameters_interface);
+		GtkBuilder *parameters_interface, GtkBuilder *informations_interface);
 extern void f_interface_update_configuration(struct s_interface *interface, int deviced);
 extern void f_interface_lock(struct s_interface *interface, int lock);
 extern void f_interface_show(struct s_interface *interface, enum e_interface_alignments chart);

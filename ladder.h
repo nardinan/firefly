@@ -64,7 +64,8 @@ typedef struct s_ladder_histogram_value {
 	int value, occurrence, filled;
 } s_ladder_histogram_value;
 typedef struct s_ladder {
-	char output[d_string_buffer_size], directory[d_string_buffer_size], ladder_directory[d_string_buffer_size], name[d_string_buffer_size];
+	char output[d_string_buffer_size], directory[d_string_buffer_size], ladder_directory[d_string_buffer_size], name[d_string_buffer_size],
+	     voltage[d_string_buffer_size], current[d_string_buffer_size], note[d_string_buffer_size];
 	struct o_object *lock, *parameters_lock;
 	struct o_trb *device;
 	struct o_trb_event last_event;
