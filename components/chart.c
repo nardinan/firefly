@@ -130,7 +130,6 @@ void f_chart_append_histogram(struct s_chart *chart, unsigned int code, float va
 	chart->total[code] += value;
 	chart->total_square[code] += value*value;
 	chart->elements[code]++;
-
 }
 
 void f_chart_append_envelope(struct s_chart *chart, unsigned int code, float x, float max, float min) {
