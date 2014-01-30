@@ -31,7 +31,7 @@ int main (int argc, char *argv[]) {
 	struct o_string *calibration = NULL, *data = NULL, *output = NULL;
 	struct o_stream *stream;
 	struct s_exception *exception = NULL;
-	int arguments = 0, flags[d_trb_event_channels];
+	int arguments = 0, flags[d_trb_event_channels], backup;
 	float high_treshold = 8.0f, low_treshold = 3.0f, pedestal[d_trb_event_channels], sigma_raw[d_trb_event_channels], sigma[d_trb_event_channels];
 	d_try {
 		d_compress_argument(arguments, "-c", calibration, d_string_pure, "No calibration file specified (-c)");
@@ -43,6 +43,15 @@ int main (int argc, char *argv[]) {
 		d_compress_argument(arguments, "-max-strips", max_strips, atoi, "No maximum number of strips per cluster specified (-max-strips)");
 		d_compress_argument(arguments, "-r", min_strip, atoi, "No range (lower strip) specified: using default one (0) (-r)");
 		d_compress_argument(arguments, "-R", max_strip, atoi, "No range (upper strip) specified: using default one (384) (-R)");
+		if ((min_strip < 0) || (min_strip > d_trb_event_channels))
+			min_strip = 0;
+		if ((max_strip < 0) || (max_strip > d_trb_event_channels))
+			max_strip = d_trb_event_channels;
+		if (max_strip < min_strip) {
+			backup = min_strip;
+			min_strip = max_strip;
+			max_strip = backup;
+		}
 		if ((calibration) && (data) && (output)) {
 			stream = f_stream_new_file(NULL, calibration, "r", 0777);
 			f_read_calibration(stream, pedestal, sigma_raw, sigma, flags);
