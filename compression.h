@@ -15,6 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef firefly_compression_h
+#define firefly_compression_h
 #include <serenity/ground/ground.h>
 #include <serenity/structures/structures.h>
 #include <serenity/structures/infn/infn.h>
@@ -63,3 +65,4 @@ extern int f_compress_event(struct o_trb_event *event, struct o_stream *stream, 
 extern struct s_singleton_cluster_details *f_decompress_event(struct o_stream *stream, struct s_singleton_event_header *header);
 extern void f_compress_data(struct o_string *input_path, struct o_string *output_path, float high_treshold, float low_treshold, float sigma_k,
 		float *pedestal, float *sigma);
+#endif

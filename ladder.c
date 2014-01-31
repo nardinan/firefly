@@ -42,6 +42,7 @@ void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *config
 			d_ladder_key_load_f(dictionary, sigma_noise_cut_top, ladder);
 			d_ladder_key_load_f(dictionary, occupancy_k, ladder);
 			d_ladder_key_load_d(dictionary, save_calibration_raw, ladder);
+			d_ladder_key_load_d(dictionary, save_calibration_pdf, ladder);
 			d_object_unlock(ladder->parameters_lock);
 		}
 		d_release(dictionary);
@@ -75,6 +76,7 @@ void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *config
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "sigma_noise_cut_top=%f\n", ladder->sigma_noise_cut_top));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "occupancy_k=%f\n", ladder->occupancy_k));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "save_calibration_raw=%d\n", ladder->save_calibration_raw));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "save_calibration_pdf=%d\n", ladder->save_calibration_pdf));
 			d_object_unlock(ladder->parameters_lock);
 		} d_pool_end_flush;
 		d_release(stream);
@@ -232,6 +234,12 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 			d_object_unlock(ladder->calibration.write_lock);
 			d_release(string);
 			d_release(stream);
+			if (ladder->save_calibration_pdf) {
+				snprintf(buffer, d_string_buffer_size, "./%s -c %s/%s%s -o %s/%s%s%s", d_common_exporter, ladder->ladder_directory,
+						ladder->output, d_common_ext_calibration, ladder->ladder_directory, ladder->output, d_common_ext_calibration,
+						d_common_ext_calibration_pdf);
+				system(buffer);
+			}
 		}
 		d_release(name);
 	}

@@ -1,28 +1,27 @@
-#include <TCanvas.h>
-#include <TSystem.h>
-#include <TH1F.h>
-#include <TGraph.h>
-#include <TStyle.h>
-#include <TFile.h>
-#include <TLegend.h>
-extern "C" {
-#include <stdio.h>
-#include <serenity/ground/ground.h>                                                                                                                             
-#include <serenity/structures/structures.h>                                                                                                                     
-#include <serenity/structures/infn/infn.h> 
-#include "compression.h"
-}
-#define d_style_empty {NAN,NAN,NAN,NAN,kTRUE,kYellow,3010,kBlack,1.0}
-typedef struct s_chart_style {
-	double range_x_begin, range_x_end, range_y_begin, range_y_end;
-	int show_stats, fill_color, fill_style, line_color, line_width;
-} s_chart_style;
-typedef struct s_charts {
+/*
+ * firefly
+ * Copyright (C) 2013 Andrea Nardinocchi (andrea@nardinan.it)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#include "root_analyzer.h"
+typedef struct s_data_charts {
 	TH1F *n_channels, *common_noise, *signals, *signals_array[5], *signal_over_noise, *strips_gravity, *main_strips_gravity, *eta, *eta_array[5],
 	     *channel_one, *channels_two, *channels_two_major, *channels_two_minor, *signal_one, *signals_two, *signals_two_major, *signals_two_minor;
 	TH1F *last;
-} s_charts;
-void f_fill_histograms(struct o_string *data, struct s_charts *charts) {
+} s_data_charts;
+void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 	struct o_stream *stream;
 	struct s_singleton_file_header file_header;
 	struct s_singleton_event_header event_header;
@@ -109,84 +108,7 @@ void f_fill_histograms(struct o_string *data, struct s_charts *charts) {
 	} d_endtry;
 }
 
-TH1F *f_create_histogram(const char *name, const char *labels, int bins_number, float x_low, float x_up, struct s_chart_style style) {
-	TH1F *result;
-	if ((result = new TH1F(name, labels, bins_number, x_low, x_up))) {
-		result->SetStats(style.show_stats);
-		result->SetLineColor(style.line_color);
-		result->SetLineWidth(style.line_width);
-		result->SetFillColor(style.fill_color);
-		result->SetFillStyle(style.fill_style);
-		if ((!isnan(style.range_x_begin)) && (!isnan(style.range_x_end)))
-			result->GetXaxis()->SetRangeUser(style.range_x_begin, style.range_x_end);
-		if ((!isnan(style.range_y_begin)) && (!isnan(style.range_y_end)))
-			result->GetYaxis()->SetRangeUser(style.range_y_begin, style.range_y_end);
-	}
-	return result;
-}
-
-void p_export_histograms_singleton(struct o_string *output, int log_y, int first, int last, int size, ...) {
-	TCanvas *canvas;
-	va_list list;
-	struct o_string *real_output;
-	int index;
-	TH1F *singleton; 
-	TLegend *legend = NULL;
-	int colors[] = {
-		kBlack,
-		kRed,
-		kGreen,
-		kBlue,
-		kMagenta,
-		kYellow,
-		kGray,
-		-1
-	};
-	if ((canvas = new TCanvas("Output", "Output", 800, 600))) {
-		if (first)
-			real_output = d_string(d_string_buffer_size, "%@(", output);
-		else if (last)
-			real_output = d_string(d_string_buffer_size, "%@)", output);
-		else
-			real_output = d_string_pure(output->content);
-		if (log_y)
-			canvas->SetLogy();
-		if (size > 1)
-			legend = new TLegend(0.05, 0.95-((float)size*0.02), 0.3, 0.95);
-		va_start(list, size);
-		for (index = 0; index < size; index++) {
-			if ((singleton = va_arg(list, TH1F *))) {
-				if (index == 0) {
-					if (size > 1) {
-						singleton->SetLineColor(colors[index]);
-						singleton->SetFillStyle(0);
-						legend->AddEntry(singleton, singleton->GetTitle(), "l");
-					}
-					singleton->Draw();
-				} else {
-					if (colors[index] != -1)
-						singleton->SetLineColor(colors[index]);
-					singleton->SetFillStyle(0);
-					legend->AddEntry(singleton, singleton->GetTitle(), "l");
-					singleton->Draw("SAME");
-				}
-			}
-		}
-		if (size > 1)
-			legend->Draw();
-		canvas->Modified();
-		canvas->Update();
-		canvas->Print(real_output->content, "pdf");
-		d_release(real_output);
-		delete canvas;
-		if (legend)
-			delete legend;
-	} else
-		d_die(d_error_malloc);
-}
-
-
-void f_export_histograms(struct o_string *output, struct s_charts *charts) {
+void f_export_histograms(struct o_string *output, struct s_data_charts *charts) {
 	p_export_histograms_singleton(output, d_true, d_true, d_false, 1, charts->n_channels);
 	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->common_noise);
 	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->signals);
@@ -209,12 +131,12 @@ void f_export_histograms(struct o_string *output, struct s_charts *charts) {
 }
 
 int main (int argc, char *argv[]) {
-	struct s_charts charts;
-	struct s_chart_style common_style = d_style_empty;
+	struct s_data_charts charts;
 	struct o_string *compressed = NULL, *output = NULL, *output_root = NULL, *extension = f_string_new_constant(NULL, ".root");
 	struct s_exception *exception = NULL;
 	int arguments = 0, index;
 	float range_start, range_end;
+	char buffer[d_string_buffer_size];
 	TFile *output_file;
 	d_try {
 		d_compress_argument(arguments, "-c", compressed, d_string_pure, "No compressed file specified (-c)");
@@ -225,206 +147,29 @@ int main (int argc, char *argv[]) {
 			output_file = new TFile(output_root->content, "RECREATE");
 			d_release(output_root);
 			output_file->cd();
-			charts.n_channels =
-				f_create_histogram(
-						"NChannels",
-						"Number of channels;# Channels;# Entries",
-						40.0,
-						0.0,
-						40.0,
-						common_style);
-			charts.common_noise =
-				f_create_histogram(
-						"CNoise",
-						"Common Noise;CN;# Entries",
-						2000,
-						-60.0,
-						60.0,
-						common_style);
-			charts.signals = 
-				f_create_histogram(
-						"SElements",
-						"Signal of cluster (foreach event, foreach cluster)",
-						2000,
-						0.0,
-						400.0,
-						common_style);
-			charts.signals_array[0] =
-				f_create_histogram(
-						"SElements0",
-						"#strips == 1",
-						2000,
-						0.0,
-						400.0,
-						common_style);
-			charts.signals_array[1] =
-				f_create_histogram(
-						"SElements1",
-						"#strips == 2",
-						2000,
-						0.0,
-						400.0,
-						common_style);
-			charts.signals_array[2] =
-				f_create_histogram(
-						"SElements2",
-						"#strips == 3",
-						2000,
-						0.0,
-						400.0,
-						common_style);
-			charts.signals_array[3] =
-				f_create_histogram(
-						"SElements3",
-						"#strips == 4",
-						2000,
-						0.0,
-						400.0,
-						common_style);
-			charts.signals_array[4] =
-				f_create_histogram(
-						"SElements4",
-						"#strips == 5",
-						2000,
-						0.0,
-						400.0,
-						common_style);
-			charts.signal_one =
-				f_create_histogram(
-						"SCluster1",
-						"Signal of clusters with #strips == 1",
-						2000,
-						0.0,
-						400.0,
-						common_style);
-			charts.signals_two =
-				f_create_histogram(
-						"SCluster2",
-						"Signal of clusters with #strips == 2",
-						2000,
-						0.0,
-						400.0,
-						common_style);
-			charts.signals_two_major =
-				f_create_histogram(
-						"SCluster2main",
-						"Signal of strip with #strips == 2 (main strip)",
-						2000,
-						0.0,
-						100.0,
-						common_style);
-			charts.signals_two_minor =
-				f_create_histogram(
-						"SCluster2minor",
-						"Signal of strip with #strips == 2 (secondary strip)",
-						2000,
-						0.0,
-						100.0,
-						common_style);
-			charts.signal_over_noise =
-				f_create_histogram(
-						"SN",
-						"signal over noise of cluster;SN;# Entries",
-						2000,
-						0.0,
-						100.0,
-						common_style);
-			charts.channel_one =
-				f_create_histogram(
-						"SN of cluster with #strips == 1",
-						"SN of cluster with #strips == 1",
-						5000,
-						0.0,
-						100.0,
-						common_style);
-			charts.channels_two =
-				f_create_histogram(
-						"SN of cluster with #strips == 2",
-						"SN of cluster with #strips == 2",
-						5000,
-						0.0,
-						100.0,
-						common_style);
-			charts.channels_two_major =
-				f_create_histogram(
-						"SN of strip with #strips == 2 (main strip SN)",
-						"SN of strip with #strips == 2 (main strip SN)",
-						5000,
-						0.0,
-						100.0,
-						common_style);
-			charts.channels_two_minor =
-				f_create_histogram(
-						"SN of strip with #strips == 2 (secondary strip SN)",
-						"SN of strip with #strips == 2 (secondary strip SN)",
-						5000,
-						0.0,
-						100.0,
-						common_style);
-			charts.strips_gravity =
-				f_create_histogram(
-						"CGravity",
-						"Center of gravity;Gravity;# Entries",
-						d_trb_event_channels,
-						0.0f,
-						d_trb_event_channels,
-						common_style);
-			charts.main_strips_gravity =
-				f_create_histogram(
-						"MSCGravity",
-						"Center of gravity (main strips);Gravity;# Entries",
-						d_trb_event_channels,
-						0.0f,
-						d_trb_event_channels,
-						common_style);
-			charts.eta =
-				f_create_histogram(
-						"ETA",
-						"Eta;Eta;# Entries",
-						500,
-						0.0f,
-						1.0f,
-						common_style);
-			charts.eta_array[0] =
-				f_create_histogram(
-						"ETA1",
-						"Eta with #strips == 1",
-						500,
-						0.0f,
-						1.0f,
-						common_style);
-			charts.eta_array[1] =
-				f_create_histogram(
-						"ETA2",
-						"Eta with #strips == 2",
-						500,
-						0.0f,
-						1.0f,
-						common_style);
-			charts.eta_array[2] =
-				f_create_histogram(
-						"ETA3",
-						"Eta with #strips == 3",
-						500,
-						0.0f,
-						1.0f,
-						common_style);
-			charts.eta_array[3] =
-				f_create_histogram(
-						"ETA4",
-						"Eta with #strips == 4",
-						500,
-						0.0f,
-						1.0f,
-						common_style);
-			charts.eta_array[4] =
-				f_create_histogram(
-						"ETA5",
-						"Eta with #strips == 5",
-						500,
-						0.0f,
-						1.0f,
-						common_style);
+			charts.n_channels = d_chart("Number of channel;# Channels;# Entries", 40.0, 0.0, 40.0);
+			charts.common_noise = d_chart("Common Noise;CN;# Entries", 1200, -60.0, 60.0);
+			charts.signals = d_chart("Signal of cluster (foreach event, foreach cluster);Signal;# Entries", 2000, 0.0, 400.0);
+			for (index = 0; index < 5; index++) {
+				snprintf(buffer, d_string_buffer_size, "Signal of clusters with #strips == %d", (index+1));
+				charts.signals_array[index] = d_chart(buffer, 2000, 0.0, 400.0);
+			}
+			charts.signal_one = d_chart("Signal of clusters with #strips == 1", 2000, 0.0, 400.0);
+			charts.signals_two = d_chart("Signal of clusters with #strips == 2", 2000, 0.0, 400.0);
+			charts.signals_two_major = d_chart("Signal of MAIN strip in clusters with #strips == 2", 2000, 0.0, 100.0);
+			charts.signals_two_minor = d_chart("Signal of SECONDARY strip in clusters with #strips == 2", 2000, 0.0, 100.0);
+			charts.signal_over_noise = d_chart("Signal over noise (SN) of cluster;SN;# Entries", 2000, 0.0, 100.0);
+			charts.channel_one = d_chart("Signal over noise (SN) of clusters with #strips == 1", 5000, 0.0, 100.0);
+			charts.channels_two = d_chart("Signal overs noise (SN) of clusters with #strips == 2", 5000, 0.0, 100.0);
+			charts.channels_two_major = d_chart("Signal over noise (SN) of MAIN strip in  clusters with #strips == 2", 5000, 0.0, 100.0);
+			charts.channels_two_minor = d_chart("Signal over noise (SN) of SECONDARY strip in clusters with #strips == 2", 5000, 0.0, 100.0);
+			charts.strips_gravity = d_chart("Center of gravity;Gravity;# Entries", d_trb_event_channels, 0.0, d_trb_event_channels);
+			charts.main_strips_gravity = d_chart("Center of gravity of MAIN strips", d_trb_event_channels, 0.0, d_trb_event_channels);
+			charts.eta = d_chart("Eta;Eta;# Entries", 500, 0.0, 1.0);
+			for (index = 0; index < 5; index++) {
+				snprintf(buffer, d_string_buffer_size, "Eta of clusters with #strips == %d", (index++));
+				charts.eta_array[index] = d_chart(buffer, 500, 0.0, 1.0);
+			}
 			f_fill_histograms(compressed, &charts);
 			range_start = charts.signal_over_noise->GetMean()-5.0*charts.signal_over_noise->GetRMS();
 			range_end = charts.signal_over_noise->GetMean()+10.0*charts.signal_over_noise->GetRMS();
@@ -456,3 +201,4 @@ int main (int argc, char *argv[]) {
 	d_release(extension);
 	return 0;
 }
+

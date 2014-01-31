@@ -25,6 +25,8 @@
 #define d_common_ext_data ".dat"
 #define d_common_ext_calibration ".cal"
 #define d_common_ext_calibration_raw ".craw"
+#define d_common_ext_calibration_pdf ".pdf"
+#define d_common_exporter "firefly_calibration_export.bin"
 #define d_common_timeout 500
 #define d_common_timeout_loop 100
 #define d_common_timeout_analyze 500000

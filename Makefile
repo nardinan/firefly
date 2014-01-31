@@ -1,6 +1,7 @@
 objects = chart.o interface.o compression.o ladder.o analyzer.o environment.o loop.o firefly.o dev-functions.o ow-functions.o
 objects_compressor = compression.o firefly_compress.o
-objects_analyzer = compression.o firefly_analyzer.o
+objects_analyzer = compression.o root_analyzer.o firefly_data_export.o
+objects_calibration_export = compression.o root_analyzer.o firefly_calibration_export.o
 objects_ttree = compression.o firefly_ttree.o
 cc = gcc -g -std=c99
 cpp = g++ -g
@@ -11,12 +12,25 @@ liblink = -L../serenity -L/usr/lib64 -lm `libusb-config --libs` `pkg-config --li
 liblink_analyzer = $(liblink) `root-config --libs`
 exec = firefly.bin
 exec_compressor = firefly_compress.bin
-exec_analyzer = firefly_analyzer.bin
+exec_analyzer = firefly_data_export.bin
+exec_calibration_export = firefly_calibration_export.bin
 exec_ttree = firefly_ttree.bin
 
 all: $(objects)
 	$(cc) $(lflags) $(objects) -o $(exec) $(liblink)
 	if [ ! -f /root/.firefly.cfg ]; then cp firefly.cfg /root/.firefly.cfg; fi;
+
+compressor: $(objects_compressor)
+	$(cc) $(lflags) $(objects_compressor) -o $(exec_compressor) $(liblink) 
+
+data_export: $(objects_analyzer)
+	$(cpp) $(lflags) $(objects_analyzer) -o $(exec_analyzer) $(liblink_analyzer)
+
+calibration_export: $(objects_calibration_export)
+	$(cpp) $(lflags) $(objects_calibration_export) -o $(exec_calibration_export) $(liblink_analyzer)
+
+ttree: $(objects_ttree)
+	$(cpp) $(lflags) $(objects_ttree) -o $(exec_ttree) $(liblink_analyzer)
 
 chart.o: components/chart.c components/chart.h
 	$(cc) $(cflags) components/chart.c
@@ -51,20 +65,17 @@ firefly.o: firefly.c loop.h
 firefly_compress.o: firefly_compress.c compression.h
 	$(cc) $(cflags) firefly_compress.c
 
-firefly_analyzer.o: firefly_analyzer.cpp compression.h
-	$(cpp) $(cflags_analyzer) firefly_analyzer.cpp
+root_analyzer.o: root_analyzer.cpp root_analyzer.h compression.h
+	$(cpp) $(cflags_analyzer) root_analyzer.cpp
+
+firefly_data_export.o: firefly_data_export.cpp root_analyzer.h
+	$(cpp) $(cflags_analyzer) firefly_data_export.cpp
+
+firefly_calibration_export.o: firefly_calibration_export.cpp root_analyzer.h
+	$(cpp) $(cflags_analyzer) firefly_calibration_export.cpp
 
 firefly_ttree.o: firefly_ttree.cpp compression.h
 	$(cpp) $(cflags_analyzer) firefly_ttree.cpp
-
-compressor: $(objects_compressor)
-	$(cc) $(lflags) $(objects_compressor) -o $(exec_compressor) $(liblink) 
-
-analyzer: $(objects_analyzer)
-	$(cpp) $(lflags) $(objects_analyzer) -o $(exec_analyzer) $(liblink_analyzer)
-
-ttree: $(objects_ttree)
-	$(cpp) $(lflags) $(objects_ttree) -o $(exec_ttree) $(liblink_analyzer)
 
 cleandat:
 	rm -f *.dat
@@ -79,3 +90,4 @@ clean:
 	rm -f $(exec_compressor)
 	rm -f $(exec_analyzer)
 	rm -f $(exec_ttree)
+	rm -f $(exec_calibration_export)
