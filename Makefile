@@ -18,7 +18,11 @@ exec_ttree = firefly_ttree.bin
 
 all: $(objects)
 	$(cc) $(lflags) $(objects) -o $(exec) $(liblink)
-	if [ ! -f /root/.firefly.cfg ]; then cp firefly.cfg /root/.firefly.cfg; fi;
+	(if [ ! -f /root/.firefly.cfg ]; then cp firefly.cfg /root/.firefly.cfg; fi;) || true
+	make compressor
+	make data_export
+	make calibration_export
+	make ttree
 
 compressor: $(objects_compressor)
 	$(cc) $(lflags) $(objects_compressor) -o $(exec_compressor) $(liblink) 
