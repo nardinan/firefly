@@ -4,11 +4,7 @@
 #include <TTree.h>
 #include <TInterpreter.h>
 extern "C" {
-#include <stdio.h>
-#include <serenity/ground/ground.h>
-#include <serenity/structures/structures.h>
-#include <serenity/structures/infn/infn.h>
-#include "compression.h"
+#include "../compression.h"
 }
 #define d_branch(ot,str,kin,ptr) (ot).Branch((str),(ptr),(kin))
 typedef struct s_tree_event {

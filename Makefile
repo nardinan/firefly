@@ -62,20 +62,20 @@ dev-functions.o: phys.ksu.edu/dev-functions.c phys.ksu.edu/dev-functions.h phys.
 firefly.o: firefly.c loop.h
 	$(cc) $(cflags) firefly.c
 
-firefly_compress.o: firefly_compress.c compression.h
-	$(cc) $(cflags) firefly_compress.c
+firefly_compress.o: tools/firefly_compress.c compression.h
+	$(cc) $(cflags) tools/firefly_compress.c
 
 root_analyzer.o: root_analyzer.cpp root_analyzer.h compression.h
 	$(cpp) $(cflags_analyzer) root_analyzer.cpp
 
-firefly_data_export.o: firefly_data_export.cpp root_analyzer.h
-	$(cpp) $(cflags_analyzer) firefly_data_export.cpp
+firefly_data_export.o: tools/firefly_data_export.cpp root_analyzer.h
+	$(cpp) $(cflags_analyzer) tools/firefly_data_export.cpp
 
-firefly_calibration_export.o: firefly_calibration_export.cpp root_analyzer.h
-	$(cpp) $(cflags_analyzer) firefly_calibration_export.cpp
+firefly_calibration_export.o: tools/firefly_calibration_export.cpp root_analyzer.h
+	$(cpp) $(cflags_analyzer) tools/firefly_calibration_export.cpp
 
-firefly_ttree.o: firefly_ttree.cpp compression.h
-	$(cpp) $(cflags_analyzer) firefly_ttree.cpp
+firefly_ttree.o: tools/firefly_ttree.cpp compression.h
+	$(cpp) $(cflags_analyzer) tools/firefly_ttree.cpp
 
 cleandat:
 	rm -f *.dat

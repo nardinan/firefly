@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "root_analyzer.h"
+#include "../root_analyzer.h"
 typedef struct s_calibration_charts {
 	TH1F *pedestal, *sigma_raw, *sigma;
 } s_calibration_charts;
