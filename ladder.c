@@ -17,6 +17,7 @@
  */
 #include "ladder.h"
 #include "analyzer.h"
+#include "environment.h"
 owDevice v_temperature[MAX_DEVICES];
 unsigned int v_sensors = 0;
 void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *configuration) { d_FP;
@@ -196,29 +197,25 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 			d_object_lock(ladder->calibration.write_lock);
 			ladder->calibration.temperature[0] = 0;
 			ladder->calibration.temperature[1] = 0;
-			for (sensors = 0, current_sensor = 0; sensors < v_sensors; sensors++) {
-				for (index = 0; index < SERIAL_SIZE; index++)
-					snprintf(buffer+(strlen("0x00")*index), d_string_buffer_size-(strlen("0x00")*index), "0x%02x",
-							v_temperature[sensors].SN[index]);
-				string = f_string_new(string, d_string_buffer_size, "temp_SN=%s\n", buffer);
-				stream->m_write_string(stream, string);
+			for (sensors = 0, current_sensor = 0; sensors < v_sensors; sensors++)
 				if ((v_temperature[sensors].SN[0] == 0x10) || (v_temperature[sensors].SN[0] == 0x22) || (v_temperature[sensors].SN[0] == 0x28))
 					if (current_sensor < 2) {
+						for (index = 0; index < SERIAL_SIZE; index++)
+							snprintf(buffer+(strlen("0x00")*index), d_string_buffer_size-(strlen("0x00")*index), "%02x",
+									v_temperature[sensors].SN[index]);
+						string = f_string_new(string, d_string_buffer_size, "temp_SN=%s\n", buffer);
+						stream->m_write_string(stream, string);
 						readDevice(&(v_temperature[sensors]), &(ladder->calibration.temperature[current_sensor]));
 						current_sensor++;
 					}
-
-			}
-			string = f_string_new(string, d_string_buffer_size, "bias_volt=%sV\nleak_curr=%suA\n",
-					((ladder->voltage)?ladder->voltage:"<undefined>"), ((ladder->current)?ladder->current:"<undefined>"));
-			stream->m_write_string(stream, string);
 			strftime(buffer, d_string_buffer_size, d_common_interface_time_format, localtime(&(ladder->starting_time)));
-			string = f_string_new(string, d_string_buffer_size, "%s\n%s\nstarting_time=%s\ntemp_right=%.03f\ntemp_left=%.03f\nhold_delay=%.03f\n",
-					ladder->name, location_entries[ladder->location_pointer].name, buffer, ladder->calibration.temperature[0],
-					ladder->calibration.temperature[1], ladder->last_hold_delay);
+			string = f_string_new(string, d_string_buffer_size, "name=%s\nlocation=%s\nbias_volt=%sV\nleak_curr=%suA\nstarting_time=%s\n"
+					"temp_right=%.03f\ntemp_left=%.03f\nhold_delay=%.03f\n", ladder->name, location_entries[ladder->location_pointer].name,
+					ladder->voltage, ladder->current, buffer, ladder->calibration.temperature[0], ladder->calibration.temperature[1],
+					ladder->last_hold_delay);
 			stream->m_write_string(stream, string);
-			string = f_string_new(string, d_string_buffer_size, "sigmaraw_cut=%.03f\nsigmaraw_noise_cut=%.03f-%.03f\nsigma_cut=%.03f\n"
-					"sigma_noise_cut=%.03f-%.03f\nsigma_k=%.03f\noccupancy_k=%.03f\n", ladder->sigma_raw_cut,
+			string = f_string_new(string, d_string_buffer_size, "sigmaraw_cut=%.03f\nsigmaraw_noise_cut=%.03f-%.03f\n"
+					"sigma_cut=%.03f\nsigma_noise_cut=%.03f-%.03f\nsigma_k=%.03f\noccupancy_k=%.03f\n", ladder->sigma_raw_cut,
 					ladder->sigma_raw_noise_cut_bottom, ladder->sigma_raw_noise_cut_top, ladder->sigma_cut, ladder->sigma_noise_cut_bottom,
 					ladder->sigma_noise_cut_top, ladder->sigma_k, ladder->occupancy_k);
 			stream->m_write_string(stream, string);
@@ -231,6 +228,8 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 						((ladder->calibration.flags[channel]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?1:0);
 				stream->m_write_string(stream, string);
 			}
+			string = f_string_new(string, d_string_buffer_size, "\n%s\n", ladder->note);
+			stream->m_write_string(stream, string);
 			d_object_unlock(ladder->calibration.write_lock);
 			d_release(string);
 			d_release(stream);
@@ -260,7 +259,7 @@ void p_ladder_load_calibrate(struct s_ladder *ladder, struct o_stream *stream) {
 	} d_endtry;
 }
 
-void p_ladder_analyze_finished(struct s_ladder *ladder) { d_FP;
+void p_ladder_analyze_finished(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
 	int calibrated;
 	d_object_lock(ladder->lock);
 	if (ladder->command == e_ladder_command_calibration) {
@@ -268,7 +267,7 @@ void p_ladder_analyze_finished(struct s_ladder *ladder) { d_FP;
 		if (calibrated) {
 			ladder->command = e_ladder_command_stop;
 			if ((ladder->deviced) && (ladder->device))
-				p_ladder_save_calibrate(ladder);
+				f_informations_show(interface);
 			ladder->update_interface = d_true;
 		}
 	}
@@ -353,9 +352,9 @@ void f_ladder_plot_adc(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
 	ladder->evented = d_false;
 }
 
-void f_ladder_plot(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
+void f_ladder_plot(struct s_ladder *ladder, struct s_interface *interface, struct s_chart **charts) { d_FP;
 	int index;
-	p_ladder_analyze_finished(ladder);
+	p_ladder_analyze_finished(ladder, interface);
 	d_object_lock(ladder->lock);
 	p_ladder_plot_calibrate(ladder, charts);
 	if ((ladder->deviced) && (ladder->device))
@@ -501,14 +500,15 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) 
 			if (ladder->command != e_ladder_command_calibration) {
 				if (gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_normal]))
 					mode = e_trb_mode_normal;
-				else if (gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_calibration])) {
-					mode = e_trb_mode_calibration;
-					dac = (float)gtk_spin_button_get_value(interface->spins[e_interface_spin_dac]);
-				} else {
-					mode = e_trb_mode_calibration_debug_digital;
-					dac = (float)gtk_spin_button_get_value(interface->spins[e_interface_spin_dac]);
-					channel = gtk_spin_button_get_value(interface->spins[e_interface_spin_channel]);
-					ladder->listening_channel = channel;
+				else {
+					dac = gtk_spin_button_get_value_as_int(interface->spins[e_interface_spin_dac]);
+					if (gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_calibration]))
+						mode = e_trb_mode_calibration;
+					else {
+						mode = e_trb_mode_calibration_debug_digital;
+						channel = gtk_spin_button_get_value(interface->spins[e_interface_spin_channel]);
+						ladder->listening_channel = channel;
+					}
 				}
 				if (d_strlen(ladder->output) > 0)
 					name = d_string(d_string_buffer_size, "%s/%s%s", ladder->ladder_directory, ladder->output, d_common_ext_data);

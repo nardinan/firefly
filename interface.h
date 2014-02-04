@@ -139,7 +139,7 @@ typedef struct s_interface_informations {
 	GtkBuilder *interface;
 	GtkWindow *window;
 	GtkEntry *entries[e_interface_informations_entry_NULL];
-	GtkButton *action, *cancel;
+	GtkButton *action;
 } s_interface_informations;
 typedef struct s_interface_scale {
 	GtkBuilder *interface;

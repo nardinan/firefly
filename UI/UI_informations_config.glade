@@ -124,21 +124,11 @@
             <property name="visible">True</property>
             <property name="layout_style">end</property>
             <child>
-              <object class="GtkButton" id="v_cancel">
-                <property name="label" translatable="yes">Cancel</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">0</property>
-              </packing>
+              <placeholder/>
             </child>
             <child>
               <object class="GtkButton" id="v_ok">
-                <property name="label" translatable="yes">OK</property>
+                <property name="label" translatable="yes">Done</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -159,7 +149,6 @@
       </object>
     </child>
     <action-widgets>
-      <action-widget response="0">v_cancel</action-widget>
       <action-widget response="0">v_ok</action-widget>
     </action-widgets>
   </object>

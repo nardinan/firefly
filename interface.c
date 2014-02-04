@@ -290,7 +290,6 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	d_assert(result->scale_configuration->export_png = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_export_PNG")));
 	d_assert(result->parameters_configuration->action = GTK_BUTTON(gtk_builder_get_object(parameters_interface, "v_action")));
 	d_assert(result->informations_configuration->action = GTK_BUTTON(gtk_builder_get_object(informations_interface, "v_ok")));
-	d_assert(result->informations_configuration->cancel = GTK_BUTTON(gtk_builder_get_object(informations_interface, "v_cancel")));
 	for (index = 0; interface_informations_entries[index]; index++)
 		d_assert(result->informations_configuration->entries[index] = GTK_ENTRY(gtk_builder_get_object(informations_interface,
 						interface_informations_entries[index])));
@@ -342,6 +341,18 @@ void f_interface_update_configuration(struct s_interface *interface, int deviced
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->combos[e_interface_combo_assembly]), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->combos[e_interface_combo_quality]), FALSE);
 	}
+	if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_internal]))
+		gtk_button_set_label(GTK_BUTTON(interface->switches[e_interface_switch_internal]), "Internal (50Hz)");
+	else
+		gtk_button_set_label(GTK_BUTTON(interface->switches[e_interface_switch_internal]), "External");
+	if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_public]))
+		gtk_button_set_label(GTK_BUTTON(interface->switches[e_interface_switch_public]), "Write data on disk");
+	else
+		gtk_button_set_label(GTK_BUTTON(interface->switches[e_interface_switch_public]), "Read only");
+	if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_calibration]))
+		gtk_button_set_label(GTK_BUTTON(interface->switches[e_interface_switch_calibration]), "Do calibration");
+	else
+		gtk_button_set_label(GTK_BUTTON(interface->switches[e_interface_switch_calibration]), "Data");
 }
 
 void f_interface_lock(struct s_interface *interface, int lock) { d_FP;

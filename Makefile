@@ -1,7 +1,7 @@
 objects = chart.o interface.o compression.o ladder.o analyzer.o environment.o loop.o firefly.o dev-functions.o ow-functions.o
 objects_compressor = compression.o firefly_compress.o
-objects_analyzer = compression.o root_analyzer.o firefly_data_export.o
-objects_calibration_export = compression.o root_analyzer.o firefly_calibration_export.o
+objects_analyzer = compression.o root_analyzer.o firefly_dat_export.o
+objects_calibration_export = compression.o root_analyzer.o firefly_cal_export.o
 objects_ttree = compression.o firefly_ttree.o
 cc = gcc -g -std=c99
 cpp = g++ -g
@@ -11,10 +11,10 @@ lflags = -Wall
 liblink = -L../serenity -L/usr/lib64 -lm `libusb-config --libs` `pkg-config --libs gtk+-2.0` -L/usr/lib -lpthread -lserenity_ground -lserenity_structures -lserenity_crypto -lserenity_infn
 liblink_analyzer = $(liblink) `root-config --libs`
 exec = firefly.bin
-exec_compressor = firefly_compress.bin
-exec_analyzer = firefly_data_export.bin
-exec_calibration_export = firefly_calibration_export.bin
-exec_ttree = firefly_ttree.bin
+exec_compressor = tools/firefly_compress.bin
+exec_analyzer = tools/firefly_dat_export.bin
+exec_calibration_export = tools/firefly_cal_export.bin
+exec_ttree = tools/firefly_ttree.bin
 
 all: $(objects)
 	$(cc) $(lflags) $(objects) -o $(exec) $(liblink)
@@ -72,11 +72,11 @@ firefly_compress.o: tools/firefly_compress.c compression.h
 root_analyzer.o: root_analyzer.cpp root_analyzer.h compression.h
 	$(cpp) $(cflags_analyzer) root_analyzer.cpp
 
-firefly_data_export.o: tools/firefly_data_export.cpp root_analyzer.h
-	$(cpp) $(cflags_analyzer) tools/firefly_data_export.cpp
+firefly_dat_export.o: tools/firefly_dat_export.cpp root_analyzer.h
+	$(cpp) $(cflags_analyzer) tools/firefly_dat_export.cpp
 
-firefly_calibration_export.o: tools/firefly_calibration_export.cpp root_analyzer.h
-	$(cpp) $(cflags_analyzer) tools/firefly_calibration_export.cpp
+firefly_cal_export.o: tools/firefly_cal_export.cpp root_analyzer.h
+	$(cpp) $(cflags_analyzer) tools/firefly_cal_export.cpp
 
 firefly_ttree.o: tools/firefly_ttree.cpp compression.h
 	$(cpp) $(cflags_analyzer) tools/firefly_ttree.cpp

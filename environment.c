@@ -49,6 +49,8 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration_debug]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_action]), "toggled", G_CALLBACK(p_callback_action), result);
+	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_public]), "toggled", G_CALLBACK(p_callback_refresh), result);
+	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_internal]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->bucket_spins[e_interface_bucket_spin_calibration]), "value-changed",
 			G_CALLBACK(p_callback_change_bucket), result);
 	g_signal_connect(G_OBJECT(result->interface->bucket_spins[e_interface_bucket_spin_data]), "value-changed",
@@ -70,6 +72,7 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 			d_die(d_error_malloc);
 	}
 	g_signal_connect(G_OBJECT(result->interface->parameters_configuration->action), "clicked", G_CALLBACK(p_callback_parameters_action), result);
+	g_signal_connect(G_OBJECT(result->interface->informations_configuration->action), "clicked", G_CALLBACK(p_callback_informations_action), result);
 	d_assert(result->searcher = f_trbs_new(NULL));
 	result->searcher->m_async_search(result->searcher, p_callback_incoming_device, d_common_timeout_device, (void *)result);
 	return result;
@@ -340,3 +343,25 @@ void p_callback_parameters_show(GtkWidget *widget, struct s_environment *environ
 	gtk_window_set_position(environment->interface->parameters_configuration->window, GTK_WIN_POS_CENTER_ON_PARENT);
 	gtk_window_present(environment->interface->parameters_configuration->window);
 }
+
+void p_callback_informations_action(GtkWidget *widget, struct s_environment *environment) {
+	snprintf(environment->ladders[environment->current]->voltage, d_string_buffer_size, "%s",
+			gtk_entry_get_text(GTK_ENTRY(environment->interface->informations_configuration->entries[e_interface_informations_entry_voltage])));
+	snprintf(environment->ladders[environment->current]->current, d_string_buffer_size, "%s",
+			gtk_entry_get_text(GTK_ENTRY(environment->interface->informations_configuration->entries[e_interface_informations_entry_current])));
+	snprintf(environment->ladders[environment->current]->note, d_string_buffer_size, "%s",
+			gtk_entry_get_text(GTK_ENTRY(environment->interface->informations_configuration->entries[e_interface_informations_entry_note])));
+	p_ladder_save_calibrate(environment->ladders[environment->current]);
+	p_callback_hide_on_exit(GTK_WIDGET(environment->interface->informations_configuration->window), environment);
+}
+
+void f_informations_show(struct s_interface *interface) {
+	gtk_entry_set_text(GTK_ENTRY(interface->informations_configuration->entries[e_interface_informations_entry_voltage]), "");
+	gtk_entry_set_text(GTK_ENTRY(interface->informations_configuration->entries[e_interface_informations_entry_current]), "");
+	gtk_entry_set_text(GTK_ENTRY(interface->informations_configuration->entries[e_interface_informations_entry_note]), "");
+	gtk_widget_show_all(GTK_WIDGET(interface->informations_configuration->window));
+	gtk_window_set_position(interface->informations_configuration->window, GTK_WIN_POS_CENTER_ON_PARENT);
+	gtk_window_present(interface->informations_configuration->window);
+	gtk_window_set_keep_above(interface->informations_configuration->window, TRUE);
+}
+

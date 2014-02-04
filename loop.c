@@ -104,7 +104,7 @@ int f_step_plot_fast(struct s_environment *environment, time_t current_time) { d
 }
 
 int f_step_plot_slow(struct s_environment *environment, time_t current_time) { d_FP;
-	f_ladder_plot(environment->ladders[environment->current], environment->interface->charts);
+	f_ladder_plot(environment->ladders[environment->current], environment->interface, environment->interface->charts);
 	return 0;
 }
 
