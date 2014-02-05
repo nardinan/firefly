@@ -250,6 +250,7 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 		d_assert(result->toggles[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(main_interface, interface_toggles[index])));
 	d_assert(result->parameters_configuration->save_raw = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_save_raw")));
 	d_assert(result->parameters_configuration->save_pdf = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_save_pdf")));
+	d_assert(result->parameters_configuration->show_bad_channels = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_show_bad_channels")));
 	for (index = 0; interface_files[index]; index++)
 		d_assert(result->files[index] = GTK_FILE_CHOOSER_BUTTON(gtk_builder_get_object(main_interface, interface_files[index])));
 	d_assert(result->parameters_configuration->directory = GTK_FILE_CHOOSER_BUTTON(gtk_builder_get_object(parameters_interface, "v_workspace")));

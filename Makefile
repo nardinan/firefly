@@ -3,7 +3,7 @@ objects_compressor = compression.o firefly_compress.o
 objects_analyzer = compression.o root_analyzer.o firefly_dat_export.o
 objects_calibration_export = compression.o root_analyzer.o firefly_cal_export.o
 objects_ttree = compression.o firefly_ttree.o
-cc = gcc -g -std=c99
+cc = gcc -g
 cpp = g++ -g
 cflags = -Wall -I/usr/local/include `libusb-config --cflags` `pkg-config --cflags gtk+-2.0` -Wno-variadic-macros -Wno-missing-braces -Wno-gnu -Wno-pointer-sign -c -pedantic
 cflags_analyzer = $(cflags) `root-config --cflags` -Wno-c++11-long-long

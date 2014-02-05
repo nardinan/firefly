@@ -44,6 +44,7 @@ void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *config
 			d_ladder_key_load_f(dictionary, occupancy_k, ladder);
 			d_ladder_key_load_d(dictionary, save_calibration_raw, ladder);
 			d_ladder_key_load_d(dictionary, save_calibration_pdf, ladder);
+			d_ladder_key_load_d(dictionary, show_bad_channels, ladder);
 			d_object_unlock(ladder->parameters_lock);
 		}
 		d_release(dictionary);
@@ -78,6 +79,7 @@ void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *config
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "occupancy_k=%f\n", ladder->occupancy_k));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "save_calibration_raw=%d\n", ladder->save_calibration_raw));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "save_calibration_pdf=%d\n", ladder->save_calibration_pdf));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "show_bad_channels=%d\n", ladder->show_bad_channels));
 			d_object_unlock(ladder->parameters_lock);
 		} d_pool_end_flush;
 		d_release(stream);
@@ -201,10 +203,11 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 				if ((v_temperature[sensors].SN[0] == 0x10) || (v_temperature[sensors].SN[0] == 0x22) || (v_temperature[sensors].SN[0] == 0x28))
 					if (current_sensor < 2) {
 						for (index = 0; index < SERIAL_SIZE; index++)
-							snprintf(buffer+(strlen("0x00")*index), d_string_buffer_size-(strlen("0x00")*index), "%02x",
-									v_temperature[sensors].SN[index]);
+							snprintf(buffer+(strlen("00")*index), d_string_buffer_size-(strlen("00")*index), "%02x",
+									(unsigned char)v_temperature[sensors].SN[index]);
 						string = f_string_new(string, d_string_buffer_size, "temp_SN=%s\n", buffer);
 						stream->m_write_string(stream, string);
+						doConversion(&(v_temperature[sensors]));
 						readDevice(&(v_temperature[sensors]), &(ladder->calibration.temperature[current_sensor]));
 						current_sensor++;
 					}
@@ -282,9 +285,10 @@ void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) {
 		for (index = 0; index < d_trb_event_channels; index++) {
 			f_chart_append_signal(charts[e_interface_alignment_pedestal], 0, index, ladder->calibration.pedestal[index]);
 			f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 1, index, ladder->calibration.sigma_raw[index]);
-			f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 0, index,
-					((ladder->calibration.flags[index]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?
-					charts[e_interface_alignment_sigma_raw]->axis_y.range[1]:0);
+			if (ladder->show_bad_channels)
+				f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 0, index,
+						((ladder->calibration.flags[index]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?
+						charts[e_interface_alignment_sigma_raw]->axis_y.range[1]:0);
 			f_chart_append_signal(charts[e_interface_alignment_sigma], 0, index, ladder->calibration.sigma[index]);
 			f_chart_append_histogram(charts[e_interface_alignment_histogram_pedestal], 0, ladder->calibration.pedestal[index]);
 			f_chart_append_histogram(charts[e_interface_alignment_histogram_sigma_raw], 0, ladder->calibration.sigma_raw[index]);
@@ -309,9 +313,10 @@ void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP
 			for (index = 0; index < d_trb_event_channels; index++) {
 				va = (index/d_trb_event_channels_on_va);
 				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 1, index, ladder->data.mean_no_pedestal[index]);
-				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 0, index,
-						((ladder->calibration.flags[index]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?
-						charts[e_interface_alignment_adc_pedestal]->axis_y.range[1]:0);
+				if (ladder->show_bad_channels)
+					f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 0, index,
+							((ladder->calibration.flags[index]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?
+							charts[e_interface_alignment_adc_pedestal]->axis_y.range[1]:0);
 				value = ladder->data.mean_no_pedestal[index]-ladder->data.cn[va];
 				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal_cn], 0, index, value);
 				f_chart_append_signal(charts[e_interface_alignment_signal], 0, index, value);
@@ -375,10 +380,12 @@ int f_ladder_device(struct s_ladder *ladder, struct o_trb *device) { d_FP;
 	while ((!result) && (usleep(d_common_timeout_device) == 0)) {
 		d_object_lock(ladder->lock);
 		if (!ladder->deviced) {
-			if (acquireAdapter() == 0) {
+			if ((acquireAdapter() == 0) && (resetAdapter() == 0)) {
 				v_sensors = makeDeviceList(v_temperature);
-				for (index = 0; index < v_sensors; index++)
+				for (index = 0; index < v_sensors; index++) {
 					setupDevice(&(v_temperature[index]));
+					doConversion(&(v_temperature[index]));
+				}
 			}
 			ladder->device = device;
 			ladder->deviced = d_true;
