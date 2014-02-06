@@ -22,6 +22,8 @@ const char *interface_labels[] = {
 	"v_start_time",
 	"v_current_time",
 	"v_output",
+	"v_temp1",
+	"v_temp2",
 	NULL
 }, *interface_switches[] = {
 	"v_public",

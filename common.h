@@ -31,6 +31,7 @@
 #define d_common_timeout_loop 100
 #define d_common_timeout_analyze 500000
 #define d_common_timeout_device 1000000
+#define d_common_timeout_temperature 200000
 #define d_common_file_time_format "_%m.%d.%Y-%H.%M.%S"
 #define d_common_interface_time_format "%d %b %Y %H:%M:%S"
 #define d_common_calibration_events 1024
@@ -38,5 +39,5 @@
 #define d_common_data_events 1024
 #define d_common_data_events_default 128
 #define d_assert(a) if(!(a))d_die("[ASSERT|firefly] - fail testing %s", #a)
-#define d_FP { /*printf("[FUNCTION|firefly] - %s::%s() %d\n", __FILE__, __FUNCTION__, __LINE__); fflush(stdout);*/ }
+#define d_FP /*{ printf("[FUNCTION|firefly] - %s::%s() %d\n", __FILE__, __FUNCTION__, __LINE__); fflush(stdout); }*/
 #endif

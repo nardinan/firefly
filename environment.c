@@ -43,6 +43,7 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	g_signal_connect(G_OBJECT(result->interface->window), "expose-event", G_CALLBACK(p_callback_start), result);
 	g_signal_connect(G_OBJECT(result->interface->scale_configuration->window), "delete-event", G_CALLBACK(p_callback_hide_on_exit), result);
 	g_signal_connect(G_OBJECT(result->interface->parameters_configuration->window), "delete-event", G_CALLBACK(p_callback_hide_on_exit), result);
+	g_signal_connect(G_OBJECT(result->interface->informations_configuration->window), "delete-event", G_CALLBACK(p_callback_hide_on_exit), result);
 	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->preferences), "activate", G_CALLBACK(p_callback_parameters_show), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_normal]), "toggled", G_CALLBACK(p_callback_refresh), result);
@@ -105,7 +106,7 @@ void p_callback_action(GtkWidget *widget, struct s_environment *environment) { d
 		f_interface_update_configuration(environment->interface, environment->ladders[environment->current]->deviced);
 	} else {
 		f_interface_lock(environment->interface, d_true);
-		f_ladder_configure(environment->ladders[environment->current], environment->interface);
+		f_ladder_configure(environment->ladders[environment->current], environment->interface, environment->searcher);
 	}
 }
 

@@ -13,7 +13,6 @@ int acquireAdapter (void) {
     unsigned int vendor, product;
 
     // Find all USB devices
-    usb_init();
     if (usb_find_busses() < 0) {
         fprintf (stderr, "ERROR: %s\n", usb_strerror());
         goto failure;
@@ -80,12 +79,9 @@ int acquireAdapter (void) {
 
         }
     }
-
-    fprintf (stderr, "ERROR: No adapter found\n");
     goto failure;
 
     failure: {
-        fprintf (stderr, "Failed to aqcuire adapter\n");
         return -1;
     }
 }

@@ -122,6 +122,10 @@ int f_step_interface(struct s_environment *environment, time_t current_time) { d
 	float bytes;
 	strftime(buffer, d_string_buffer_size, d_common_interface_time_format, localtime(&current_time));
 	gtk_label_set_text(environment->interface->labels[e_interface_label_current_time], buffer);
+	snprintf(value, d_string_buffer_size, "%.02f C", environment->ladders[environment->current]->calibration.temperature[0]);
+	gtk_label_set_text(environment->interface->labels[e_interface_label_temperature1], value);
+	snprintf(value, d_string_buffer_size, "%.02f C", environment->ladders[environment->current]->calibration.temperature[1]);
+	gtk_label_set_text(environment->interface->labels[e_interface_label_temperature2], value);
 	d_object_lock(environment->ladders[environment->current]->lock);
 	if (environment->ladders[environment->current]->command != e_ladder_command_stop) {
 		strftime(buffer, d_string_buffer_size, d_common_interface_time_format,
@@ -197,3 +201,4 @@ int f_step_progress(struct s_environment *environment, time_t current_time) { d_
 	gtk_progress_bar_set_fraction(environment->interface->progress_bar, d_min(fraction, 1.0));
 	return 0;
 }
+

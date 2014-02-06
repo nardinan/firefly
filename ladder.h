@@ -65,7 +65,7 @@ typedef struct s_ladder_histogram_value {
 } s_ladder_histogram_value;
 typedef struct s_ladder {
 	char output[d_string_buffer_size], directory[d_string_buffer_size], ladder_directory[d_string_buffer_size], name[d_string_buffer_size],
-	     voltage[d_string_buffer_size], current[d_string_buffer_size], note[d_string_buffer_size];
+	     voltage[d_string_buffer_size], current[d_string_buffer_size], note[d_string_buffer_size], sensors[2][d_string_buffer_size];
 	struct o_object *lock, *parameters_lock;
 	struct o_trb *device;
 	struct o_trb_event last_event;
@@ -104,6 +104,7 @@ extern struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *de
 extern int p_ladder_read_integrity(struct o_trb_event *event, unsigned char *last_readed_code);
 extern void p_ladder_read_calibrate(struct s_ladder *ladder);
 extern void p_ladder_read_data(struct s_ladder *ladder);
+extern void f_ladder_temperature(struct s_ladder *ladder, struct o_trbs *searcher);
 extern void f_ladder_read(struct s_ladder *ladder, time_t timeout);
 extern void p_ladder_save_calibrate(struct s_ladder *ladder);
 extern void p_ladder_load_calibrate(struct s_ladder *ladder, struct o_stream *stream);
@@ -115,6 +116,6 @@ extern void f_ladder_plot(struct s_ladder *ladder, struct s_interface *interface
 extern int f_ladder_device(struct s_ladder *ladder, struct o_trb *device);
 extern void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *interface);
 extern void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *interface);
-extern void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface);
+extern void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface, struct o_trbs *searcher);
 #endif
 

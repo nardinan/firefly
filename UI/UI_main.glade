@@ -587,7 +587,7 @@
                         <child>
                           <object class="GtkTable" id="v_stats_grid">
                             <property name="visible">True</property>
-                            <property name="n_rows">5</property>
+                            <property name="n_rows">7</property>
                             <property name="n_columns">2</property>
                             <child>
                               <object class="GtkLabel" id="v_events_label">
@@ -739,6 +739,68 @@
                                 <property name="right_attach">2</property>
                                 <property name="top_attach">4</property>
                                 <property name="bottom_attach">5</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="v_temp1_label">
+                                <property name="visible">True</property>
+                                <property name="xpad">5</property>
+                                <property name="label" translatable="yes">temp sensor #1</property>
+                                <attributes>
+                                  <attribute name="scale" value="0.800000"/>
+                                </attributes>
+                              </object>
+                              <packing>
+                                <property name="top_attach">5</property>
+                                <property name="bottom_attach">6</property>
+                                <property name="x_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="v_temp2_label">
+                                <property name="visible">True</property>
+                                <property name="xpad">5</property>
+                                <property name="label" translatable="yes">temp sensor #2</property>
+                                <attributes>
+                                  <attribute name="scale" value="0.800000"/>
+                                </attributes>
+                              </object>
+                              <packing>
+                                <property name="top_attach">6</property>
+                                <property name="bottom_attach">7</property>
+                                <property name="x_options"/>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="v_temp1">
+                                <property name="visible">True</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">?</property>
+                                <attributes>
+                                  <attribute name="scale" value="0.800000"/>
+                                </attributes>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">5</property>
+                                <property name="bottom_attach">6</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="v_temp2">
+                                <property name="visible">True</property>
+                                <property name="xalign">0</property>
+                                <property name="label" translatable="yes">?</property>
+                                <attributes>
+                                  <attribute name="scale" value="0.800000"/>
+                                </attributes>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">6</property>
+                                <property name="bottom_attach">7</property>
                               </packing>
                             </child>
                           </object>
@@ -1757,7 +1819,6 @@
     </columns>
   </object>
   <object class="GtkAdjustment" id="v_dac_model">
-    <property name="value">0</property>
     <property name="upper">255</property>
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
@@ -1769,7 +1830,6 @@
   </object>
   <object class="GtkAdjustment" id="v_delay_model">
     <property name="value">6.5999999999999996</property>
-    <property name="lower">0</property>
     <property name="upper">12</property>
     <property name="step_increment">0.10000000000000001</property>
     <property name="page_increment">1</property>

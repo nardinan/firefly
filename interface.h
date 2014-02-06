@@ -32,6 +32,8 @@ typedef enum e_interface_labels {
 	e_interface_label_start_time,
 	e_interface_label_current_time,
 	e_interface_label_output,
+	e_interface_label_temperature1,
+	e_interface_label_temperature2,
 	e_interface_label_NULL
 } e_interface_labels;
 typedef enum e_interface_switches {

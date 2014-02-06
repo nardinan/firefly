@@ -161,6 +161,45 @@ void p_ladder_read_data(struct s_ladder *ladder) { d_FP;
 	}
 }
 
+void f_ladder_temperature(struct s_ladder *ladder, struct o_trbs *searcher) { d_FP;
+	int sensors, current_sensor, index, initialized = d_false;
+	memset(ladder->sensors[0], 0, sizeof(char)*d_string_buffer_size);
+	memset(ladder->sensors[1], 0, sizeof(char)*d_string_buffer_size);
+	ladder->calibration.temperature[0] = 0;
+	ladder->calibration.temperature[1] = 0;
+	d_object_lock(searcher->search_semaphore);
+	if ((acquireAdapter() == 0) && (resetAdapter() == 0))
+		initialized = d_true;
+	d_object_unlock(searcher->search_semaphore);
+	if (initialized) {
+		v_sensors = makeDeviceList(v_temperature);
+		for (sensors = 0, current_sensor = 0; sensors < v_sensors; sensors++) {
+			setupDevice(&(v_temperature[sensors]));
+			doConversion(&(v_temperature[sensors]));
+			if (current_sensor < 2) {
+				for (index = 0; index < SERIAL_SIZE; index++)
+					snprintf(ladder->sensors[current_sensor]+(strlen("00")*index), d_string_buffer_size-(strlen("00")*index), "%02x",
+							(unsigned char)v_temperature[sensors].SN[index]);
+				current_sensor++;
+			}
+		}
+		current_sensor = 0;
+		while (current_sensor < 2) {
+			usleep(d_common_timeout_temperature);
+			for (sensors = 0, current_sensor = 0; sensors < v_sensors; sensors++) {
+				if ((v_temperature[sensors].SN[0] == 0x10) || (v_temperature[sensors].SN[0] == 0x22) || (v_temperature[sensors].SN[0] == 0x28))
+					if (current_sensor < 2) {
+						if (readDevice(&(v_temperature[sensors]), &(ladder->calibration.temperature[current_sensor])) < 0)
+							break;
+						current_sensor++;
+					}
+			}
+		}
+		releaseAdapter();
+	}
+}
+
+
 void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 	d_object_lock(ladder->lock);
 	if ((ladder->deviced) && (ladder->device)) {
@@ -188,7 +227,7 @@ void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 }
 
 void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
-	int channel, va, channel_on_va, sensors, current_sensor, index;
+	int channel, va, channel_on_va;
 	struct o_stream *stream;
 	struct o_string *name, *string = NULL;
 	char buffer[d_string_buffer_size];
@@ -197,20 +236,8 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 		name = d_string(d_string_buffer_size, "%s/%s%s", ladder->ladder_directory, ladder->output, d_common_ext_calibration);
 		if ((stream = f_stream_new_file(NULL, name, "w", 0777))) {
 			d_object_lock(ladder->calibration.write_lock);
-			ladder->calibration.temperature[0] = 0;
-			ladder->calibration.temperature[1] = 0;
-			for (sensors = 0, current_sensor = 0; sensors < v_sensors; sensors++)
-				if ((v_temperature[sensors].SN[0] == 0x10) || (v_temperature[sensors].SN[0] == 0x22) || (v_temperature[sensors].SN[0] == 0x28))
-					if (current_sensor < 2) {
-						for (index = 0; index < SERIAL_SIZE; index++)
-							snprintf(buffer+(strlen("00")*index), d_string_buffer_size-(strlen("00")*index), "%02x",
-									(unsigned char)v_temperature[sensors].SN[index]);
-						string = f_string_new(string, d_string_buffer_size, "temp_SN=%s\n", buffer);
-						stream->m_write_string(stream, string);
-						doConversion(&(v_temperature[sensors]));
-						readDevice(&(v_temperature[sensors]), &(ladder->calibration.temperature[current_sensor]));
-						current_sensor++;
-					}
+			string = f_string_new(string, d_string_buffer_size, "temp_SN=%s\ntemp_SN=%s\n", ladder->sensors[0], ladder->sensors[1]);
+			stream->m_write_string(stream, string);
 			strftime(buffer, d_string_buffer_size, d_common_interface_time_format, localtime(&(ladder->starting_time)));
 			string = f_string_new(string, d_string_buffer_size, "name=%s\nlocation=%s\nbias_volt=%sV\nleak_curr=%suA\nstarting_time=%s\n"
 					"temp_right=%.03f\ntemp_left=%.03f\nhold_delay=%.03f\n", ladder->name, location_entries[ladder->location_pointer].name,
@@ -376,17 +403,10 @@ void f_ladder_plot(struct s_ladder *ladder, struct s_interface *interface, struc
 }
 
 int f_ladder_device(struct s_ladder *ladder, struct o_trb *device) { d_FP;
-	int result = d_false, index;
+	int result = d_false;
 	while ((!result) && (usleep(d_common_timeout_device) == 0)) {
 		d_object_lock(ladder->lock);
 		if (!ladder->deviced) {
-			if ((acquireAdapter() == 0) && (resetAdapter() == 0)) {
-				v_sensors = makeDeviceList(v_temperature);
-				for (index = 0; index < v_sensors; index++) {
-					setupDevice(&(v_temperature[index]));
-					doConversion(&(v_temperature[index]));
-				}
-			}
 			ladder->device = device;
 			ladder->deviced = d_true;
 			ladder->update_interface = d_true;
@@ -491,7 +511,7 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 		ladder->command = e_ladder_command_stop;
 }
 
-void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
+void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface, struct o_trbs *searcher) { d_FP;
 	unsigned char trigger = d_ladder_trigger_internal, dac = 0x00, channel = 0x00;
 	enum e_trb_mode mode = e_trb_mode_normal;
 	struct o_string *name = NULL;
@@ -519,8 +539,12 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface) 
 				}
 				if (d_strlen(ladder->output) > 0)
 					name = d_string(d_string_buffer_size, "%s/%s%s", ladder->ladder_directory, ladder->output, d_common_ext_data);
-			} else if ((ladder->save_calibration_raw) && (d_strlen(ladder->output) > 0))
-				name = d_string(d_string_buffer_size, "%s/%s%s", ladder->ladder_directory, ladder->output, d_common_ext_calibration_raw);
+			} else {
+				f_ladder_temperature(ladder, searcher);
+				if ((ladder->save_calibration_raw) && (d_strlen(ladder->output) > 0))
+					name = d_string(d_string_buffer_size, "%s/%s%s", ladder->ladder_directory, ladder->output,
+							d_common_ext_calibration_raw);
+			}
 			if (name) {
 				ladder->device->m_stream(ladder->device, NULL, name, "w", 0777);
 				d_release(name);
