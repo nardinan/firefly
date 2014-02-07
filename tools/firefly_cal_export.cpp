@@ -43,9 +43,9 @@ void f_fill_histograms(struct o_string *data, struct s_calibration_charts *chart
 }
 
 void f_export_histograms(struct o_string *output, struct s_calibration_charts *charts) {
-	p_export_histograms_singleton(output, d_true, d_true, d_false, 1, charts->pedestal);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->sigma_raw);
-	p_export_histograms_singleton(output, d_true, d_false, d_true, 1, charts->sigma);
+	p_export_histograms_singleton(output, d_false, d_true, d_false, 1, charts->pedestal);
+	p_export_histograms_singleton(output, d_false, d_false, d_false, 1, charts->sigma_raw);
+	p_export_histograms_singleton(output, d_false, d_false, d_true, 1, charts->sigma);
 }
 
 int main (int argc, char *argv[]) {
@@ -57,9 +57,14 @@ int main (int argc, char *argv[]) {
 		d_compress_argument(arguments, "-c", calibration, d_string_pure, "No calibration file specified (-c)");
 		d_compress_argument(arguments, "-o", output, d_string_pure, "No output file specified (-o)");
 		if ((calibration) && (output)) {
-			charts.pedestal = d_chart("Pedestal;ADC;Channel", d_trb_event_channels, 0.0, d_trb_event_channels);
-			charts.sigma_raw = d_chart("Sigma raw;Sigma raw;Channel", d_trb_event_channels, 0.0, d_trb_event_channels);
-			charts.sigma = d_chart("Sigma;Sigma;Channel", d_trb_event_channels, 0.0, d_trb_event_channels);
+			common_style.fill_color = kWhite;
+			common_style.fill_style = 0;
+			charts.pedestal = d_chart("Pedestal;Channel;ADC", d_trb_event_channels, 0.0, d_trb_event_channels);
+			charts.pedestal->GetYaxis()->SetRangeUser(0, 1000);
+			charts.sigma_raw = d_chart("Sigma raw;Channel;Sigma raw", d_trb_event_channels, 0.0, d_trb_event_channels);
+			charts.sigma_raw->GetYaxis()->SetRangeUser(0, 20);
+			charts.sigma = d_chart("Sigma;Channel;Sigma", d_trb_event_channels, 0.0, d_trb_event_channels);
+			charts.sigma->GetYaxis()->SetRangeUser(0, 10);
 			f_fill_histograms(calibration, &charts);
 			f_export_histograms(output, &charts);
 		} else
