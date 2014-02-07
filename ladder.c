@@ -162,7 +162,7 @@ void p_ladder_read_data(struct s_ladder *ladder) { d_FP;
 }
 
 void f_ladder_temperature(struct s_ladder *ladder, struct o_trbs *searcher) { d_FP;
-	int sensors, current_sensor, index, initialized = d_false;
+	int sensors, current_sensor, temperature_sensors, index, initialized = d_false;
 	memset(ladder->sensors[0], 0, sizeof(char)*d_string_buffer_size);
 	memset(ladder->sensors[1], 0, sizeof(char)*d_string_buffer_size);
 	ladder->calibration.temperature[0] = 0;
@@ -173,18 +173,18 @@ void f_ladder_temperature(struct s_ladder *ladder, struct o_trbs *searcher) { d_
 	d_object_unlock(searcher->search_semaphore);
 	if (initialized) {
 		v_sensors = makeDeviceList(v_temperature);
-		for (sensors = 0, current_sensor = 0; sensors < v_sensors; sensors++) {
+		for (sensors = 0, temperature_sensors = 0; sensors < v_sensors; sensors++) {
 			setupDevice(&(v_temperature[sensors]));
 			doConversion(&(v_temperature[sensors]));
-			if (current_sensor < 2) {
+			if (temperature_sensors < 2) {
 				for (index = 0; index < SERIAL_SIZE; index++)
-					snprintf(ladder->sensors[current_sensor]+(strlen("00")*index), d_string_buffer_size-(strlen("00")*index), "%02x",
+					snprintf(ladder->sensors[temperature_sensors]+(strlen("00")*index), d_string_buffer_size-(strlen("00")*index), "%02x",
 							(unsigned char)v_temperature[sensors].SN[index]);
-				current_sensor++;
+				temperature_sensors++;
 			}
 		}
 		current_sensor = 0;
-		while (current_sensor < 2) {
+		while (current_sensor < temperature_sensors) {
 			usleep(d_common_timeout_temperature);
 			for (sensors = 0, current_sensor = 0; sensors < v_sensors; sensors++) {
 				if ((v_temperature[sensors].SN[0] == 0x10) || (v_temperature[sensors].SN[0] == 0x22) || (v_temperature[sensors].SN[0] == 0x28))
@@ -421,54 +421,61 @@ void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *inte
 	int written, selected_kind, selected_assembly, selected_quality, index, founded = d_false;
 	char test_code = 0x00, buffer_output[d_string_buffer_size], buffer_input[d_string_buffer_size], buffer_name[d_string_buffer_size];
 	FILE *stream;
-	if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_public])) {
-		selected_kind = gtk_combo_box_get_active(interface->combos[e_interface_combo_kind]);
-		written = snprintf(ladder->name, d_string_buffer_size, "%s", kind_entries[selected_kind].code);
-		if ((selected_kind == d_interface_index_prototype) || (selected_kind == d_interface_index_ladder)) {
-			selected_assembly = gtk_combo_box_get_active(interface->combos[e_interface_combo_assembly]);
-			selected_quality = gtk_combo_box_get_active(interface->combos[e_interface_combo_quality]);
-			written += snprintf(ladder->name+written, d_string_buffer_size-written, "%s%s", assembly_entries[selected_assembly].code,
-					quality_entries[selected_quality].code);
-		}
-		written += snprintf(ladder->name+written, d_string_buffer_size-written, "%03d%c",
-				gtk_spin_button_get_value_as_int(interface->spins[e_interface_spin_serial]),
-				(gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_top]))?'T':'B');
-		snprintf(ladder->ladder_directory, d_string_buffer_size, "%s/%s", ladder->directory, ladder->name);
-		mkdir(ladder->ladder_directory, 0777);
-		if (ladder->command == e_ladder_command_calibration) {
-			for (index = 0; index < e_interface_test_toggle_NULL; index++)
-				if (gtk_check_menu_item_get_active(interface->test_modes[index])) {
-					test_code = test_entries[index];
-					break;
-				}
-			if (test_code != 0x00) {
-				snprintf(ladder->ladder_directory, d_string_buffer_size, "%s/%s/%s", ladder->directory, ladder->name, d_ladder_directory_test);
-				mkdir(ladder->ladder_directory, 0777);
+	selected_kind = gtk_combo_box_get_active(interface->combos[e_interface_combo_kind]);
+	written = snprintf(ladder->name, d_string_buffer_size, "%s", kind_entries[selected_kind].code);
+	if ((selected_kind == d_interface_index_prototype) || (selected_kind == d_interface_index_ladder)) {
+		selected_assembly = gtk_combo_box_get_active(interface->combos[e_interface_combo_assembly]);
+		selected_quality = gtk_combo_box_get_active(interface->combos[e_interface_combo_quality]);
+		written += snprintf(ladder->name+written, d_string_buffer_size-written, "%s%s", assembly_entries[selected_assembly].code,
+				quality_entries[selected_quality].code);
+	}
+	written += snprintf(ladder->name+written, d_string_buffer_size-written, "%03d%c",
+			gtk_spin_button_get_value_as_int(interface->spins[e_interface_spin_serial]),
+			(gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_top]))?'T':'B');
+	snprintf(ladder->ladder_directory, d_string_buffer_size, "%s/%s", ladder->directory, ladder->name);
+	mkdir(ladder->ladder_directory, 0777);
+	if (ladder->command == e_ladder_command_calibration) {
+		for (index = 0; index < e_interface_test_toggle_NULL; index++)
+			if (gtk_check_menu_item_get_active(interface->test_modes[index])) {
+				test_code = test_entries[index];
+				break;
 			}
-		} else {
-			snprintf(ladder->ladder_directory, d_string_buffer_size, "%s/%s/%s", ladder->directory, ladder->name, d_ladder_directory_data);
+		if (test_code != 0x00) {
+			snprintf(ladder->ladder_directory, d_string_buffer_size, "%s/%s/%s", ladder->directory, ladder->name, d_ladder_directory_test);
 			mkdir(ladder->ladder_directory, 0777);
 		}
-		if (test_code)
-			snprintf(buffer_name, d_string_buffer_size, "%s_%s_%c", ladder->name, location_entries[ladder->location_pointer].code, test_code);
-		else
-			snprintf(buffer_name, d_string_buffer_size, "%s_%s", ladder->name, location_entries[ladder->location_pointer].code);
-		index = 0;
-		while (!founded) {
-			snprintf(buffer_output, d_string_buffer_size, "ls %s/%s_%03d* 2>/dev/null", ladder->ladder_directory, buffer_name, index);
-			if ((stream = popen(buffer_output, "r")) != NULL) {
-				if (fgets(buffer_input, d_string_buffer_size, stream) == NULL) {
-					snprintf(ladder->output, d_string_buffer_size, "%s_%03d", buffer_name, index);
-					founded = d_true;
-				}
-				pclose(stream);
-			}
-			index++;
-		}
 	} else {
-		memset(ladder->ladder_directory, 0, d_string_buffer_size);
-		memset(ladder->output, 0, d_string_buffer_size);
+		snprintf(ladder->ladder_directory, d_string_buffer_size, "%s/%s/%s", ladder->directory, ladder->name, d_ladder_directory_data);
+		mkdir(ladder->ladder_directory, 0777);
 	}
+	if (test_code != 0x00)
+		snprintf(buffer_name, d_string_buffer_size, "%s_%s_%c", ladder->name, location_entries[ladder->location_pointer].code, test_code);
+	else
+		snprintf(buffer_name, d_string_buffer_size, "%s_%s", ladder->name, location_entries[ladder->location_pointer].code);
+	memset(ladder->shadow_calibration, 0, d_string_buffer_size);
+	for (index = 0, founded = d_false; (!founded); index++) {
+		snprintf(buffer_output, d_string_buffer_size, "%s/%s/%s_%03d%s", ladder->directory, ladder->name, buffer_name, index,
+				d_common_ext_calibration);
+		if ((stream = fopen(buffer_output, "r"))) {
+			memcpy(ladder->shadow_calibration, buffer_output, d_string_buffer_size);
+			fclose(stream);
+		} else
+			founded = d_true;
+	}
+	for (index = 0, founded = d_false; (!founded); index++) {
+		snprintf(buffer_output, d_string_buffer_size, "ls %s/%s_%03d* 2>/dev/null", ladder->ladder_directory, buffer_name, index);
+		if ((stream = popen(buffer_output, "r")) != NULL) {
+			if (fgets(buffer_input, d_string_buffer_size, stream) == NULL) {
+				snprintf(ladder->shadow_output, d_string_buffer_size, "%s_%03d", buffer_name, index);
+				founded = d_true;
+			}
+			pclose(stream);
+		}
+	}
+	if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_public]))
+		memcpy(ladder->output, ladder->shadow_output, d_string_buffer_size);
+	else
+		memset(ladder->output, 0, d_string_buffer_size);
 }
 
 void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
@@ -514,7 +521,9 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface, struct o_trbs *searcher) { d_FP;
 	unsigned char trigger = d_ladder_trigger_internal, dac = 0x00, channel = 0x00;
 	enum e_trb_mode mode = e_trb_mode_normal;
-	struct o_string *name = NULL;
+	struct o_string *name = NULL, *shadow_calibration_name;
+	struct o_stream *shadow_calibration;
+	int calibrated;
 	d_object_lock(ladder->lock);
 	if ((ladder->deviced) && (ladder->device))
 		if (ladder->command != e_ladder_command_stop) {
@@ -525,6 +534,16 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface, 
 				trigger = d_ladder_trigger_external;
 			ladder->device->m_close_stream(ladder->device);
 			if (ladder->command != e_ladder_command_calibration) {
+				d_ladder_safe_assign(ladder->calibration.lock, calibrated, ladder->calibration.calibrated);
+				if (!calibrated)
+					if (d_strlen(ladder->shadow_calibration) > 0) {
+						shadow_calibration_name = d_string_pure(ladder->shadow_calibration);
+						printf("loading: %s\n", ladder->shadow_calibration);
+						shadow_calibration = f_stream_new_file(NULL, shadow_calibration_name, "r", 0777);
+						p_ladder_load_calibrate(ladder, shadow_calibration);
+						d_release(shadow_calibration);
+						d_release(shadow_calibration_name);
+					}
 				if (gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_normal]))
 					mode = e_trb_mode_normal;
 				else {
