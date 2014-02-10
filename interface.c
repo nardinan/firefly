@@ -166,8 +166,8 @@ struct s_interface_key_value location_entries[] = {
 	{"L", "Ladder"},
 	{NULL, NULL}
 }, assembly_entries[] = {
-	{"PG", "Perugia"},
-	{"GE", "Geneva"},
+	{"P", "Perugia"},
+	{"G", "Geneva"},
 	{NULL, NULL}
 }, quality_entries[] = {
 	{"EL", "Electrical"},
