@@ -59,6 +59,7 @@ int main (int argc, char *argv[]) {
 		if ((calibration) && (output)) {
 			common_style.fill_color = kWhite;
 			common_style.fill_style = 0;
+			common_style.show_stats = kFALSE;
 			charts.pedestal = d_chart("Pedestal;Channel;ADC", d_trb_event_channels, 0.0, d_trb_event_channels);
 			charts.pedestal->GetYaxis()->SetRangeUser(0, 1000);
 			charts.sigma_raw = d_chart("Sigma raw;Channel;Sigma raw", d_trb_event_channels, 0.0, d_trb_event_channels);
