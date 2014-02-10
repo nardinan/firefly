@@ -18,7 +18,8 @@
 #include "../root_analyzer.h"
 typedef struct s_data_charts {
 	TH1F *n_channels, *common_noise, *signals, *signals_array[5], *signal_over_noise, *strips_gravity, *main_strips_gravity, *eta, *eta_array[5],
-	     *channel_one, *channels_two, *channels_two_major, *channels_two_minor, *signal_one, *signals_two, *signals_two_major, *signals_two_minor;
+	     *channel_one, *channels_two, *channels_two_major, *channels_two_minor, *signal_one, *signals_two, *signals_two_major, *signals_two_minor,
+	     *signal_eta;
 	TH1F *last;
 } s_data_charts;
 void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
@@ -43,6 +44,9 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 									strip < clusters[index].header.strips; strip++, current_strip++)
 								value += clusters[index].values[strip];
 							charts->signals->Fill(value);
+							if (clusters[index].header.strips > 1)
+								if (clusters[index].header.eta >= 0)
+									charts->signal_eta->Fill(clusters[index].header.eta, value);
 							if ((clusters[index].header.strips >= 1) && (clusters[index].header.strips <= 5))
 								charts->signals_array[clusters[index].header.strips-1]->Fill(value);
 						}
@@ -89,11 +93,14 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 						if (charts->main_strips_gravity)
 							charts->main_strips_gravity->Fill(clusters[index].header.main_strips_gravity);
 						if (charts->eta)
-							if (charts->eta >= 0) {
-								charts->eta->Fill(clusters[index].header.eta);
-								if ((clusters[index].header.strips >= 1) && (clusters[index].header.strips <= 5))
-									charts->eta_array[clusters[index].header.strips-1]->Fill(clusters[index].header.eta);
-							}
+							if (clusters[index].header.strips > 1)
+								if (charts->eta >= 0) {
+									charts->eta->Fill(clusters[index].header.eta);
+									if ((clusters[index].header.strips >= 1) && (clusters[index].header.strips <= 5))
+										charts->eta_array[clusters[index].header.strips-1]->
+											Fill(clusters[index].header.eta);
+
+								}
 					}
 					d_free(clusters);
 				}
@@ -126,6 +133,7 @@ void f_export_histograms(struct o_string *output, struct s_data_charts *charts) 
 	p_export_histograms_singleton(output, d_false, d_false, d_false, 1, charts->strips_gravity);
 	p_export_histograms_singleton(output, d_false, d_false, d_false, 1, charts->main_strips_gravity);
 	p_export_histograms_singleton(output, d_false, d_false, d_false, 1, charts->eta);
+	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->signal_eta);
 	p_export_histograms_singleton(output, d_false, d_false, d_true, 6, charts->eta, charts->eta_array[0], charts->eta_array[1], charts->eta_array[2],
 			charts->eta_array[3], charts->eta_array[4]);
 }
@@ -166,8 +174,9 @@ int main (int argc, char *argv[]) {
 			charts.strips_gravity = d_chart("Center of gravity;Gravity;# Entries", d_trb_event_channels, 0.0, d_trb_event_channels);
 			charts.main_strips_gravity = d_chart("Center of gravity of MAIN strips", d_trb_event_channels, 0.0, d_trb_event_channels);
 			charts.eta = d_chart("Eta;Eta;# Entries", 500, 0.0, 1.0);
+			charts.signal_eta = d_chart("Signal over eta;Signal;Eta", 2000, 0.0, 1.0);
 			for (index = 0; index < 5; index++) {
-				snprintf(buffer, d_string_buffer_size, "Eta of clusters with #strips == %d", (index++));
+				snprintf(buffer, d_string_buffer_size, "Eta of clusters with #strips == %d", (index+1));
 				charts.eta_array[index] = d_chart(buffer, 500, 0.0, 1.0);
 			}
 			f_fill_histograms(compressed, &charts);

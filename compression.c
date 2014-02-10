@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "compression.h"
-unsigned int min_strip = 0, max_strip = d_trb_event_channels, min_strips = NAN, max_strips = NAN;
+unsigned int min_strip = 0, max_strip = d_trb_event_channels, min_strips = 0, max_strips = d_trb_event_channels;
 float max_common_noise = NAN;
 unsigned int f_get_parameter(const char *flag, int argc, char *argv[]) {
 	unsigned int index, result = d_parameter_invalid;
@@ -135,31 +135,25 @@ int f_compress_event(struct o_trb_event *event, struct o_stream *stream, time_t 
 					first_channel = channel;
 				last_channel = channel;
 			} else {
-				if (peak_readed) {
-					if ((isnan(max_strips) != 0) || (((last_channel-first_channel)+1) <= max_strips)) {
-						if ((isnan(min_strips) != 0) || (((last_channel-first_channel)+1) >= min_strips)) {
-							p_compress_event_cluster(&(clusters[event_header.clusters]), first_channel, last_channel, sigma, signal,
-									common_noise);
-							event_header.bytes_to_next += sizeof(struct s_singleton_event_header)+((sizeof(float)*
-										(clusters[event_header.clusters].header.strips+1))+sizeof(unsigned int));
-							event_header.clusters++;
-						}
+				if (peak_readed)
+					if (((last_channel-first_channel+1) <= max_strips) && ((last_channel-first_channel+1) >= min_strips)) {
+						p_compress_event_cluster(&(clusters[event_header.clusters]), first_channel, last_channel, sigma, signal,
+								common_noise);
+						event_header.bytes_to_next += sizeof(struct s_singleton_event_header)+((sizeof(float)*
+									(clusters[event_header.clusters].header.strips+1))+sizeof(unsigned int));
+						event_header.clusters++;
 					}
-				}
 				first_channel = last_channel = -1;
 				peak_readed = d_false;
 			}
 		}
-		if (peak_readed) { /* last event if it's continue over last strip */
-			if ((isnan(max_strips) != 0) || (((last_channel-first_channel)+1) <= max_strips)) {
-				if ((isnan(min_strips) != 0) || (((last_channel-first_channel)+1) >= min_strips)) {
-					p_compress_event_cluster(&(clusters[event_header.clusters]), first_channel, last_channel, sigma, signal, common_noise);
-					event_header.bytes_to_next += sizeof(struct s_singleton_event_header)+((sizeof(float)*
-								(clusters[event_header.clusters].header.strips+1))+sizeof(unsigned int));
-					event_header.clusters++;
-				}
+		if (peak_readed) /* last event if it's continue over last strip */
+			if ((isnan(min_strips) != 0) || (((last_channel-first_channel)+1) >= min_strips)) {
+				p_compress_event_cluster(&(clusters[event_header.clusters]), first_channel, last_channel, sigma, signal, common_noise);
+				event_header.bytes_to_next += sizeof(struct s_singleton_event_header)+((sizeof(float)*
+							(clusters[event_header.clusters].header.strips+1))+sizeof(unsigned int));
+				event_header.clusters++;
 			}
-		}
 		if (event_header.clusters) {
 			stream->m_write(stream, sizeof(struct s_singleton_event_header), &event_header);
 			for (index = 0; index < event_header.clusters; index++)
