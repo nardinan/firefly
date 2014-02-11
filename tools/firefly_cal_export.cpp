@@ -43,9 +43,8 @@ void f_fill_histograms(struct o_string *data, struct s_calibration_charts *chart
 }
 
 void f_export_histograms(struct o_string *output, struct s_calibration_charts *charts) {
-	p_export_histograms_singleton(output, d_false, d_true, d_false, 1, charts->pedestal);
-	p_export_histograms_singleton(output, d_false, d_false, d_false, 1, charts->sigma_raw);
-	p_export_histograms_singleton(output, d_false, d_false, d_true, 1, charts->sigma);
+	v_chart_split = 2;
+	p_export_histograms_singleton(output, d_false, d_true, d_true, 3, charts->pedestal, charts->sigma_raw, charts->sigma);
 }
 
 int main (int argc, char *argv[]) {

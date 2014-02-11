@@ -23,6 +23,7 @@ extern "C" {
 #include "compression.h"
 }
 struct s_chart_style common_style = d_style_empty;
+int v_chart_split = 1;
 TH1F *f_create_histogram(const char *name, const char *labels, int bins_number, float x_low, float x_up, struct s_chart_style style) {
 	TH1F *result;
 	if ((result = new TH1F(name, labels, bins_number, x_low, x_up))) {
@@ -43,10 +44,7 @@ void p_export_histograms_singleton(struct o_string *output, int log_y, int first
 	TCanvas *canvas;
 	va_list list;
 	struct o_string *real_output;
-	int index;
-	TH1F *singleton; 
-	TLegend *legend = NULL;
-	int colors[] = {
+	int index, colors[] = {
 		kBlack,
 		kRed,
 		kGreen,
@@ -56,37 +54,44 @@ void p_export_histograms_singleton(struct o_string *output, int log_y, int first
 		kGray,
 		-1
 	};
+	TH1F *singleton; 
+	TLegend *legend = NULL;
 	if ((canvas = new TCanvas("Output", "Output", 800, 600))) {
-		if (first)
+		if (v_chart_split > 1)
+			canvas->Divide(v_chart_split, v_chart_split);
+		if ((first) && (!last))
 			real_output = d_string(d_string_buffer_size, "%@(", output);
-		else if (last)
+		else if ((last) && (!first))
 			real_output = d_string(d_string_buffer_size, "%@)", output);
 		else
 			real_output = d_string_pure(output->content);
 		if (log_y)
 			canvas->SetLogy();
 		if (size > 1)
-			legend = new TLegend(0.05, 0.95-((float)size*0.02), 0.3, 0.95);
+			if (v_chart_split == 1)
+				legend = new TLegend(0.05, 0.95-((float)size*0.02), 0.3, 0.95);
 		va_start(list, size);
 		for (index = 0; index < size; index++) {
+			if (v_chart_split > 1)
+				canvas->cd(index+1);
 			if ((singleton = va_arg(list, TH1F *))) {
-				if (index == 0) {
-					if (size > 1) {
-						singleton->SetLineColor(colors[index]);
-						singleton->SetFillStyle(0);
-						legend->AddEntry(singleton, singleton->GetTitle(), "l");
-					}
-					singleton->Draw();
-				} else {
-					if (colors[index] != -1)
-						singleton->SetLineColor(colors[index]);
+				if (size > 1) {
+					if (v_chart_split == 1)
+						if (colors[index] != -1)
+							singleton->SetLineColor(colors[index]);
 					singleton->SetFillStyle(0);
-					legend->AddEntry(singleton, singleton->GetTitle(), "l");
-					singleton->Draw("SAME");
+					if (legend)
+						legend->AddEntry(singleton, singleton->GetTitle(), "l");
 				}
+				if ((v_chart_split > 1) || (index == 0))
+					singleton->Draw();
+				else
+					singleton->Draw("SAME");
 			}
+			canvas->Modified();
+			canvas->Update();
 		}
-		if (size > 1)
+		if (legend)
 			legend->Draw();
 		canvas->Modified();
 		canvas->Update();

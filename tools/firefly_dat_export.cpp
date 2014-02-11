@@ -133,7 +133,7 @@ void f_export_histograms(struct o_string *output, struct s_data_charts *charts) 
 	p_export_histograms_singleton(output, d_false, d_false, d_false, 1, charts->strips_gravity);
 	p_export_histograms_singleton(output, d_false, d_false, d_false, 1, charts->main_strips_gravity);
 	p_export_histograms_singleton(output, d_false, d_false, d_false, 1, charts->eta);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->signal_eta);
+	p_export_histograms_singleton(output, d_false, d_false, d_false, 1, charts->signal_eta);
 	p_export_histograms_singleton(output, d_false, d_false, d_true, 6, charts->eta, charts->eta_array[0], charts->eta_array[1], charts->eta_array[2],
 			charts->eta_array[3], charts->eta_array[4]);
 }
@@ -174,7 +174,7 @@ int main (int argc, char *argv[]) {
 			charts.strips_gravity = d_chart("Center of gravity;Gravity;# Entries", d_trb_event_channels, 0.0, d_trb_event_channels);
 			charts.main_strips_gravity = d_chart("Center of gravity of MAIN strips", d_trb_event_channels, 0.0, d_trb_event_channels);
 			charts.eta = d_chart("Eta;Eta;# Entries", 500, 0.0, 1.0);
-			charts.signal_eta = d_chart("Signal over eta;Signal;Eta", 2000, 0.0, 1.0);
+			charts.signal_eta = d_chart("Signal over eta;Eta;Signal", 2000, 0.0, 1.0);
 			for (index = 0; index < 5; index++) {
 				snprintf(buffer, d_string_buffer_size, "Eta of clusters with #strips == %d", (index+1));
 				charts.eta_array[index] = d_chart(buffer, 500, 0.0, 1.0);

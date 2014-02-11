@@ -37,6 +37,7 @@ typedef struct s_chart_style {
 	int show_stats, fill_color, fill_style, line_color, line_width;
 } s_chart_style;
 extern struct s_chart_style common_style;
+extern int v_chart_split;
 extern TH1F *f_create_histogram(const char *name, const char *labels, int bins_number, float x_low, float x_up, struct s_chart_style style);
 extern void p_export_histograms_singleton(struct o_string *output, int log_y, int first, int last, int size, ...);
 #endif
