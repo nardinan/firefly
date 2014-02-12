@@ -264,7 +264,7 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 			d_release(string);
 			d_release(stream);
 			if (ladder->save_calibration_pdf) {
-				snprintf(buffer, d_string_buffer_size, "./%s -c %s/%s%s -o %s/%s%s%s", d_common_exporter, ladder->ladder_directory,
+				snprintf(buffer, d_string_buffer_size, "./%s -c \"%s/%s%s\" -o \"%s/%s%s%s\"", d_common_exporter, ladder->ladder_directory,
 						ladder->output, d_common_ext_calibration, ladder->ladder_directory, ladder->output, d_common_ext_calibration,
 						d_common_ext_calibration_pdf);
 				system(buffer);
