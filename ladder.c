@@ -463,7 +463,7 @@ void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *inte
 			founded = d_true;
 	}
 	for (index = 0, founded = d_false; (!founded); index++) {
-		snprintf(buffer_output, d_string_buffer_size, "ls %s/%s_%03d* 2>/dev/null", ladder->ladder_directory, buffer_name, index);
+		snprintf(buffer_output, d_string_buffer_size, "ls \"%s/%s_%03d\"* 2>/dev/null", ladder->ladder_directory, buffer_name, index);
 		if ((stream = popen(buffer_output, "r")) != NULL) {
 			if (fgets(buffer_input, d_string_buffer_size, stream) == NULL) {
 				snprintf(ladder->shadow_output, d_string_buffer_size, "%s_%03d", buffer_name, index);
