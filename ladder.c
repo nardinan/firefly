@@ -538,7 +538,6 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface, 
 				if (!calibrated)
 					if (d_strlen(ladder->shadow_calibration) > 0) {
 						shadow_calibration_name = d_string_pure(ladder->shadow_calibration);
-						printf("loading: %s\n", ladder->shadow_calibration);
 						shadow_calibration = f_stream_new_file(NULL, shadow_calibration_name, "r", 0777);
 						p_ladder_load_calibrate(ladder, shadow_calibration);
 						d_release(shadow_calibration);
