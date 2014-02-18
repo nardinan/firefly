@@ -2,6 +2,7 @@ objects = chart.o interface.o compression.o ladder.o analyzer.o environment.o lo
 objects_compressor = compression.o firefly_compress.o
 objects_analyzer = compression.o root_analyzer.o firefly_dat_export.o
 objects_calibration_export = compression.o root_analyzer.o firefly_cal_export.o
+objects_cn_export = compression.o root_analyzer.o firefly_cn_export.o
 objects_ttree = compression.o firefly_ttree.o
 cc = gcc -g
 cpp = g++ -g
@@ -14,6 +15,7 @@ exec = firefly.bin
 exec_compressor = tools/firefly_compress.bin
 exec_analyzer = tools/firefly_dat_export.bin
 exec_calibration_export = tools/firefly_cal_export.bin
+exec_cn_export = tools/firefly_cn_export.bin
 exec_ttree = tools/firefly_ttree.bin
 
 all: $(objects)
@@ -22,6 +24,7 @@ all: $(objects)
 	make compressor
 	make data_export
 	make calibration_export
+	make cn_export
 	make ttree
 
 compressor: $(objects_compressor)
@@ -32,6 +35,9 @@ data_export: $(objects_analyzer)
 
 calibration_export: $(objects_calibration_export)
 	$(cpp) $(lflags) $(objects_calibration_export) -o $(exec_calibration_export) $(liblink_analyzer)
+
+cn_export: $(objects_cn_export)
+	$(cpp) $(lflags) $(objects_cn_export) -o $(exec_cn_export) $(liblink_analyzer)
 
 ttree: $(objects_ttree)
 	$(cpp) $(lflags) $(objects_ttree) -o $(exec_ttree) $(liblink_analyzer)
@@ -78,6 +84,9 @@ firefly_dat_export.o: tools/firefly_dat_export.cpp root_analyzer.h
 firefly_cal_export.o: tools/firefly_cal_export.cpp root_analyzer.h
 	$(cpp) $(cflags_analyzer) tools/firefly_cal_export.cpp
 
+firefly_cn_export.o: tools/firefly_cn_export.cpp root_analyzer.h
+	$(cpp) $(cflags_analyzer) tools/firefly_cn_export.cpp
+
 firefly_ttree.o: tools/firefly_ttree.cpp compression.h
 	$(cpp) $(cflags_analyzer) tools/firefly_ttree.cpp
 
@@ -95,3 +104,4 @@ clean:
 	rm -f $(exec_analyzer)
 	rm -f $(exec_ttree)
 	rm -f $(exec_calibration_export)
+	rm -f $(exec_cn_export)

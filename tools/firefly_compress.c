@@ -28,7 +28,7 @@ void f_check_compression(struct o_string *data) {
 }
 
 int main (int argc, char *argv[]) {
-	struct o_string *calibration = NULL, *data = NULL, *output = NULL;
+	struct o_string *calibration = NULL, *data = NULL, *output = NULL, *output_cn = NULL;
 	struct o_stream *stream;
 	struct s_exception *exception = NULL;
 	int arguments = 0, flags[d_trb_event_channels], backup;
@@ -44,6 +44,7 @@ int main (int argc, char *argv[]) {
 		d_compress_argument(arguments, "-min-strips", min_strips, atoi, "No minimum number of strips per cluster specified (-min-strips)");
 		d_compress_argument(arguments, "-r", min_strip, atoi, "No range (lower strip) specified: using default one (0) (-r)");
 		d_compress_argument(arguments, "-R", max_strip, atoi, "No range (upper strip) specified: using default one (384) (-R)");
+		d_compress_argument(arguments, "-ocn", output_cn, d_string_pure, "No CNs output file (-ocn)");
 		if (min_strip > d_trb_event_channels)
 			min_strip = 0;
 		if (max_strip > d_trb_event_channels)
@@ -56,10 +57,12 @@ int main (int argc, char *argv[]) {
 		if ((calibration) && (data) && (output)) {
 			stream = f_stream_new_file(NULL, calibration, "r", 0777);
 			f_read_calibration(stream, pedestal, sigma_raw, sigma, flags);
-			f_compress_data(data, output, high_treshold, low_treshold, 10.0, pedestal, sigma);
+			f_compress_data(data, output, output_cn, high_treshold, low_treshold, 10.0, pedestal, sigma);
 			f_check_compression(output);
 		} else
 			d_log(e_log_level_ever, "Missing arguments", NULL);
+		if (output_cn)
+			d_release(output_cn);
 		d_release(calibration);
 		d_release(data);
 		d_release(output);

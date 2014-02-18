@@ -96,8 +96,8 @@ void p_compress_event_cluster(struct s_singleton_cluster_details *cluster, unsig
 		cluster->header.eta = -1.0f;
 }
 
-int f_compress_event(struct o_trb_event *event, struct o_stream *stream, time_t timestamp, unsigned int number, float high_treshold, float low_treshold,
-		float sigma_k, float *pedestal, float *sigma) {
+int f_compress_event(struct o_trb_event *event, struct o_stream *stream, struct o_stream *cn_stream, time_t timestamp, unsigned int number,
+		float high_treshold, float low_treshold, float sigma_k, float *pedestal, float *sigma) {
 	int index, channel, va, startup, entries, first_channel, last_channel, peak_readed = d_false, discard = d_false;
 	float value, common_noise_on_va, common_noise[d_trb_event_vas], signal[d_trb_event_channels], signal_over_noise;
 	struct s_singleton_event_header event_header = {
@@ -108,6 +108,7 @@ int f_compress_event(struct o_trb_event *event, struct o_stream *stream, time_t 
 		.bytes_to_next=0
 	};
 	struct s_singleton_cluster_details clusters[d_trb_event_channels];
+	struct o_string *singleton;
 	for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
 		common_noise[va] = 0;
 		for (channel = startup, entries = 0, common_noise_on_va = 0; channel < (startup+d_trb_event_channels_on_va); channel++) {
@@ -119,11 +120,20 @@ int f_compress_event(struct o_trb_event *event, struct o_stream *stream, time_t 
 		}
 		if (entries)
 			common_noise[va] = (common_noise_on_va/(float)entries);
-		if ((isnan(max_common_noise) == 0) && ((common_noise[va] > max_common_noise) || (common_noise[va] < (max_common_noise*-1.0)))) {
-			discard = d_true;
+	}
+	if (cn_stream) {
+		singleton = d_string(d_string_buffer_size, "%.03f,%.03f,%.03f,%.03f,%.03f,%.03f\n", common_noise[0], common_noise[1], common_noise[2],
+				common_noise[3], common_noise[4], common_noise[5]);
+		cn_stream->m_write_string(cn_stream, singleton);
+		d_release(singleton);
+	}
+	/* TODO: wanna save the common_noise? */
+	if (isnan(max_common_noise) == 0)
+		for (va = 0; va < d_trb_event_vas; va++) {
+			if ((common_noise[va] > max_common_noise) || (common_noise[va] < (max_common_noise*-1.0)))
+				discard = d_true;
 			break;
 		}
-	}
 	if (!discard) {
 		for (channel = min_strip; channel < max_strip; channel++) {
 			signal[channel] = event->values[channel]-pedestal[channel]-common_noise[(channel/d_trb_event_channels_on_va)];
@@ -189,8 +199,8 @@ struct s_singleton_cluster_details *f_decompress_event(struct o_stream *stream, 
 	return clusters;
 }
 
-void f_compress_data(struct o_string *input_path, struct o_string *output_path, float high_treshold, float low_treshold, float sigma_k, float *pedestal,
-		float *sigma) {
+void f_compress_data(struct o_string *input_path, struct o_string *output_path, struct o_string *cn_output_path, float high_treshold, float low_treshold,
+		float sigma_k, float *pedestal, float *sigma) {
 	int buffer_fill = 0, event_number = 0, compressed_events = 0, last_clusters = 0, read_again = d_true, index, clusters,
 	event_size = d_trb_event_size_normal;
 	float written_bytes = 0;
@@ -201,12 +211,14 @@ void f_compress_data(struct o_string *input_path, struct o_string *output_path, 
 		.high_treshold=high_treshold,
 		.low_treshold=low_treshold
 	};
-	struct o_stream *input_stream, *output_stream;
+	struct o_stream *input_stream, *output_stream, *cn_output_stream = NULL;
 	struct o_trb_event *event = f_trb_event_new(NULL);
 	struct s_exception *exception = NULL;
 	d_try {
 		output_stream = f_stream_new_file(NULL, output_path, "wb", 0777);
 		input_stream = f_stream_new_file(NULL, input_path, "rb", 0777);
+		if (cn_output_path)
+			cn_output_stream = f_stream_new_file(NULL, cn_output_path, "w", 0777);
 		for (index = 0; index < d_trb_event_channels; index++) {
 			header.pedestal[index] = pedestal[index];
 			header.sigma[index] = sigma[index];
@@ -223,8 +235,8 @@ void f_compress_data(struct o_string *input_path, struct o_string *output_path, 
 					buffer_fill = p_trb_event_align(buffer, buffer_fill);
 			}
 			if (event->filled) {
-				if ((clusters = f_compress_event(event, output_stream, time(NULL), event_number, high_treshold, low_treshold, sigma_k,
-								pedestal, sigma)) > 0) {
+				if ((clusters = f_compress_event(event, output_stream, cn_output_stream, time(NULL), event_number, high_treshold, low_treshold,
+								sigma_k, pedestal, sigma)) > 0) {
 					compressed_events++;
 					last_clusters = clusters;
 				}
@@ -246,6 +258,8 @@ void f_compress_data(struct o_string *input_path, struct o_string *output_path, 
 		output_file_size = output_stream->m_size(output_stream);
 		fprintf(stdout, "\n[original: %zdbytes | compressed: %zdbytes] - ratio: %f%%\n", input_file_size, output_file_size,
 				(((float)output_file_size/(float)input_file_size)*100.0));
+		if (cn_output_stream)
+			d_release(cn_output_stream);
 		d_release(input_stream);
 		d_release(output_stream);
 	} d_catch(exception) {
