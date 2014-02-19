@@ -16,9 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../root_analyzer.h"
+#define d_calibration_text_align 13
+#define d_calibration_text_size 0.045
 typedef struct s_calibration_charts {
 	TH1F *pedestal, *sigma_raw, *sigma;
+	TPaveText *paves;
 } s_calibration_charts;
+struct s_singleton_calibration_details details;
 void f_fill_histograms(struct o_string *data, struct s_calibration_charts *charts) {
 	struct o_stream *stream;
 	struct s_exception *exception = NULL;
@@ -26,7 +30,7 @@ void f_fill_histograms(struct o_string *data, struct s_calibration_charts *chart
 	float pedestal[d_trb_event_channels], sigma_raw[d_trb_event_channels], sigma[d_trb_event_channels];
 	d_try {
 		stream = f_stream_new_file(NULL, data, "rb", 0777);
-		f_read_calibration(stream, pedestal, sigma_raw, sigma, flag);
+		f_read_calibration(stream, pedestal, sigma_raw, sigma, flag, &details);
 		for (index = 0; index < d_trb_event_channels; index++) {
 			if (charts->pedestal)
 				charts->pedestal->Fill(index, pedestal[index]);
@@ -43,8 +47,9 @@ void f_fill_histograms(struct o_string *data, struct s_calibration_charts *chart
 }
 
 void f_export_histograms(struct o_string *output, struct s_calibration_charts *charts) {
-	v_chart_split = 2;
-	p_export_histograms_singleton(output, d_false, d_true, d_true, 3, charts->pedestal, charts->sigma_raw, charts->sigma);
+	v_chart_split_x = v_chart_split_y = 2;
+	p_export_histograms_singleton(output, d_false, d_trb_event_vas, e_pdf_page_middle, "TTTP", charts->pedestal, charts->sigma_raw,
+			charts->sigma, charts->paves);
 }
 
 int main (int argc, char *argv[]) {
@@ -52,20 +57,38 @@ int main (int argc, char *argv[]) {
 	struct o_string *calibration = NULL, *output = NULL;
 	struct s_exception *exception = NULL;
 	int arguments = 0;
+	char buffer[d_string_buffer_size];
 	d_try {
 		d_compress_argument(arguments, "-c", calibration, d_string_pure, "No calibration file specified (-c)");
 		d_compress_argument(arguments, "-o", output, d_string_pure, "No output file specified (-o)");
 		if ((calibration) && (output)) {
 			common_style.fill_color = kWhite;
-			common_style.fill_style = 0;
 			common_style.show_stats = kFALSE;
 			charts.pedestal = d_chart("Pedestal;Channel;ADC", d_trb_event_channels, 0.0, d_trb_event_channels);
 			charts.pedestal->GetYaxis()->SetRangeUser(0, 1000);
+			charts.pedestal->GetXaxis()->SetNdivisions(1606, kFALSE);
 			charts.sigma_raw = d_chart("Sigma raw;Channel;Sigma raw", d_trb_event_channels, 0.0, d_trb_event_channels);
 			charts.sigma_raw->GetYaxis()->SetRangeUser(0, 20);
+			charts.sigma_raw->GetXaxis()->SetNdivisions(1606, kFALSE);
 			charts.sigma = d_chart("Sigma;Channel;Sigma", d_trb_event_channels, 0.0, d_trb_event_channels);
 			charts.sigma->GetYaxis()->SetRangeUser(0, 10);
+			charts.sigma->GetXaxis()->SetNdivisions(1606, kFALSE);
 			f_fill_histograms(calibration, &charts);
+			charts.paves = new TPaveText(0.1, 0.1, 0.9, 0.9);
+			charts.paves->SetTextAlign(d_calibration_text_align);
+			charts.paves->SetTextSize(d_calibration_text_size);
+			snprintf(buffer, d_string_buffer_size, "Name: %s (%s)", details.name, details.date);;
+			charts.paves->AddText(buffer);
+			snprintf(buffer, d_string_buffer_size, "SN[0]: %s", details.serials[0]);
+			charts.paves->AddText(buffer);
+			snprintf(buffer, d_string_buffer_size, "SN[1]: %s", details.serials[1]);
+			charts.paves->AddText(buffer);
+			snprintf(buffer, d_string_buffer_size, "Temperature: %.03fC %.03fC", details.temperatures[0], details.temperatures[1]);
+			charts.paves->AddText(buffer);
+			snprintf(buffer, d_string_buffer_size, "Sigma K: %.03f", details.sigma_k);
+			charts.paves->AddText(buffer);
+			snprintf(buffer, d_string_buffer_size, "Hold delay: %.03f", details.hold_delay);
+			charts.paves->AddText(buffer);
 			f_export_histograms(output, &charts);
 		} else
 			d_log(e_log_level_ever, "Missing arguments", NULL);
@@ -76,3 +99,4 @@ int main (int argc, char *argv[]) {
 	} d_endtry;
 	return 0;
 }
+

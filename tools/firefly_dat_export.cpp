@@ -116,26 +116,26 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 }
 
 void f_export_histograms(struct o_string *output, struct s_data_charts *charts) {
-	p_export_histograms_singleton(output, d_true, d_true, d_false, 1, charts->n_channels);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->common_noise);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->signals);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 6, charts->signals, charts->signals_array[0], charts->signals_array[1],
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_first, "T", charts->n_channels);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->common_noise);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->signals);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "TTTTTT", charts->signals, charts->signals_array[0], charts->signals_array[1],
 			charts->signals_array[2], charts->signals_array[3], charts->signals_array[4]);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->signal_one);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->signals_two);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->signals_two_major);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->signals_two_minor);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->signal_over_noise);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->channel_one);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->channels_two);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->channels_two_major);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->channels_two_minor);
-	p_export_histograms_singleton(output, d_false, d_false, d_false, 1, charts->strips_gravity);
-	p_export_histograms_singleton(output, d_false, d_false, d_false, 1, charts->main_strips_gravity);
-	p_export_histograms_singleton(output, d_false, d_false, d_false, 1, charts->eta);
-	p_export_histograms_singleton(output, d_false, d_false, d_false, 1, charts->signal_eta);
-	p_export_histograms_singleton(output, d_false, d_false, d_true, 6, charts->eta, charts->eta_array[0], charts->eta_array[1], charts->eta_array[2],
-			charts->eta_array[3], charts->eta_array[4]);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->signal_one);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->signals_two);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->signals_two_major);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->signals_two_minor);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->signal_over_noise);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->channel_one);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->channels_two);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->channels_two_major);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->channels_two_minor);
+	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "T", charts->strips_gravity);
+	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "T", charts->main_strips_gravity);
+	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "T", charts->eta);
+	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "T", charts->signal_eta);
+	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_last, "TTTTTT", charts->eta, charts->eta_array[0], charts->eta_array[1],
+			charts->eta_array[2], charts->eta_array[3], charts->eta_array[4]);
 }
 
 int main (int argc, char *argv[]) {

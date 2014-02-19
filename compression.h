@@ -53,11 +53,27 @@ typedef struct s_singleton_cluster_details {
 	unsigned int first_strip;
 	float values[d_trb_event_channels+1];
 } s_singleton_cluster_details;
+typedef struct s_singleton_calibration_details {
+	char name[d_string_buffer_size], serials[2][d_string_buffer_size], date[d_string_buffer_size];
+	float temperatures[2], sigma_k, hold_delay;
+} s_singleton_calibration_details;
 #pragma pack(pop)
+typedef enum e_calibration_details {
+	e_calibration_detail_name = 0,
+	e_calibration_detail_serial,
+	e_calibration_detail_date,
+	e_calibration_detail_temperature_1,
+	e_calibration_detail_temperature_2,
+	e_calibration_detail_sigma_k,
+	e_calibration_detail_hold_delay,
+	e_calibration_detail_none
+} e_calibration_details;
+#define d_value(key,str,enm,val) ((d_strcmp((key)->content,(str))==0)?(val):(enm))
 extern unsigned int min_strip, max_strip, min_strips, max_strips;
 extern float max_common_noise;
 extern unsigned int f_get_parameter(const char *flag, int argc, char **argv);
-extern void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_raw, float *sigma, int *flag);
+extern void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_raw, float *sigma, int *flag,
+		struct s_singleton_calibration_details *details);
 extern void p_compress_event_cluster(struct s_singleton_cluster_details *cluster, unsigned int first_channel, unsigned int last_channel, float *sigma,
 		float *signal, float *common_noise);
 extern int f_compress_event(struct o_trb_event *event, struct o_stream *stream, struct o_stream *cn_stream, time_t timestamp, unsigned int number,

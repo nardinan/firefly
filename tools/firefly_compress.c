@@ -56,7 +56,7 @@ int main (int argc, char *argv[]) {
 		}
 		if ((calibration) && (data) && (output)) {
 			stream = f_stream_new_file(NULL, calibration, "r", 0777);
-			f_read_calibration(stream, pedestal, sigma_raw, sigma, flags);
+			f_read_calibration(stream, pedestal, sigma_raw, sigma, flags, NULL);
 			f_compress_data(data, output, output_cn, high_treshold, low_treshold, 10.0, pedestal, sigma);
 			f_check_compression(output);
 		} else

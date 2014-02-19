@@ -26,27 +26,81 @@ unsigned int f_get_parameter(const char *flag, int argc, char *argv[]) {
 	return result;
 }
 
-void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_raw, float *sigma, int *flag) {
-	int channel;
-	struct o_string *readed_buffer, *buffer = NULL, *singleton;
+void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_raw, float *sigma, int *flag, struct s_singleton_calibration_details *details) {
+	int channel, is_information;
+	struct o_string *readed_buffer, *buffer = NULL, *key = NULL, *singleton;
 	struct o_array *elements;
 	struct s_exception *exception = NULL;
+	enum e_calibration_details kind = e_calibration_detail_none;
+	const char *buffers[] = {
+		"name",
+		"temp_SN",
+		"starting_time",
+		"temp_right",
+		"temp_left",
+		"sigma_k",
+		"hold_delay",
+		NULL
+	};
 	d_try {
+		memset(details, 0, sizeof(struct s_singleton_cluster_details));
 		while ((readed_buffer = stream->m_read_line(stream, buffer, d_string_buffer_size))) {
-			if ((elements = readed_buffer->m_split(readed_buffer, ','))) {
-				if (elements->filled == 7) { /* <ID = 0> <VA = 1> <ID in VA = 2> <Pedestal = 3> <Sigma raw = 4> <Sigma = 5> <Flag = 6> */
-					channel = d_array_cast(atoi, elements, singleton, 0, d_trb_event_channels);
-					if ((channel >= 0) && (channel < d_trb_event_channels)) {
-						pedestal[channel] = d_array_cast(atof, elements, singleton, 3, 0.0);
-						sigma_raw[channel] = d_array_cast(atof, elements, singleton, 4, 0.0);
-						sigma[channel] = d_array_cast(atof, elements, singleton, 5, 0.0);
-						flag[channel] = 0;
-						if (d_array_cast(atoi, elements, singleton, 6, 0))
-							flag[channel] = e_trb_event_channel_damaged;
+			is_information = d_false;
+			if ((details) && (elements = readed_buffer->m_split(readed_buffer, '='))) {
+				if (elements->filled == 2) { /* code=value */
+					if ((key = (struct o_string *)elements->m_get(elements, 0)) &&
+							(singleton = (struct o_string *)elements->m_get(elements, 1))) {
+						for (kind = 0; buffers[kind]; kind++)
+							if (d_strcmp(key->content, buffers[kind]) == 0)
+								break;
+						switch (kind) {
+							case e_calibration_detail_name:
+								snprintf(details->name, d_string_buffer_size, "%s", singleton->content);
+								break;
+							case e_calibration_detail_serial:
+								if (d_strlen(details->serials[0]) == 0)
+									snprintf(details->serials[0], d_string_buffer_size, "%s", singleton->content);
+								else
+									snprintf(details->serials[1], d_string_buffer_size, "%s", singleton->content);
+								break;
+							case e_calibration_detail_date:
+								snprintf(details->date, d_string_buffer_size, "%s", singleton->content);
+								break;
+							case e_calibration_detail_temperature_1:
+								details->temperatures[0] = atof(singleton->content);
+								break;
+							case e_calibration_detail_temperature_2:
+								details->temperatures[1] = atof(singleton->content);
+								break;
+							case e_calibration_detail_sigma_k:
+								details->sigma_k = atof(singleton->content);
+								break;
+							case e_calibration_detail_hold_delay:
+								details->hold_delay = atof(singleton->content);
+								break;
+							default:
+								d_log(e_log_level_ever, "wrong key: %s", key->content);
+						}
+						is_information = d_true;
 					}
 				}
 				d_release(elements);
 			}
+			if (!is_information)
+				if ((elements = readed_buffer->m_split(readed_buffer, ','))) {
+					if (elements->filled == 7) { /* <ID = 0> <VA = 1> <ID in VA = 2> <Pedestal = 3> <Sigma raw = 4> <Sigma = 5> <Flag = 6> */
+						channel = d_array_cast(atoi, elements, singleton, 0, d_trb_event_channels);
+						if ((channel >= 0) && (channel < d_trb_event_channels)) {
+							pedestal[channel] = d_array_cast(atof, elements, singleton, 3, 0.0);
+							sigma_raw[channel] = d_array_cast(atof, elements, singleton, 4, 0.0);
+							sigma[channel] = d_array_cast(atof, elements, singleton, 5, 0.0);
+							flag[channel] = 0;
+							if (d_array_cast(atoi, elements, singleton, 6, 0))
+								flag[channel] = e_trb_event_channel_damaged;
+						}
+					}
+					d_release(elements);
+				}
 			buffer = readed_buffer;
 		}
 		d_release(buffer);
@@ -127,7 +181,6 @@ int f_compress_event(struct o_trb_event *event, struct o_stream *stream, struct 
 		cn_stream->m_write_string(cn_stream, singleton);
 		d_release(singleton);
 	}
-	/* TODO: wanna save the common_noise? */
 	if (isnan(max_common_noise) == 0)
 		for (va = 0; va < d_trb_event_vas; va++) {
 			if ((common_noise[va] > max_common_noise) || (common_noise[va] < (max_common_noise*-1.0)))

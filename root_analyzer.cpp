@@ -23,7 +23,7 @@ extern "C" {
 #include "compression.h"
 }
 struct s_chart_style common_style = d_style_empty;
-int v_chart_split = 1;
+int v_chart_split_x = 1, v_chart_split_y = 1;
 TH1F *f_create_histogram(const char *name, const char *labels, int bins_number, float x_low, float x_up, struct s_chart_style style) {
 	TH1F *result;
 	if ((result = new TH1F(name, labels, bins_number, x_low, x_up))) {
@@ -40,7 +40,7 @@ TH1F *f_create_histogram(const char *name, const char *labels, int bins_number, 
 	return result;
 }
 
-void p_export_histograms_singleton(struct o_string *output, int log_y, int first, int last, int size, ...) {
+void p_export_histograms_singleton(struct o_string *output, int log_y, int grid_x, enum e_pdf_pages page, const char *format, ...) {
 	TCanvas *canvas;
 	va_list list;
 	struct o_string *real_output;
@@ -54,39 +54,63 @@ void p_export_histograms_singleton(struct o_string *output, int log_y, int first
 		kGray,
 		-1
 	};
-	TH1F *singleton; 
+	size_t length = d_strlen(format);
+	char element;
+	TH1F *singleton_th1f;
+	TPaveText *singleton_paves;
 	TLegend *legend = NULL;
 	if ((canvas = new TCanvas("Output", "Output", 800, 600))) {
-		if (v_chart_split > 1)
-			canvas->Divide(v_chart_split, v_chart_split);
-		if ((first) && (!last))
-			real_output = d_string(d_string_buffer_size, "%@(", output);
-		else if ((last) && (!first))
-			real_output = d_string(d_string_buffer_size, "%@)", output);
-		else
-			real_output = d_string_pure(output->content);
+		if (d_multiple_chart)
+			canvas->Divide(v_chart_split_x, v_chart_split_y);
+		switch (page) {
+			case e_pdf_page_first:
+				real_output = d_string(d_string_buffer_size, "%@(", output);
+				break;
+			case e_pdf_page_last:
+				real_output = d_string(d_string_buffer_size, "%@)", output);
+				break;
+			case e_pdf_page_middle:
+				real_output = d_string_pure(output->content);
+				break;
+		}
 		if (log_y)
 			canvas->SetLogy();
-		if (size > 1)
-			if (v_chart_split == 1)
-				legend = new TLegend(0.05, 0.95-((float)size*0.02), 0.3, 0.95);
-		va_start(list, size);
-		for (index = 0; index < size; index++) {
-			if (v_chart_split > 1)
+		if (length > 1)
+			if (!d_multiple_chart)
+				legend = new TLegend(0.05, 0.95-((float)length*0.02), 0.3, 0.95);
+		va_start(list, format);
+		for (index = 0; index < length; index++) {
+			element = format[index];
+			if (d_multiple_chart)
 				canvas->cd(index+1);
-			if ((singleton = va_arg(list, TH1F *))) {
-				if (size > 1) {
-					if (v_chart_split == 1)
-						if (colors[index] != -1)
-							singleton->SetLineColor(colors[index]);
-					singleton->SetFillStyle(0);
-					if (legend)
-						legend->AddEntry(singleton, singleton->GetTitle(), "l");
-				}
-				if ((v_chart_split > 1) || (index == 0))
-					singleton->Draw();
-				else
-					singleton->Draw("SAME");
+			switch (element) {
+				case 'T':
+					if ((singleton_th1f = va_arg(list, TH1F *))) {
+						if (length > 1) {
+							if (!d_multiple_chart) {
+								if (colors[index] >= 0)
+									singleton_th1f->SetLineColor(colors[index]);
+								singleton_th1f->SetFillStyle(0);
+							}
+							if (legend)
+								legend->AddEntry(singleton_th1f, singleton_th1f->GetTitle(), "l");
+						}
+						if (grid_x) 
+							gPad->SetGridx();
+						if ((d_multiple_chart) || (index == 0))
+							singleton_th1f->Draw();
+						else
+							singleton_th1f->Draw("SAME");
+					}
+					break;
+				case 'P':
+					if ((singleton_paves = va_arg(list, TPaveText *))) {
+						if ((d_multiple_chart) || (index == 0))
+							singleton_paves->Draw();
+						else
+							singleton_paves->Draw("SAME");
+					}
+					break;
 			}
 			canvas->Modified();
 			canvas->Update();

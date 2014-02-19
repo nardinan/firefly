@@ -279,7 +279,8 @@ void p_ladder_load_calibrate(struct s_ladder *ladder, struct o_stream *stream) {
 	struct s_exception *exception = NULL;
 	d_try {
 		d_object_lock(ladder->calibration.lock);
-		f_read_calibration(stream, ladder->calibration.pedestal, ladder->calibration.sigma_raw, ladder->calibration.sigma, ladder->calibration.flags);
+		f_read_calibration(stream, ladder->calibration.pedestal, ladder->calibration.sigma_raw, ladder->calibration.sigma,
+				ladder->calibration.flags, NULL);
 		ladder->calibration.calibrated = d_true;
 		ladder->calibration.computed = d_true;
 		d_object_unlock(ladder->calibration.lock);

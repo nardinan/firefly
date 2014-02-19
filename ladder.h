@@ -63,6 +63,14 @@ typedef enum e_ladder_commands {
 typedef struct s_ladder_histogram_value {
 	int value, occurrence, filled;
 } s_ladder_histogram_value;
+/* TODO: this structure contain a single command */
+typedef struct s_ladder_command {
+	unsigned char DAC, channel, trigger;
+	int kind, assembly_line, quality_id, serial, position;
+	enum e_ladder_commands command;
+	float hold_delay;
+	time_t duration, starting;
+} s_ladder_command;
 typedef struct s_ladder {
 	char output[d_string_buffer_size], shadow_output[d_string_buffer_size], shadow_calibration[d_string_buffer_size], directory[d_string_buffer_size],
 	     ladder_directory[d_string_buffer_size], name[d_string_buffer_size], voltage[d_string_buffer_size], current[d_string_buffer_size],

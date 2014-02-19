@@ -16,10 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../root_analyzer.h"
-typedef struct s_calibration_charts {
+typedef struct s_common_noise_charts {
 	TH1F *CN[d_trb_event_vas];
-} s_calibration_charts;
-void f_fill_histograms(struct o_string *data, struct s_calibration_charts *charts) {
+} s_common_noise_charts;
+void f_fill_histograms(struct o_string *data, struct s_common_noise_charts *charts) {
 	struct o_stream *stream;
 	struct o_string *readed_buffer, *buffer = NULL, *singleton;
 	struct o_array *elements;
@@ -47,37 +47,37 @@ void f_fill_histograms(struct o_string *data, struct s_calibration_charts *chart
 	} d_endtry;
 }
 
-void f_export_histograms(struct o_string *output, struct s_calibration_charts *charts) {
-	p_export_histograms_singleton(output, d_true, d_true, d_false, 1, charts->CN[0]);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->CN[1]);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->CN[2]);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->CN[3]);
-	p_export_histograms_singleton(output, d_true, d_false, d_false, 1, charts->CN[4]);
-	p_export_histograms_singleton(output, d_true, d_false, d_true, 1, charts->CN[5]); 
+void f_export_histograms(struct o_string *output, struct s_common_noise_charts *charts) {
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_first, "T", charts->CN[0]);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->CN[1]);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->CN[2]);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->CN[3]);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->CN[4]);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_last, "T", charts->CN[5]); 
 }
 
 int main (int argc, char *argv[]) {
-	struct s_calibration_charts charts;
-	struct o_string *calibration = NULL, *output = NULL;
+	struct s_common_noise_charts charts;
+	struct o_string *common_noise = NULL, *output = NULL;
 	struct s_exception *exception = NULL;
 	int arguments = 0, index;
 	float buckets = 180.0, half;
 	char buffer[d_string_buffer_size];
 	d_try {
-		d_compress_argument(arguments, "-c", calibration, d_string_pure, "No CN file specified (-c)");
+		d_compress_argument(arguments, "-c", common_noise, d_string_pure, "No CN file specified (-c)");
 		d_compress_argument(arguments, "-o", output, d_string_pure, "No output file specified (-o)");
 		d_compress_argument(arguments, "-buckets", buckets, atof, "Number of buckets (-buckets)");
-		if ((calibration) && (output)) {
+		if ((common_noise) && (output)) {
 			half = (buckets/2.0);
 			for (index = 0; index < d_trb_event_vas; index++) {
 				snprintf(buffer, d_string_buffer_size, "CN (VA %d);CN;# entries", index);
 				charts.CN[index] = d_chart(buffer, (buckets*5.0), (half*-1.0), half);
 			}
-			f_fill_histograms(calibration, &charts);
+			f_fill_histograms(common_noise, &charts);
 			f_export_histograms(output, &charts);
 		} else
 			d_log(e_log_level_ever, "Missing arguments", NULL);
-		d_release(calibration);
+		d_release(common_noise);
 		d_release(output);
 	} d_catch(exception) {
 		d_exception_dump(stderr, exception);
