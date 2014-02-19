@@ -79,11 +79,9 @@ int main (int argc, char *argv[]) {
 			charts.paves->SetTextSize(d_calibration_text_size);
 			snprintf(buffer, d_string_buffer_size, "Name: %s (%s)", details.name, details.date);;
 			charts.paves->AddText(buffer);
-			snprintf(buffer, d_string_buffer_size, "SN[0]: %s", details.serials[0]);
+			snprintf(buffer, d_string_buffer_size, "SNs: %s, %s", details.serials[0], details.serials[1]);
 			charts.paves->AddText(buffer);
-			snprintf(buffer, d_string_buffer_size, "SN[1]: %s", details.serials[1]);
-			charts.paves->AddText(buffer);
-			snprintf(buffer, d_string_buffer_size, "Temperature: %.03fC %.03fC", details.temperatures[0], details.temperatures[1]);
+			snprintf(buffer, d_string_buffer_size, "Temperatures: %.03fC, %.03fC", details.temperatures[0], details.temperatures[1]);
 			charts.paves->AddText(buffer);
 			snprintf(buffer, d_string_buffer_size, "Sigma K: %.03f", details.sigma_k);
 			charts.paves->AddText(buffer);
