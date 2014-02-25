@@ -42,6 +42,7 @@ int main (int argc, char *argv[]) {
 		d_compress_argument(arguments, "-max-cn", max_common_noise, atof, "No maximum CN specified (-max-cn)");
 		d_compress_argument(arguments, "-max-strips", max_strips, atoi, "No maximum number of strips per cluster specified (-max-strips)");
 		d_compress_argument(arguments, "-min-strips", min_strips, atoi, "No minimum number of strips per cluster specified (-min-strips)");
+		d_compress_argument(arguments, "-min-sn", min_signal_over_noise, atof, "No minimum signal over noise  value specified (-min-sn)");
 		d_compress_argument(arguments, "-r", min_strip, atoi, "No range (lower strip) specified: using default one (0) (-r)");
 		d_compress_argument(arguments, "-R", max_strip, atoi, "No range (upper strip) specified: using default one (384) (-R)");
 		d_compress_argument(arguments, "-ocn", output_cn, d_string_pure, "No CNs output file (-ocn)");

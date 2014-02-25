@@ -70,7 +70,7 @@ typedef enum e_calibration_details {
 } e_calibration_details;
 #define d_value(key,str,enm,val) ((d_strcmp((key)->content,(str))==0)?(val):(enm))
 extern unsigned int min_strip, max_strip, min_strips, max_strips;
-extern float max_common_noise;
+extern float max_common_noise, min_signal_over_noise;
 extern unsigned int f_get_parameter(const char *flag, int argc, char **argv);
 extern void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_raw, float *sigma, int *flag,
 		struct s_singleton_calibration_details *details);
