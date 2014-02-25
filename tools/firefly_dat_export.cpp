@@ -16,11 +16,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../root_analyzer.h"
+#define d_cuts_steps 5
+typedef struct s_data_cuts {
+	float low, top;
+} s_data_cuts;
+struct s_data_cuts cuts[d_cuts_steps] = {
+	{18.0, 30.0},
+	{30.0, 50.0},
+	{50.0, 70.0},
+	{70.0, 90.0},
+	{90.0, 110.0}
+};
 typedef struct s_data_charts {
 	TH1F *n_channels, *common_noise, *signals, *signals_array[5], *signal_over_noise, *strips_gravity, *main_strips_gravity, *eta, *eta_array[5],
 	     *channel_one, *channels_two, *channels_two_major, *channels_two_minor, *signal_one, *signals_two, *signals_two_major, *signals_two_minor,
-	     *signal_eta;
-	TH1F *last;
+	     *etas[d_cuts_steps];
+	TH2F *signal_eta;
+	TH1D *profile;
 } s_data_charts;
 void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 	struct o_stream *stream;
@@ -29,7 +41,7 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 	struct s_singleton_cluster_details *clusters;
 	struct s_exception *exception = NULL;
 	float value;
-	int index, strip, current_strip, current_event = 0;
+	int index, subindex, strip, current_strip, current_event = 0;
 	d_try {
 		stream = f_stream_new_file(NULL, data, "rb", 0777);
 		if ((stream->m_read_raw(stream, (unsigned char *)&(file_header), sizeof(struct s_singleton_file_header)))) {
@@ -45,8 +57,14 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 								value += clusters[index].values[strip];
 							charts->signals->Fill(value);
 							if (clusters[index].header.strips > 1)
-								if (clusters[index].header.eta >= 0)
+								if (clusters[index].header.eta >= 0) {
 									charts->signal_eta->Fill(clusters[index].header.eta, value);
+									for (subindex = 0; subindex < d_cuts_steps; subindex++)
+										if ((value > cuts[subindex].low) && (value < cuts[subindex].top)) {
+											charts->etas[subindex]->Fill(clusters[index].header.eta);
+											break;
+										}
+								}
 							if ((clusters[index].header.strips >= 1) && (clusters[index].header.strips <= 5))
 								charts->signals_array[clusters[index].header.strips-1]->Fill(value);
 						}
@@ -119,8 +137,8 @@ void f_export_histograms(struct o_string *output, struct s_data_charts *charts) 
 	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_first, "T", charts->n_channels);
 	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->common_noise);
 	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->signals);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "TTTTTT", charts->signals, charts->signals_array[0], charts->signals_array[1],
-			charts->signals_array[2], charts->signals_array[3], charts->signals_array[4]);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "TTTTTT", charts->signals, charts->signals_array[0],
+			charts->signals_array[1], charts->signals_array[2], charts->signals_array[3], charts->signals_array[4]);
 	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->signal_one);
 	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->signals_two);
 	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "T", charts->signals_two_major);
@@ -134,8 +152,11 @@ void f_export_histograms(struct o_string *output, struct s_data_charts *charts) 
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "T", charts->main_strips_gravity);
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "T", charts->eta);
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "T", charts->signal_eta);
-	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_last, "TTTTTT", charts->eta, charts->eta_array[0], charts->eta_array[1],
+	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "T", charts->profile);
+	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "TTTTTT", charts->eta, charts->eta_array[0], charts->eta_array[1],
 			charts->eta_array[2], charts->eta_array[3], charts->eta_array[4]);
+	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_last, "TTTTTT", charts->eta, charts->etas[0], charts->etas[1], charts->etas[2],
+			charts->etas[3], charts->etas[4]);
 }
 
 int main (int argc, char *argv[]) {
@@ -164,22 +185,28 @@ int main (int argc, char *argv[]) {
 			}
 			charts.signal_one = d_chart("Signal of clusters with #strips == 1", 2000, 0.0, 400.0);
 			charts.signals_two = d_chart("Signal of clusters with #strips == 2", 2000, 0.0, 400.0);
-			charts.signals_two_major = d_chart("Signal of MAIN strip in clusters with #strips == 2", 2000, 0.0, 100.0);
+			charts.signals_two_major = d_chart("Signal of SEED strip in clusters with #strips == 2", 2000, 0.0, 100.0);
 			charts.signals_two_minor = d_chart("Signal of SECONDARY strip in clusters with #strips == 2", 2000, 0.0, 100.0);
 			charts.signal_over_noise = d_chart("Signal over noise (SN) of cluster;SN;# Entries", 2000, 0.0, 100.0);
 			charts.channel_one = d_chart("Signal over noise (SN) of clusters with #strips == 1", 5000, 0.0, 100.0);
 			charts.channels_two = d_chart("Signal overs noise (SN) of clusters with #strips == 2", 5000, 0.0, 100.0);
-			charts.channels_two_major = d_chart("Signal over noise (SN) of MAIN strip in  clusters with #strips == 2", 5000, 0.0, 100.0);
+			charts.channels_two_major = d_chart("Signal over noise (SN) of SEED strip in  clusters with #strips == 2", 5000, 0.0, 100.0);
 			charts.channels_two_minor = d_chart("Signal over noise (SN) of SECONDARY strip in clusters with #strips == 2", 5000, 0.0, 100.0);
 			charts.strips_gravity = d_chart("Center of gravity;Gravity;# Entries", d_trb_event_channels, 0.0, d_trb_event_channels);
-			charts.main_strips_gravity = d_chart("Center of gravity of MAIN strips", d_trb_event_channels, 0.0, d_trb_event_channels);
+			charts.main_strips_gravity = d_chart("Center of gravity of SEED strips", d_trb_event_channels, 0.0, d_trb_event_channels);
 			charts.eta = d_chart("Eta;Eta;# Entries", 500, 0.0, 1.0);
-			charts.signal_eta = d_chart("Signal over eta;Eta;Signal", 2000, 0.0, 1.0);
 			for (index = 0; index < 5; index++) {
 				snprintf(buffer, d_string_buffer_size, "Eta of clusters with #strips == %d", (index+1));
 				charts.eta_array[index] = d_chart(buffer, 500, 0.0, 1.0);
 			}
+			charts.signal_eta = d_chart_2D("signal over eta;Eta;Signal", 100, 0.0, 1.0, 300, 0, 300);
+			for (index = 0; index < d_cuts_steps; index++) {
+				snprintf(buffer, d_string_buffer_size, "Eta of clusters with signal %.00f-%.00f;Eta;# Entries", cuts[index].low,
+						cuts[index].top);
+				charts.etas[index] = d_chart(buffer, 500, 0.0, 1.0);
+			}
 			f_fill_histograms(compressed, &charts);
+			charts.profile = (TH1D *) charts.signal_eta->ProfileX("Signal over eta (Profile)");
 			range_start = charts.signal_over_noise->GetMean()-5.0*charts.signal_over_noise->GetRMS();
 			range_end = charts.signal_over_noise->GetMean()+10.0*charts.signal_over_noise->GetRMS();
 			charts.signal_over_noise->GetXaxis()->SetRangeUser(range_start, range_end);
