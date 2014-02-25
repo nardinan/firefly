@@ -17,7 +17,7 @@
  */
 #include "compression.h"
 unsigned int min_strip = 0, max_strip = d_trb_event_channels, min_strips = 0, max_strips = d_trb_event_channels;
-float max_common_noise = NAN;
+float max_common_noise = NAN, min_signal_over_noise = NAN;
 unsigned int f_get_parameter(const char *flag, int argc, char *argv[]) {
 	unsigned int index, result = d_parameter_invalid;
 	for (index = 0; (index < argc) && (result == d_parameter_invalid); index++)
@@ -43,7 +43,8 @@ void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_r
 		NULL
 	};
 	d_try {
-		memset(details, 0, sizeof(struct s_singleton_cluster_details));
+		if (details)
+			memset(details, 0, sizeof(struct s_singleton_cluster_details));
 		while ((readed_buffer = stream->m_read_line(stream, buffer, d_string_buffer_size))) {
 			is_information = d_false;
 			if ((details) && (elements = readed_buffer->m_split(readed_buffer, '='))) {
@@ -202,9 +203,12 @@ int f_compress_event(struct o_trb_event *event, struct o_stream *stream, struct 
 					if (((last_channel-first_channel+1) <= max_strips) && ((last_channel-first_channel+1) >= min_strips)) {
 						p_compress_event_cluster(&(clusters[event_header.clusters]), first_channel, last_channel, sigma, signal,
 								common_noise);
-						event_header.bytes_to_next += sizeof(struct s_singleton_event_header)+((sizeof(float)*
-									(clusters[event_header.clusters].header.strips+1))+sizeof(unsigned int));
-						event_header.clusters++;
+						if ((isnan(min_signal_over_noise) != 0) ||
+								(clusters[event_header.clusters].header.signal_over_noise > min_signal_over_noise)) {
+							event_header.bytes_to_next += sizeof(struct s_singleton_event_header)+((sizeof(float)*
+										(clusters[event_header.clusters].header.strips+1))+sizeof(unsigned int));
+							event_header.clusters++;
+						}
 					}
 				first_channel = last_channel = -1;
 				peak_readed = d_false;
@@ -213,9 +217,12 @@ int f_compress_event(struct o_trb_event *event, struct o_stream *stream, struct 
 		if (peak_readed) /* last event if it's continue over last strip */
 			if ((isnan(min_strips) != 0) || (((last_channel-first_channel)+1) >= min_strips)) {
 				p_compress_event_cluster(&(clusters[event_header.clusters]), first_channel, last_channel, sigma, signal, common_noise);
-				event_header.bytes_to_next += sizeof(struct s_singleton_event_header)+((sizeof(float)*
-							(clusters[event_header.clusters].header.strips+1))+sizeof(unsigned int));
-				event_header.clusters++;
+				if ((isnan(min_signal_over_noise) != 0) ||
+						(clusters[event_header.clusters].header.signal_over_noise > min_signal_over_noise)) {
+					event_header.bytes_to_next += sizeof(struct s_singleton_event_header)+((sizeof(float)*
+								(clusters[event_header.clusters].header.strips+1))+sizeof(unsigned int));
+					event_header.clusters++;
+				}
 			}
 		if (event_header.clusters) {
 			stream->m_write(stream, sizeof(struct s_singleton_event_header), &event_header);
@@ -254,7 +261,7 @@ struct s_singleton_cluster_details *f_decompress_event(struct o_stream *stream, 
 
 void f_compress_data(struct o_string *input_path, struct o_string *output_path, struct o_string *cn_output_path, float high_treshold, float low_treshold,
 		float sigma_k, float *pedestal, float *sigma) {
-	int buffer_fill = 0, event_number = 0, compressed_events = 0, last_clusters = 0, read_again = d_true, index, clusters,
+	int buffer_fill = 0, event_number = 0, compressed_events = 0, discarded_events = 0, last_clusters = 0, read_again = d_true, index, clusters,
 	event_size = d_trb_event_size_normal;
 	float written_bytes = 0;
 	ssize_t readed = 0, input_file_size, output_file_size;
@@ -295,8 +302,8 @@ void f_compress_data(struct o_string *input_path, struct o_string *output_path, 
 				}
 				event_number++;
 				fprintf(stdout, "\r%80s", "");
-				fprintf(stdout, "\r[compressed events: %d/%d ~%02f%% (last with %d clusters)]", compressed_events, event_number,
-						(((float)compressed_events/(float)event_number)*100.0f),  last_clusters);
+				fprintf(stdout, "\r[compressed events: %d/%d (discarded %d) ~%02f%% (last with %d clusters)]", compressed_events, event_number,
+						discarded_events, (((float)compressed_events/(float)event_number)*100.0f), last_clusters);
 				fflush(stdout);
 			} else
 				read_again = d_false;
