@@ -20,6 +20,7 @@
 #include <TCanvas.h>
 #include <TSystem.h>
 #include <TH1F.h>
+#include <TH2F.h>
 #include <TGraph.h>
 #include <TStyle.h>
 #include <TFile.h>
@@ -32,7 +33,8 @@ extern "C" {
 #include "compression.h"
 }
 #define d_style_empty {NAN,NAN,NAN,NAN,kTRUE,kYellow,3010,kBlack,1.0}
-#define d_chart(nam,bks,min,max) f_create_histogram(nam,nam,bks,min,max,common_style);
+#define d_chart(nam,bks,min,max) f_create_histogram(nam,nam,bks,min,max,common_style)
+#define d_chart_2D(nam,bksx,minx,maxx,bksy,miny,maxy) f_create_2D_histogram(nam,nam,bksx,minx,maxx,bksy,miny,maxy,common_style)
 typedef struct s_chart_style {
 	double range_x_begin, range_x_end, range_y_begin, range_y_end;
 	int show_stats, fill_color, fill_style, line_color, line_width;
@@ -46,5 +48,7 @@ extern struct s_chart_style common_style;
 extern int v_chart_split_x, v_chart_split_y;
 #define d_multiple_chart ((v_chart_split_x > 1) || (v_chart_split_y > 1))
 extern TH1F *f_create_histogram(const char *name, const char *labels, int bins_number, float x_low, float x_up, struct s_chart_style style);
+extern TH2F *f_create_2D_histogram(const char *name, const char *labels, int bins_number_x, float x_low, float x_up, int bins_number_y, float y_low,
+		float y_yp, struct s_chart_style style);
 extern void p_export_histograms_singleton(struct o_string *output, int log_y, int grid_x, enum e_pdf_pages page, const char *format, ...);
 #endif

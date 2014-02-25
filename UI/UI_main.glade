@@ -1544,11 +1544,10 @@
                 <child type="tab">
                   <object class="GtkLabel" id="v_charts_data_histograms">
                     <property name="visible">True</property>
-                    <property name="yalign">0.43000000715255737</property>
                     <property name="label" translatable="yes">Signal</property>
                   </object>
                   <packing>
-                    <property name="position">5</property>
+                    <property name="position">4</property>
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
@@ -1768,7 +1767,170 @@
                 <child type="tab">
                   <object class="GtkLabel" id="v_charts_cn">
                     <property name="visible">True</property>
+                    <property name="yalign">0.43000000715255737</property>
                     <property name="label" translatable="yes">CN</property>
+                  </object>
+                  <packing>
+                    <property name="position">5</property>
+                    <property name="tab_fill">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkFrame" id="v_fft_frame">
+                    <property name="visible">True</property>
+                    <property name="label_xalign">0.5</property>
+                    <property name="shadow_type">none</property>
+                    <child>
+                      <object class="GtkAlignment" id="v_fft_alignment">
+                        <property name="visible">True</property>
+                        <property name="top_padding">3</property>
+                        <property name="bottom_padding">3</property>
+                        <property name="left_padding">3</property>
+                        <property name="right_padding">3</property>
+                        <child>
+                          <object class="GtkTable" id="v_fft_box">
+                            <property name="visible">True</property>
+                            <property name="n_rows">2</property>
+                            <property name="n_columns">2</property>
+                            <property name="homogeneous">True</property>
+                            <child>
+                              <object class="GtkFrame" id="v_fft_adc_2">
+                                <property name="visible">True</property>
+                                <property name="label_xalign">0.5</property>
+                                <property name="shadow_type">in</property>
+                                <child>
+                                  <object class="GtkAlignment" id="v_fft_adc_2_alignment">
+                                    <property name="visible">True</property>
+                                    <property name="top_padding">3</property>
+                                    <property name="bottom_padding">3</property>
+                                    <property name="left_padding">3</property>
+                                    <property name="right_padding">3</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child type="label">
+                                  <object class="GtkLabel" id="v_fft_adc_2_label">
+                                    <property name="visible">True</property>
+                                    <property name="label" translatable="yes">&lt;i&gt;ADC #2&lt;/i&gt;</property>
+                                    <property name="use_markup">True</property>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkFrame" id="v_fft_signal_adc_1">
+                                <property name="visible">True</property>
+                                <property name="label_xalign">0.5</property>
+                                <property name="shadow_type">in</property>
+                                <child>
+                                  <object class="GtkAlignment" id="v_fft_signal_adc_1_alignment">
+                                    <property name="visible">True</property>
+                                    <property name="top_padding">3</property>
+                                    <property name="bottom_padding">3</property>
+                                    <property name="left_padding">3</property>
+                                    <property name="right_padding">3</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child type="label">
+                                  <object class="GtkLabel" id="v_fft_signal_adc_1_label">
+                                    <property name="visible">True</property>
+                                    <property name="label" translatable="yes">&lt;i&gt;Signal ADC #1&lt;/i&gt;</property>
+                                    <property name="use_markup">True</property>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="top_attach">1</property>
+                                <property name="bottom_attach">2</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkFrame" id="v_fft_adc_1">
+                                <property name="visible">True</property>
+                                <property name="label_xalign">0.5</property>
+                                <property name="shadow_type">in</property>
+                                <child>
+                                  <object class="GtkAlignment" id="v_fft_adc_1_alignment">
+                                    <property name="visible">True</property>
+                                    <property name="top_padding">3</property>
+                                    <property name="bottom_padding">3</property>
+                                    <property name="left_padding">3</property>
+                                    <property name="right_padding">3</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child type="label">
+                                  <object class="GtkLabel" id="v_fft_adc_1_label">
+                                    <property name="visible">True</property>
+                                    <property name="label" translatable="yes">&lt;i&gt;ADC #1&lt;/i&gt;</property>
+                                    <property name="use_markup">True</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkFrame" id="v_fft_signal_adc_2">
+                                <property name="visible">True</property>
+                                <property name="label_xalign">0.5</property>
+                                <property name="shadow_type">in</property>
+                                <child>
+                                  <object class="GtkAlignment" id="v_fft_signal_adc_2_alignment">
+                                    <property name="visible">True</property>
+                                    <property name="top_padding">3</property>
+                                    <property name="bottom_padding">3</property>
+                                    <property name="left_padding">3</property>
+                                    <property name="right_padding">3</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child type="label">
+                                  <object class="GtkLabel" id="v_fft_signal_adc_2_label">
+                                    <property name="visible">True</property>
+                                    <property name="label" translatable="yes">&lt;i&gt;Signal ADC #2&lt;/i&gt;</property>
+                                    <property name="use_markup">True</property>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">1</property>
+                                <property name="bottom_attach">2</property>
+                              </packing>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child type="label">
+                      <object class="GtkLabel" id="v_tff_label">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">&lt;b&gt;data AVG&lt;/b&gt;</property>
+                        <property name="use_markup">True</property>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="position">6</property>
+                  </packing>
+                </child>
+                <child type="tab">
+                  <object class="GtkLabel" id="v_charts_tff">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Fourier Transform</property>
                   </object>
                   <packing>
                     <property name="position">5</property>

@@ -17,10 +17,12 @@
  */
 #ifndef firefly_analyzer_h
 #define firefly_analyzer_h
+#include <fftw3.h>
 #include "ladder.h"
 extern void p_analyzer_thread_calibrate_channels(struct s_ladder *ladder, float sigma_k, float sigma_cut_bottom, float sigma_cut_top, float *values,
 		size_t size);
 extern void p_analyzer_thread_calibrate(struct s_ladder *ladder);
+extern void p_analyzer_thread_data_spectrum(size_t elements, float *input, float *output);
 extern void p_analyzer_thread_data(struct s_ladder *ladder);
 extern void *f_analyzer_thread(void *v_ladder);
 #endif

@@ -40,6 +40,23 @@ TH1F *f_create_histogram(const char *name, const char *labels, int bins_number, 
 	return result;
 }
 
+TH2F *f_create_2D_histogram(const char *name, const char *labels, int bins_number_x, float x_low, float x_up, int bins_number_y, float y_low, float y_up, 
+		struct s_chart_style style) {
+	TH2F *result;
+	if ((result = new TH2F(name, labels, bins_number_x, x_low, x_up, bins_number_y, y_low, y_up))) {
+		result->SetStats(style.show_stats);
+		result->SetLineColor(style.line_color);
+		result->SetLineWidth(style.line_width);
+		result->SetFillColor(style.fill_color);
+		result->SetFillStyle(style.fill_style);
+		if ((!isnan(style.range_x_begin)) && (!isnan(style.range_x_end)))
+			result->GetXaxis()->SetRangeUser(style.range_x_begin, style.range_x_end);
+		if ((!isnan(style.range_y_begin)) && (!isnan(style.range_y_end)))
+			result->GetYaxis()->SetRangeUser(style.range_y_begin, style.range_y_end);
+	}
+	return result;
+}
+
 void p_export_histograms_singleton(struct o_string *output, int log_y, int grid_x, enum e_pdf_pages page, const char *format, ...) {
 	TCanvas *canvas;
 	va_list list;
@@ -56,10 +73,10 @@ void p_export_histograms_singleton(struct o_string *output, int log_y, int grid_
 	};
 	size_t length = d_strlen(format);
 	char element;
-	TH1F *singleton_th1f;
+	TH1 *singleton_th1;
 	TPaveText *singleton_paves;
 	TLegend *legend = NULL;
-	if ((canvas = new TCanvas("Output", "Output", 800, 600))) {
+	if ((canvas = new TCanvas("Page", "Page", 800, 600))) {
 		if (d_multiple_chart)
 			canvas->Divide(v_chart_split_x, v_chart_split_y);
 		switch (page) {
@@ -85,31 +102,27 @@ void p_export_histograms_singleton(struct o_string *output, int log_y, int grid_
 				canvas->cd(index+1);
 			switch (element) {
 				case 'T':
-					if ((singleton_th1f = va_arg(list, TH1F *))) {
+					if ((singleton_th1 = va_arg(list, TH1 *))) {
 						if (length > 1) {
 							if (!d_multiple_chart) {
 								if (colors[index] >= 0)
-									singleton_th1f->SetLineColor(colors[index]);
-								singleton_th1f->SetFillStyle(0);
+									singleton_th1->SetLineColor(colors[index]);
+								singleton_th1->SetFillStyle(0);
 							}
 							if (legend)
-								legend->AddEntry(singleton_th1f, singleton_th1f->GetTitle(), "l");
+								legend->AddEntry(singleton_th1, singleton_th1->GetTitle(), "l");
 						}
-						if (grid_x) 
+						if (grid_x)
 							gPad->SetGridx();
 						if ((d_multiple_chart) || (index == 0))
-							singleton_th1f->Draw();
+							singleton_th1->Draw();
 						else
-							singleton_th1f->Draw("SAME");
+							singleton_th1->Draw("SAME");
 					}
 					break;
 				case 'P':
-					if ((singleton_paves = va_arg(list, TPaveText *))) {
-						if ((d_multiple_chart) || (index == 0))
-							singleton_paves->Draw();
-						else
-							singleton_paves->Draw("SAME");
-					}
+					if ((singleton_paves = va_arg(list, TPaveText *)))
+						singleton_paves->Draw();
 					break;
 			}
 			canvas->Modified();

@@ -336,6 +336,7 @@ void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP
 	if (ladder->data.computed) {
 		f_interface_clean_data(charts);
 		f_interface_clean_common_noise(charts);
+		f_interface_clean_fourier(charts);
 		f_chart_denormalize(charts[e_interface_alignment_histogram_signal]);
 		if (ladder->last_readed_kind != 0xa3) {
 			for (index = 0; index < d_trb_event_channels; index++) {
@@ -364,6 +365,20 @@ void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP
 				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_4], 0, ladder->data.cn_bucket[index][3]);
 				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_5], 0, ladder->data.cn_bucket[index][4]);
 				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_6], 0, ladder->data.cn_bucket[index][5]);
+			}
+			f_chart_append_signal(charts[e_interface_alignment_fft_adc_1], 0, 0, 0);
+			f_chart_append_signal(charts[e_interface_alignment_fft_adc_2], 0, 0, 0);
+			f_chart_append_signal(charts[e_interface_alignment_fft_signal_adc_1], 0, 0, 0);
+			f_chart_append_signal(charts[e_interface_alignment_fft_signal_adc_2], 0, 0, 0);
+			for (index = 0; index < d_common_data_spectrum; index++) {
+				f_chart_append_signal(charts[e_interface_alignment_fft_adc_1], 0, (index+1)*d_common_data_spectrum_step,
+					ladder->data.spectrum_adc[0][index]);
+				f_chart_append_signal(charts[e_interface_alignment_fft_adc_2], 0, (index+1)*d_common_data_spectrum_step,
+					ladder->data.spectrum_adc[1][index]);
+				f_chart_append_signal(charts[e_interface_alignment_fft_signal_adc_1], 0, (index+1)*d_common_data_spectrum_step,
+					ladder->data.spectrum_signal[0][index]);
+				f_chart_append_signal(charts[e_interface_alignment_fft_signal_adc_2], 0, (index+1)*d_common_data_spectrum_step,
+					ladder->data.spectrum_signal[1][index]);
 			}
 		} else
 			for (index = 0; index < d_trb_event_channels; index++)

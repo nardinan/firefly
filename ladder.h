@@ -19,6 +19,7 @@
 #define firefly_ladder_h
 #include <pwd.h>
 #include <sys/stat.h>
+#include <fftw3.h>
 #include "phys.ksu.edu/ow-functions.h"
 #include "phys.ksu.edu/dev-functions.h"
 #include "interface.h"
@@ -99,9 +100,11 @@ typedef struct s_ladder {
 		unsigned int next, size, buckets_size, channel, occupancy[d_trb_event_channels], total_events;
 		struct o_trb_event events[d_common_data_events];
 		float mean[d_trb_event_channels], mean_no_pedestal[d_trb_event_channels], cn[d_trb_event_vas],
+		      adc_bucket[d_common_data_events][d_trb_event_channels], adc_pedestal_bucket[d_common_data_events][d_trb_event_channels],
 		      cn_bucket[d_common_data_events][d_trb_event_vas], signal_bucket[d_common_data_events][d_trb_event_channels],
 		      signal_bucket_maximum[d_trb_event_channels], signal_bucket_minimum[d_trb_event_channels],
-		      signal_over_noise_bucket[d_common_data_events][d_trb_event_channels];
+		      signal_over_noise_bucket[d_common_data_events][d_trb_event_channels], spectrum_adc[d_trb_event_adcs][d_common_data_spectrum],
+		      spectrum_adc_pedestal[d_trb_event_adcs][d_common_data_spectrum], spectrum_signal[d_trb_event_adcs][d_common_data_spectrum];
 		int computed;
 	} data;
 } s_ladder;

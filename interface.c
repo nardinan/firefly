@@ -112,6 +112,10 @@ const char *interface_labels[] = {
 	"v_data_cn_4_alignment",
 	"v_data_cn_5_alignment",
 	"v_data_cn_6_alignment",
+	"v_fft_adc_1_alignment",
+	"v_fft_adc_2_alignment",
+	"v_fft_signal_adc_1_alignment",
+	"v_fft_signal_adc_2_alignment",
 	NULL
 }, *interface_styles[] = {
 	"styles/adc.keys",
@@ -132,7 +136,11 @@ const char *interface_labels[] = {
 	"styles/histogram_cn.keys",
 	"styles/histogram_cn.keys",
 	"styles/histogram_cn.keys",
-	"styles/histogram_cn.keys"
+	"styles/histogram_cn.keys",
+	"styles/fft.keys",
+	"styles/fft.keys",
+	"styles/fft.keys",
+	"styles/fft.keys"
 }, *interface_name[] = {
 	"ADC",
 	"ADC_pedestal",
@@ -152,7 +160,11 @@ const char *interface_labels[] = {
 	"common_noise_va3",
 	"common_noise_va4",
 	"common_noise_va5",
-	"common_noise_va6"
+	"common_noise_va6",
+	"fourier_transform_adc_1",
+	"fourier_transform_adc_2",
+	"fourier_transform_signal_adc_1",
+	"fourier_transform_signal_adc_2"
 };
 struct s_interface_key_value location_entries[] = {
 	{"PG", "Perugia"},
@@ -421,3 +433,9 @@ void f_interface_clean_common_noise(struct s_chart **charts) {
 	f_chart_flush(charts[e_interface_alignment_histogram_cn_6]);
 }
 
+void f_interface_clean_fourier(struct s_chart **charts) {
+	f_chart_flush(charts[e_interface_alignment_fft_adc_1]);
+	f_chart_flush(charts[e_interface_alignment_fft_adc_2]);
+	f_chart_flush(charts[e_interface_alignment_fft_signal_adc_1]);
+	f_chart_flush(charts[e_interface_alignment_fft_signal_adc_2]);
+}

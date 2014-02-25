@@ -38,6 +38,8 @@
 #define d_common_calibration_events_default 512
 #define d_common_data_events 2048
 #define d_common_data_events_default 128
+#define d_common_data_spectrum ((d_trb_event_channels_half/2)+1)
+#define d_common_data_spectrum_step 5.2
 #define d_assert(a) if(!(a))d_die("[ASSERT|firefly] - fail testing %s", #a)
 #define d_FP /*{ printf("[FUNCTION|firefly] - %s::%s() %d\n", __FILE__, __FUNCTION__, __LINE__); fflush(stdout); }*/
 #endif

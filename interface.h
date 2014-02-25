@@ -135,6 +135,10 @@ typedef enum e_interface_alignments {
 	e_interface_alignment_histogram_cn_4,
 	e_interface_alignment_histogram_cn_5,
 	e_interface_alignment_histogram_cn_6,
+	e_interface_alignment_fft_adc_1,
+	e_interface_alignment_fft_adc_2,
+	e_interface_alignment_fft_signal_adc_1,
+	e_interface_alignment_fft_signal_adc_2,
 	e_interface_alignment_NULL
 } e_interface_alignments;
 typedef struct s_interface_informations {
@@ -187,5 +191,6 @@ extern void f_interface_clean_calibration(struct s_chart **charts);
 extern void f_interface_clean_data(struct s_chart **charts);
 extern void f_interface_clean_data_histogram(struct s_chart **charts);
 extern void f_interface_clean_common_noise(struct s_chart **charts);
+extern void f_interface_clean_fourier(struct s_chart **charts);
 #endif
 
