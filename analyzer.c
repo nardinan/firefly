@@ -58,13 +58,21 @@ void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 	}
 }
 
-void p_analyzer_thread_data_spectrum(size_t elements, float *input, float *output) { d_FP;
+void p_analyzer_sine_noise(size_t elements, float *input, float frequency) {
+	double period = (1.0/frequency), step;
+	int index;
+	step = (2.0*M_PI)/(period*1000000.0);
+	for (index = 0; index < elements; index++)
+		input[index] += sin(step*(double)index);
+}
+
+void p_analyzer_spectrum(size_t elements, float *input, float *output) { d_FP;
 	fftw_complex *spectrum_out;
 	fftw_plan spectrum_plan;
 	int frequency, index;
 	double *input_double;
 	if ((spectrum_out = (fftw_complex *)d_malloc(sizeof(fftw_complex)*((elements/2)+1))) &&
-		(input_double = (double *)d_malloc(sizeof(double)*elements))) {
+			(input_double = (double *)d_malloc(sizeof(double)*elements))) {
 		for (index = 0; index < elements; index++)
 			input_double[index] = (double)input[index];
 		spectrum_plan = fftw_plan_dft_r2c_1d(elements, input_double, spectrum_out, FFTW_ESTIMATE);
@@ -138,6 +146,7 @@ void p_analyzer_thread_data(struct s_ladder *ladder) { d_FP;
 										ladder->calibration.pedestal[channel]);
 								ladder->data.signal_bucket[index][channel] = (ladder->data.events[index].values[channel]-
 										ladder->calibration.pedestal[channel]-ladder->data.cn_bucket[index][va]);
+								if ((channel%5) == 0) ladder->data.signal_bucket[index][channel] += sinf((float)channel);
 								if (!not_first[channel]) {
 									ladder->data.signal_bucket_maximum[channel] =
 										ladder->data.signal_bucket[index][channel];
@@ -159,13 +168,13 @@ void p_analyzer_thread_data(struct s_ladder *ladder) { d_FP;
 							}
 						}
 						for (adc = 0; adc < d_trb_event_adcs; adc ++) {
-							p_analyzer_thread_data_spectrum(d_trb_event_channels_half,
+							p_analyzer_spectrum(d_trb_event_channels_half,
 									&(ladder->data.adc_bucket[index][d_trb_event_channels_half*adc]),
 									ladder->data.spectrum_adc[adc]);
-							p_analyzer_thread_data_spectrum(d_trb_event_channels_half,
+							p_analyzer_spectrum(d_trb_event_channels_half,
 									&(ladder->data.adc_pedestal_bucket[index][d_trb_event_channels_half*adc]),
 									ladder->data.spectrum_adc_pedestal[adc]);
-							p_analyzer_thread_data_spectrum(d_trb_event_channels_half,
+							p_analyzer_spectrum(d_trb_event_channels_half,
 									&(ladder->data.signal_bucket[index][d_trb_event_channels_half*adc]),
 									ladder->data.spectrum_signal[adc]);
 						}
