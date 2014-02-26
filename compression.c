@@ -183,11 +183,11 @@ int f_compress_event(struct o_trb_event *event, struct o_stream *stream, struct 
 		d_release(singleton);
 	}
 	if (isnan(max_common_noise) == 0)
-		for (va = 0; va < d_trb_event_vas; va++) {
-			if ((common_noise[va] > max_common_noise) || (common_noise[va] < (max_common_noise*-1.0)))
+		for (va = 0; va < d_trb_event_vas; va++)
+			if ((common_noise[va] > max_common_noise) || (common_noise[va] < (max_common_noise*-1.0))) {
 				discard = d_true;
-			break;
-		}
+				break;
+			}
 	if (!discard) {
 		for (channel = min_strip; channel < max_strip; channel++) {
 			signal[channel] = event->values[channel]-pedestal[channel]-common_noise[(channel/d_trb_event_channels_on_va)];
@@ -261,7 +261,7 @@ struct s_singleton_cluster_details *f_decompress_event(struct o_stream *stream, 
 
 void f_compress_data(struct o_string *input_path, struct o_string *output_path, struct o_string *cn_output_path, float high_treshold, float low_treshold,
 		float sigma_k, float *pedestal, float *sigma) {
-	int buffer_fill = 0, event_number = 0, compressed_events = 0, discarded_events = 0, last_clusters = 0, read_again = d_true, index, clusters,
+	int buffer_fill = 0, event_number = 0, compressed_events = 0, last_clusters = 0, read_again = d_true, index, clusters,
 	event_size = d_trb_event_size_normal;
 	float written_bytes = 0;
 	ssize_t readed = 0, input_file_size, output_file_size;
@@ -302,8 +302,8 @@ void f_compress_data(struct o_string *input_path, struct o_string *output_path, 
 				}
 				event_number++;
 				fprintf(stdout, "\r%80s", "");
-				fprintf(stdout, "\r[compressed events: %d/%d (discarded %d) ~%02f%% (last with %d clusters)]", compressed_events, event_number,
-						discarded_events, (((float)compressed_events/(float)event_number)*100.0f), last_clusters);
+				fprintf(stdout, "\r[compressed events: %d/%d ~%02f%% (last with %d clusters)]", compressed_events, event_number,
+						(((float)compressed_events/(float)event_number)*100.0f), last_clusters);
 				fflush(stdout);
 			} else
 				read_again = d_false;
