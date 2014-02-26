@@ -81,12 +81,20 @@ int main (int argc, char *argv[]) {
 			charts.paves->AddText(buffer);
 			snprintf(buffer, d_string_buffer_size, "SNs: %s, %s", details.serials[0], details.serials[1]);
 			charts.paves->AddText(buffer);
-			snprintf(buffer, d_string_buffer_size, "Temperatures: %.03fC, %.03fC", details.temperatures[0], details.temperatures[1]);
+			snprintf(buffer, d_string_buffer_size, "Temperatures: %.01fC, %.01fC", details.temperatures[0], details.temperatures[1]);
 			charts.paves->AddText(buffer);
-			snprintf(buffer, d_string_buffer_size, "Sigma K: %.03f", details.sigma_k);
+			snprintf(buffer, d_string_buffer_size, "Sigma K: %.01f", details.sigma_k);
 			charts.paves->AddText(buffer);
-			snprintf(buffer, d_string_buffer_size, "Hold delay: %.03f", details.hold_delay);
+			snprintf(buffer, d_string_buffer_size, "Hold delay: %.01f", details.hold_delay);
 			charts.paves->AddText(buffer);
+			if (d_strlen(details.bias) > 0) {
+				snprintf(buffer, d_string_buffer_size, "Bias Voltage: %s", details.bias);
+				charts.paves->AddText(buffer);
+			}
+			if (d_strlen(details.leakage) > 0) {
+				snprintf(buffer, d_string_buffer_size, "Leakage current: %s", details.leakage);
+				charts.paves->AddText(buffer);
+			}
 			f_export_histograms(output, &charts);
 		} else
 			d_log(e_log_level_ever, "Missing arguments", NULL);

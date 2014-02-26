@@ -25,14 +25,14 @@
 #define d_compress_tag 0xface
 #define d_compress_endian 0xbeef
 #define d_compress_argument(cnt,key,res,op,msg)\
-do{\
-	int _index;\
+	do{\
+		int _index;\
 		if(((_index=f_get_parameter((key),argc,argv))!=d_parameter_invalid)&&((_index+1)<argc)){\
 			(res)=op(argv[_index+1]);\
-				(cnt)++;\
+			(cnt)++;\
 		}else\
-			d_log(e_log_level_ever,msg,NULL);\
-}while(0);
+		d_log(e_log_level_ever,msg,NULL);\
+	}while(0);
 #pragma pack(push, 1)
 typedef struct s_singleton_file_header {
 	unsigned short endian_check;
@@ -54,7 +54,8 @@ typedef struct s_singleton_cluster_details {
 	float values[d_trb_event_channels+1];
 } s_singleton_cluster_details;
 typedef struct s_singleton_calibration_details {
-	char name[d_string_buffer_size], serials[2][d_string_buffer_size], date[d_string_buffer_size];
+	char name[d_string_buffer_size], serials[2][d_string_buffer_size], date[d_string_buffer_size], bias[d_string_buffer_size],
+	     leakage[d_string_buffer_size];
 	float temperatures[2], sigma_k, hold_delay;
 } s_singleton_calibration_details;
 #pragma pack(pop)
@@ -66,6 +67,8 @@ typedef enum e_calibration_details {
 	e_calibration_detail_temperature_2,
 	e_calibration_detail_sigma_k,
 	e_calibration_detail_hold_delay,
+	e_calibration_detail_bias_voltage,
+	e_calibration_detail_leakage_current,
 	e_calibration_detail_none
 } e_calibration_details;
 #define d_value(key,str,enm,val) ((d_strcmp((key)->content,(str))==0)?(val):(enm))

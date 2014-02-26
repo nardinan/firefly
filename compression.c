@@ -40,6 +40,8 @@ void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_r
 		"temp_left",
 		"sigma_k",
 		"hold_delay",
+		"bias_volt",
+		"leak_curr",
 		NULL
 	};
 	d_try {
@@ -79,6 +81,13 @@ void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_r
 							case e_calibration_detail_hold_delay:
 								details->hold_delay = atof(singleton->content);
 								break;
+							case e_calibration_detail_bias_voltage:
+								if (d_strlen(singleton->content) > 0)
+									snprintf(details->bias, d_string_buffer_size, "%s", singleton->content);
+								break;
+							case e_calibration_detail_leakage_current:
+								if (d_strlen(singleton->content) > 0)
+									snprintf(details->leakage, d_string_buffer_size, "%s", singleton->content);
 							default:
 								d_log(e_log_level_ever, "wrong key: %s", key->content);
 						}
