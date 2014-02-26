@@ -48,7 +48,7 @@ void f_fill_histograms(struct o_string *data, struct s_calibration_charts *chart
 
 void f_export_histograms(struct o_string *output, struct s_calibration_charts *charts) {
 	v_chart_split_x = v_chart_split_y = 2;
-	p_export_histograms_singleton(output, d_false, d_trb_event_vas, e_pdf_page_middle, "TTTP", charts->pedestal, charts->sigma_raw,
+	p_export_histograms_singleton(output, d_false, d_trb_event_vas, e_pdf_page_middle, "HIST", "TTTP", charts->pedestal, charts->sigma_raw,
 			charts->sigma, charts->paves);
 }
 

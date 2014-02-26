@@ -50,5 +50,5 @@ extern int v_chart_split_x, v_chart_split_y;
 extern TH1F *f_create_histogram(const char *name, const char *labels, int bins_number, float x_low, float x_up, struct s_chart_style style);
 extern TH2F *f_create_2D_histogram(const char *name, const char *labels, int bins_number_x, float x_low, float x_up, int bins_number_y, float y_low,
 		float y_yp, struct s_chart_style style);
-extern void p_export_histograms_singleton(struct o_string *output, int log_y, int grid_x, enum e_pdf_pages page, const char *format, ...);
+extern void p_export_histograms_singleton(struct o_string *output, int log_y, int grid_x, enum e_pdf_pages page, const char *draw, const char *format, ...);
 #endif

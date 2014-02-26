@@ -57,7 +57,7 @@ TH2F *f_create_2D_histogram(const char *name, const char *labels, int bins_numbe
 	return result;
 }
 
-void p_export_histograms_singleton(struct o_string *output, int log_y, int grid_x, enum e_pdf_pages page, const char *format, ...) {
+void p_export_histograms_singleton(struct o_string *output, int log_y, int grid_x, enum e_pdf_pages page, const char *draw, const char *format, ...) {
 	TCanvas *canvas;
 	va_list list;
 	struct o_string *real_output;
@@ -72,7 +72,7 @@ void p_export_histograms_singleton(struct o_string *output, int log_y, int grid_
 		-1
 	};
 	size_t length = d_strlen(format);
-	char element;
+	char element, buffer[d_string_buffer_size];
 	TH1 *singleton_th1;
 	TPaveText *singleton_paves;
 	TLegend *legend = NULL;
@@ -114,9 +114,15 @@ void p_export_histograms_singleton(struct o_string *output, int log_y, int grid_
 						}
 						if (grid_x)
 							gPad->SetGridx();
-						if ((d_multiple_chart) || (index == 0))
-							singleton_th1->Draw();
-						else
+						if ((d_multiple_chart) || (index == 0)) {
+							if (draw)
+								singleton_th1->Draw(draw);
+							else
+								singleton_th1->Draw();
+						} else if (draw) {
+							snprintf(buffer, d_string_buffer_size, "%s SAME", draw);
+							singleton_th1->Draw(buffer);
+						} else
 							singleton_th1->Draw("SAME");
 					}
 					break;
