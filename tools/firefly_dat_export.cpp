@@ -48,7 +48,7 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 			if (file_header.endian_check == (unsigned short)d_compress_endian) {
 				while ((clusters = f_decompress_event(stream, &event_header))) {
 					printf("\r%80s", "");
-					printf("\r[processing event: %d]", current_event++);
+					printf("\r[processing event: %d] %d clusters", current_event++, event_header.clusters);
 					fflush(stdout);
 					for (index = 0; index < event_header.clusters; index++) {
 						if (charts->signals) {
