@@ -46,6 +46,7 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	g_signal_connect(G_OBJECT(result->interface->informations_configuration->window), "delete-event", G_CALLBACK(p_callback_hide_on_exit), result);
 	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->preferences), "activate", G_CALLBACK(p_callback_parameters_show), result);
+	g_signal_connect(G_OBJECT(result->interface->led), "activate", G_CALLBACK(p_callback_led), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_normal]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration_debug]), "toggled", G_CALLBACK(p_callback_refresh), result);
@@ -347,6 +348,10 @@ void p_callback_parameters_show(GtkWidget *widget, struct s_environment *environ
 	gtk_widget_show_all(GTK_WIDGET(environment->interface->parameters_configuration->window));
 	gtk_window_set_position(environment->interface->parameters_configuration->window, GTK_WIN_POS_CENTER_ON_PARENT);
 	gtk_window_present(environment->interface->parameters_configuration->window);
+}
+
+void p_callback_led(GtkWidget *widget, struct s_environment *environment) {
+	f_ladder_led(environment->ladders[environment->current]);
 }
 
 void p_callback_informations_action(GtkWidget *widget, struct s_environment *environment) {

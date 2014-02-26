@@ -21,10 +21,10 @@
                     <property name="visible">True</property>
                     <child>
                       <object class="GtkImageMenuItem" id="v_edit_preferences">
-                        <property name="label">gtk-preferences</property>
+                        <property name="label">Preferences</property>
                         <property name="visible">True</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="image">image2</property>
+                        <property name="use_stock">False</property>
                       </object>
                     </child>
                   </object>
@@ -37,7 +37,7 @@
                 <property name="label" translatable="yes">_Kind of test</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
-                  <object class="GtkMenu" id="menu1">
+                  <object class="GtkMenu" id="v_test_menu">
                     <property name="visible">True</property>
                     <child>
                       <object class="GtkRadioMenuItem" id="v_test_z">
@@ -68,6 +68,26 @@
                         <property name="label" translatable="yes">Test "c"</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_z</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="v_utils">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">_Utilities</property>
+                <property name="use_underline">True</property>
+                <child type="submenu">
+                  <object class="GtkMenu" id="v_utils_menu">
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkImageMenuItem" id="v_util_led">
+                        <property name="label" translatable="yes">on/off LED</property>
+                        <property name="visible">True</property>
+                        <property name="image">image1</property>
+                        <property name="use_stock">False</property>
                       </object>
                     </child>
                   </object>
@@ -2045,5 +2065,15 @@
     <property name="upper">16777216</property>
     <property name="step_increment">1</property>
     <property name="page_increment">1</property>
+  </object>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="stock">gtk-media-record</property>
+    <property name="icon-size">2</property>
+  </object>
+  <object class="GtkImage" id="image2">
+    <property name="visible">True</property>
+    <property name="stock">gtk-execute</property>
+    <property name="icon-size">2</property>
   </object>
 </interface>

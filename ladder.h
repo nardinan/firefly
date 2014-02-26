@@ -129,5 +129,6 @@ extern int f_ladder_device(struct s_ladder *ladder, struct o_trb *device);
 extern void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *interface);
 extern void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *interface);
 extern void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface, struct o_trbs *searcher);
+extern void f_ladder_led(struct s_ladder *ladder);
 #endif
 
