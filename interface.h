@@ -34,6 +34,7 @@ typedef enum e_interface_labels {
 	e_interface_label_output,
 	e_interface_label_temperature1,
 	e_interface_label_temperature2,
+	e_interface_label_status,
 	e_interface_label_NULL
 } e_interface_labels;
 typedef enum e_interface_switches {
@@ -161,6 +162,7 @@ typedef struct s_interface_parameters {
 	GtkSpinButton *spins[e_interface_parameters_spin_NULL];
 	GtkComboBox *combos[e_interface_parameters_combo_NULL];
 	GtkToggleButton *save_raw, *save_pdf, *show_bad_channels;
+	GtkEntry *remote;
 	GtkFileChooserButton *directory;
 	GtkButton *action;
 } s_interface_parameters;
@@ -168,7 +170,7 @@ typedef struct s_interface {
 	GtkBuilder *interface;
 	GtkWindow *window;
 	GtkLabel *labels[e_interface_label_NULL], *connected_label;
-	GtkMenuItem *preferences, *led;
+	GtkMenuItem *preferences, *led, *rsync;
 	GtkCheckMenuItem *test_modes[e_interface_test_toggle_NULL];
 	GtkToggleButton *switches[e_interface_switch_NULL], *toggles[e_interface_toggle_NULL];
 	GtkSpinButton *spins[e_interface_spin_NULL], *bucket_spins[e_interface_bucket_spin_NULL];

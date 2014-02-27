@@ -58,6 +58,7 @@ extern void p_callback_scale_show(GtkWidget *widget, GdkEvent *event, struct s_e
 extern void p_callback_parameters_action(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_parameters_show(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_led(GtkWidget *widget, struct s_environment *environment);
+extern void p_callback_rsync(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_informations_action(GtkWidget *widget, struct s_environment *environment);
 extern void f_informations_show(struct s_interface *interface);
 #endif

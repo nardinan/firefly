@@ -26,6 +26,9 @@
 #include "compression.h"
 #define d_ladder_directory_test "test"
 #define d_ladder_directory_data "data"
+#define d_ladder_directory_draft "draft"
+#define d_ladder_command_rsync "rsync -az -e ssh"
+#define d_ladder_command_grep "pgrep -fl"
 #define d_ladder_trigger_internal 0x22
 #define d_ladder_trigger_external 0x11
 #define d_ladder_safe_assign(sep,res,val)\
@@ -75,7 +78,7 @@ typedef struct s_ladder_command {
 typedef struct s_ladder {
 	char output[d_string_buffer_size], shadow_output[d_string_buffer_size], shadow_calibration[d_string_buffer_size], directory[d_string_buffer_size],
 	     ladder_directory[d_string_buffer_size], name[d_string_buffer_size], voltage[d_string_buffer_size], current[d_string_buffer_size],
-	     note[d_string_buffer_size], sensors[2][d_string_buffer_size];
+	     note[d_string_buffer_size], sensors[2][d_string_buffer_size], remote[d_string_buffer_size];
 	struct o_object *lock, *parameters_lock;
 	struct o_trb *device;
 	struct o_trb_event last_event;
@@ -130,5 +133,7 @@ extern void p_ladder_configure_output(struct s_ladder *ladder, struct s_interfac
 extern void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *interface);
 extern void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface, struct o_trbs *searcher);
 extern void f_ladder_led(struct s_ladder *ladder);
+extern int p_ladder_rsync_execution(void);
+extern int f_ladder_rsync(struct s_ladder *ladder);
 #endif
 

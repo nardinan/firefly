@@ -45,6 +45,7 @@ void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *config
 			d_ladder_key_load_d(dictionary, save_calibration_raw, ladder);
 			d_ladder_key_load_d(dictionary, save_calibration_pdf, ladder);
 			d_ladder_key_load_d(dictionary, show_bad_channels, ladder);
+			d_ladder_key_load_s(dictionary, remote, ladder);
 			d_object_unlock(ladder->parameters_lock);
 		}
 		d_release(dictionary);
@@ -80,6 +81,7 @@ void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *config
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "save_calibration_raw=%d\n", ladder->save_calibration_raw));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "save_calibration_pdf=%d\n", ladder->save_calibration_pdf));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "show_bad_channels=%d\n", ladder->show_bad_channels));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "remote=%s\n", ladder->remote));
 			d_object_unlock(ladder->parameters_lock);
 		} d_pool_end_flush;
 		d_release(stream);
@@ -459,6 +461,9 @@ void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *inte
 		if (test_code != 0x00) {
 			snprintf(ladder->ladder_directory, d_string_buffer_size, "%s/%s/%s", ladder->directory, ladder->name, d_ladder_directory_test);
 			mkdir(ladder->ladder_directory, 0777);
+		} else {
+			snprintf(ladder->ladder_directory, d_string_buffer_size, "%s/%s/%s", ladder->directory, ladder->name, d_ladder_directory_draft);
+			mkdir(ladder->ladder_directory, 0777);
 		}
 	} else {
 		snprintf(ladder->ladder_directory, d_string_buffer_size, "%s/%s/%s", ladder->directory, ladder->name, d_ladder_directory_data);
@@ -470,8 +475,8 @@ void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *inte
 		snprintf(buffer_name, d_string_buffer_size, "%s_%s", ladder->name, location_entries[ladder->location_pointer].code);
 	memset(ladder->shadow_calibration, 0, d_string_buffer_size);
 	for (index = 0, founded = d_false; (!founded); index++) {
-		snprintf(buffer_output, d_string_buffer_size, "%s/%s/%s_%03d%s", ladder->directory, ladder->name, buffer_name, index,
-				d_common_ext_calibration);
+		snprintf(buffer_output, d_string_buffer_size, "%s/%s/%s/%s_%03d%s", ladder->directory, ladder->name, d_ladder_directory_draft, buffer_name,
+				index, d_common_ext_calibration);
 		if ((stream = fopen(buffer_output, "r"))) {
 			memcpy(ladder->shadow_calibration, buffer_output, d_string_buffer_size);
 			fclose(stream);
@@ -597,3 +602,30 @@ void f_ladder_led(struct s_ladder *ladder) {
 	d_object_unlock(ladder->lock);
 }
 
+int p_ladder_rsync_execution(void) {
+	FILE *stream;
+	char buffer_output[d_string_buffer_size], buffer_input[d_string_buffer_size];
+	int founded = d_false;
+	snprintf(buffer_output, d_string_buffer_size, "%s \"%s\"", d_ladder_command_grep, d_ladder_command_rsync);
+	if ((stream = popen(buffer_output, "r")) != NULL) {
+		if (fgets(buffer_input, d_string_buffer_size, stream) != NULL)
+			founded = d_true;
+		pclose(stream);
+	}
+	return founded;
+}
+
+int f_ladder_rsync(struct s_ladder *ladder) {
+	char buffer_output[d_string_buffer_size];
+	int result = d_false;
+	d_object_lock(ladder->lock);
+	if (!p_ladder_rsync_execution())
+		if (d_strlen(ladder->remote) > 0) {
+			snprintf(buffer_output, d_string_buffer_size, "%s \"%s/\" %s < /dev/null &", d_ladder_command_rsync, ladder->directory,
+					ladder->remote);
+			if (system(buffer_output) >= 0)
+				result = d_true;
+		}
+	d_object_unlock(ladder->lock);
+	return result;
+}

@@ -83,10 +83,18 @@
                   <object class="GtkMenu" id="v_utils_menu">
                     <property name="visible">True</property>
                     <child>
-                      <object class="GtkImageMenuItem" id="v_util_led">
+                      <object class="GtkImageMenuItem" id="v_utils_led">
                         <property name="label" translatable="yes">on/off LED</property>
                         <property name="visible">True</property>
                         <property name="image">image1</property>
+                        <property name="use_stock">False</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="v_utils_rsync">
+                        <property name="label" translatable="yes">remote RSync</property>
+                        <property name="visible">True</property>
+                        <property name="image">image3</property>
                         <property name="use_stock">False</property>
                       </object>
                     </child>
@@ -1967,6 +1975,25 @@
             <property name="position">1</property>
           </packing>
         </child>
+        <child>
+          <object class="GtkStatusbar" id="v_status">
+            <property name="visible">True</property>
+            <property name="spacing">2</property>
+            <child>
+              <object class="GtkLabel" id="v_status_label">
+                <property name="visible">True</property>
+                <property name="xalign">1</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
       </object>
     </child>
   </object>
@@ -2074,6 +2101,11 @@
   <object class="GtkImage" id="image2">
     <property name="visible">True</property>
     <property name="stock">gtk-execute</property>
+    <property name="icon-size">2</property>
+  </object>
+  <object class="GtkImage" id="image3">
+    <property name="visible">True</property>
+    <property name="stock">gtk-connect</property>
     <property name="icon-size">2</property>
   </object>
 </interface>

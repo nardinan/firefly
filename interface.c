@@ -24,6 +24,7 @@ const char *interface_labels[] = {
 	"v_output",
 	"v_temp1",
 	"v_temp2",
+	"v_status_label",
 	NULL
 }, *interface_switches[] = {
 	"v_public",
@@ -167,8 +168,12 @@ const char *interface_labels[] = {
 	"fourier_transform_signal_adc_2"
 };
 struct s_interface_key_value location_entries[] = {
-	{"PG", "Perugia"},
-	{"GE", "Geneva"},
+	{"PA", "Perugia - clean rooom"},
+	{"PC", "Perugia - cosmic rays"},
+	{"PL", "Perugia - laboratory"},
+	{"GA", "Geneva - clean room"},
+	{"GC", "Geneva - cosmic rays"},
+	{"GL", "Geneva - laboratory"},
 	{"BE", "Beijing"},
 	{"HSA", "Hybrid SA"},
 	{NULL, NULL}
@@ -221,7 +226,8 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 		d_assert(result->labels[index] = GTK_LABEL(gtk_builder_get_object(main_interface, interface_labels[index])));
 	d_assert(result->connected_label = GTK_LABEL(gtk_builder_get_object(main_interface, "v_connected_device_label")));
 	d_assert(result->preferences = GTK_MENU_ITEM(gtk_builder_get_object(main_interface, "v_edit_preferences")));
-	d_assert(result->led = GTK_MENU_ITEM(gtk_builder_get_object(main_interface, "v_util_led")));
+	d_assert(result->led = GTK_MENU_ITEM(gtk_builder_get_object(main_interface, "v_utils_led")));
+	d_assert(result->rsync = GTK_MENU_ITEM(gtk_builder_get_object(main_interface, "v_utils_rsync")));
 	for (index = 0; interface_switches[index]; index++)
 		d_assert(result->switches[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(main_interface, interface_switches[index])));
 	for (index = 0; interface_scale_switches[index]; index++)
@@ -306,6 +312,7 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	d_assert(result->scale_configuration->export_png = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_export_PNG")));
 	d_assert(result->parameters_configuration->action = GTK_BUTTON(gtk_builder_get_object(parameters_interface, "v_action")));
 	d_assert(result->informations_configuration->action = GTK_BUTTON(gtk_builder_get_object(informations_interface, "v_ok")));
+	d_assert(result->parameters_configuration->remote = GTK_ENTRY(gtk_builder_get_object(parameters_interface, "v_remote")));
 	for (index = 0; interface_informations_entries[index]; index++)
 		d_assert(result->informations_configuration->entries[index] = GTK_ENTRY(gtk_builder_get_object(informations_interface,
 						interface_informations_entries[index])));

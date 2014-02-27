@@ -47,6 +47,7 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->preferences), "activate", G_CALLBACK(p_callback_parameters_show), result);
 	g_signal_connect(G_OBJECT(result->interface->led), "activate", G_CALLBACK(p_callback_led), result);
+	g_signal_connect(G_OBJECT(result->interface->rsync), "activate", G_CALLBACK(p_callback_rsync), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_normal]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration_debug]), "toggled", G_CALLBACK(p_callback_refresh), result);
@@ -284,6 +285,8 @@ void p_callback_parameters_action(GtkWidget *widget, struct s_environment *envir
 		gtk_toggle_button_get_active(environment->interface->parameters_configuration->save_pdf);
 	environment->ladders[environment->current]->show_bad_channels =
 		gtk_toggle_button_get_active(environment->interface->parameters_configuration->show_bad_channels);
+	strncpy(environment->ladders[environment->current]->remote, gtk_entry_get_text(environment->interface->parameters_configuration->remote),
+			d_string_buffer_size);
 	environment->ladders[environment->current]->skip =
 		gtk_spin_button_get_value_as_int(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_skip]);
 	environment->ladders[environment->current]->sigma_raw_cut =
@@ -326,6 +329,7 @@ void p_callback_parameters_show(GtkWidget *widget, struct s_environment *environ
 			environment->ladders[environment->current]->save_calibration_pdf);
 	gtk_toggle_button_set_active(environment->interface->parameters_configuration->show_bad_channels,
 			environment->ladders[environment->current]->show_bad_channels);
+	gtk_entry_set_text(environment->interface->parameters_configuration->remote, environment->ladders[environment->current]->remote);
 	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_skip],
 			environment->ladders[environment->current]->skip);
 	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_raw_cut],
@@ -352,6 +356,17 @@ void p_callback_parameters_show(GtkWidget *widget, struct s_environment *environ
 
 void p_callback_led(GtkWidget *widget, struct s_environment *environment) {
 	f_ladder_led(environment->ladders[environment->current]);
+}
+
+void p_callback_rsync(GtkWidget *widget, struct s_environment *environment) {
+	GtkWidget *dialog;
+	if (f_ladder_rsync(environment->ladders[environment->current]))
+		if ((dialog = gtk_message_dialog_new(environment->interface->window, GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_INFO,
+						GTK_BUTTONS_CLOSE, "Rsync on directory '%s' is now in execution (it may requires a large amount of time)",
+						environment->ladders[environment->current]->directory))) {
+			gtk_dialog_run(GTK_DIALOG(dialog));
+			gtk_widget_destroy(GTK_WIDGET(dialog));
+		}
 }
 
 void p_callback_informations_action(GtkWidget *widget, struct s_environment *environment) {
