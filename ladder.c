@@ -605,7 +605,7 @@ int p_ladder_rsync_execution(void) {
 	FILE *stream;
 	char buffer_output[d_string_buffer_size], buffer_input[d_string_buffer_size];
 	int founded = d_false;
-	snprintf(buffer_output, d_string_buffer_size, "%s \"%s\"", d_ladder_command_grep, d_ladder_command_rsync);
+	snprintf(buffer_output, d_string_buffer_size, "%s \"%s\"", d_ladder_command_grep, d_ladder_command_search);
 	if ((stream = popen(buffer_output, "r")) != NULL) {
 		if (fgets(buffer_input, d_string_buffer_size, stream) != NULL)
 			founded = d_true;

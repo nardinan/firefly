@@ -27,7 +27,8 @@
 #define d_ladder_directory_test "test"
 #define d_ladder_directory_data "data"
 #define d_ladder_directory_draft "draft"
-#define d_ladder_command_rsync "rsync -az --exclude '*.dat' -e ssh"
+#define d_ladder_command_rsync "rsync -az --exclude *.dat -e ssh"
+#define d_ladder_command_search "rsync -ax"
 #define d_ladder_command_grep "pgrep -fl"
 #define d_ladder_trigger_internal 0x22
 #define d_ladder_trigger_external 0x11
