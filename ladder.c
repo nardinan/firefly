@@ -540,7 +540,8 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 }
 
 void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface, struct o_trbs *searcher) { d_FP;
-	unsigned char trigger = d_ladder_trigger_internal, dac = 0x00, channel = 0x00;
+	unsigned char trigger = d_ladder_trigger_internal, channel = 0x00;
+	unsigned short dac = 0;
 	enum e_trb_mode mode = e_trb_mode_normal;
 	struct o_string *name = NULL, *shadow_calibration_name;
 	struct o_stream *shadow_calibration;
