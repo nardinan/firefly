@@ -168,7 +168,7 @@ const char *interface_labels[] = {
 	"fourier_transform_signal_adc_2"
 };
 struct s_interface_key_value location_entries[] = {
-	{"PA", "Perugia - clean rooom"},
+	{"PA", "Perugia - clean room"},
 	{"PC", "Perugia - cosmic rays"},
 	{"PL", "Perugia - laboratory"},
 	{"GA", "Geneva - clean room"},
