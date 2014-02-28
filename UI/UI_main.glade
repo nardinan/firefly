@@ -762,7 +762,7 @@
                                     <property name="can_focus">False</property>
                                     <property name="xalign">0.94999998807907104</property>
                                     <property name="xpad">5</property>
-                                    <property name="label" translatable="yes">Choose a file</property>
+                                    <property name="label" translatable="yes">Choose a .cal file</property>
                                   </object>
                                 </child>
                                 <child>
@@ -1368,7 +1368,7 @@
                       <object class="GtkLabel" id="v_calibration_plot_label">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">&lt;b&gt;calibration&lt;/b&gt;</property>
+                        <property name="label" translatable="yes">&lt;b&gt;action&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </object>
                     </child>
