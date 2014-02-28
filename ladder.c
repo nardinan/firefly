@@ -422,16 +422,14 @@ void f_ladder_plot(struct s_ladder *ladder, struct s_interface *interface, struc
 
 int f_ladder_device(struct s_ladder *ladder, struct o_trb *device) { d_FP;
 	int result = d_false;
-	//while ((!result) && (usleep(d_common_timeout_device) == 0)) {
-		d_object_lock(ladder->lock);
-		if (!ladder->deviced) {
-			ladder->device = device;
-			ladder->deviced = d_true;
-			ladder->update_interface = d_true;
-			result = d_true;
-		}
-		d_object_unlock(ladder->lock);
-	//}
+	d_object_lock(ladder->lock);
+	if (!ladder->deviced) {
+		ladder->device = device;
+		ladder->deviced = d_true;
+		ladder->update_interface = d_true;
+		result = d_true;
+	}
+	d_object_unlock(ladder->lock);
 	return result;
 }
 
