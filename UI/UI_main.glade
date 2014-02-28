@@ -41,15 +41,20 @@
     </columns>
   </object>
   <object class="GtkAdjustment" id="v_dac_model">
-    <property name="upper">255</property>
+    <property name="upper">4096</property>
+    <property name="value">0</property>
     <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
+    <property name="page_increment">1</property>
   </object>
   <object class="GtkAdjustment" id="v_delay_model">
     <property name="upper">12</property>
     <property name="value">6.5999999999999996</property>
     <property name="step_increment">0.10000000000000001</property>
     <property name="page_increment">1</property>
+  </object>
+  <object class="GtkAction" id="v_preferences_action">
+    <property name="label">Preferences</property>
+    <property name="short_label">Preferences</property>
   </object>
   <object class="GtkImage" id="v_image_led">
     <property name="visible">True</property>
@@ -104,9 +109,13 @@
       </row>
     </data>
   </object>
-  <object class="GtkAction" id="v_preferences_action">
-    <property name="label">Preferences</property>
-    <property name="short_label">Preferences</property>
+  <object class="GtkListStore" id="v_quality_store">
+    <columns>
+      <!-- column-name quality -->
+      <column type="gchararray"/>
+      <!-- column-name code -->
+      <column type="gchararray"/>
+    </columns>
   </object>
   <object class="GtkWindow" id="v_main_window">
     <property name="can_focus">False</property>
@@ -2361,13 +2370,5 @@
         </child>
       </object>
     </child>
-  </object>
-  <object class="GtkListStore" id="v_quality_store">
-    <columns>
-      <!-- column-name quality -->
-      <column type="gchararray"/>
-      <!-- column-name code -->
-      <column type="gchararray"/>
-    </columns>
   </object>
 </interface>
