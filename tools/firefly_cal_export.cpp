@@ -41,7 +41,7 @@ void f_fill_histograms(struct o_string *data, struct s_calibration_charts *chart
 			if (charts->sigma)
 				charts->sigma->Fill(index, sigma[index]);
 			pedestal_mean += pedestal[index];
-			pedestal_mean_square += (pedesta[index]*pedestal[index]);
+			pedestal_mean_square += (pedestal[index]*pedestal[index]);
 			sigma_raw_mean += sigma_raw[index];
 			sigma_raw_mean_square += (sigma_raw[index]*sigma_raw[index]);
 			sigma_mean += sigma[index];
