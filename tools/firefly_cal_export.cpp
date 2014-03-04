@@ -23,11 +23,13 @@ typedef struct s_calibration_charts {
 	TPaveText *paves;
 } s_calibration_charts;
 struct s_singleton_calibration_details details;
+float pedestal_mean = 0, sigma_raw_mean = 0, sigma_mean = 0, pedestal_mean_square = 0, sigma_raw_mean_square = 0, sigma_mean_square = 0, pedestal_rms = 0,
+      sigma_raw_rms = 0, sigma_rms = 0;
 void f_fill_histograms(struct o_string *data, struct s_calibration_charts *charts) {
 	struct o_stream *stream;
 	struct s_exception *exception = NULL;
 	int index, flag[d_trb_event_channels];
-	float pedestal[d_trb_event_channels], sigma_raw[d_trb_event_channels], sigma[d_trb_event_channels];
+	float pedestal[d_trb_event_channels], sigma_raw[d_trb_event_channels], sigma[d_trb_event_channels], fraction = (1.0/(float)d_trb_event_channels);
 	d_try {
 		stream = f_stream_new_file(NULL, data, "rb", 0777);
 		f_read_calibration(stream, pedestal, sigma_raw, sigma, flag, &details);
@@ -38,7 +40,22 @@ void f_fill_histograms(struct o_string *data, struct s_calibration_charts *chart
 				charts->sigma_raw->Fill(index, sigma_raw[index]);
 			if (charts->sigma)
 				charts->sigma->Fill(index, sigma[index]);
+			pedestal_mean += pedestal[index];
+			pedestal_mean_square += (pedesta[index]*pedestal[index]);
+			sigma_raw_mean += sigma_raw[index];
+			sigma_raw_mean_square += (sigma_raw[index]*sigma_raw[index]);
+			sigma_mean += sigma[index];
+			sigma_mean_square += (sigma[index]*sigma[index]);
 		}
+		pedestal_mean *= fraction;
+		pedestal_mean_square *= fraction;
+		pedestal_rms = sqrt(fabs(pedestal_mean_square-(pedestal_mean*pedestal_mean)));
+		sigma_raw_mean *= fraction;
+		sigma_raw_mean_square *= fraction;
+		sigma_raw_rms = sqrt(fabs(sigma_raw_mean_square-(sigma_raw_mean*sigma_raw_mean)));
+		sigma_mean *= fraction;
+		sigma_mean_square *= fraction;
+		sigma_rms = sqrt(fabs(sigma_mean_square-(sigma_mean*sigma_mean)));
 		d_release(stream);
 	} d_catch(exception) {
 		d_exception_dump(stderr, exception);
@@ -79,10 +96,12 @@ int main (int argc, char *argv[]) {
 			charts.paves->SetTextSize(d_calibration_text_size);
 			snprintf(buffer, d_string_buffer_size, "Name: %s (%s)", details.name, details.date);;
 			charts.paves->AddText(buffer);
-			snprintf(buffer, d_string_buffer_size, "SNs: %s, %s", details.serials[0], details.serials[1]);
-			charts.paves->AddText(buffer);
-			snprintf(buffer, d_string_buffer_size, "Temperatures: %.01fC, %.01fC", details.temperatures[0], details.temperatures[1]);
-			charts.paves->AddText(buffer);
+			if ((d_strlen(details.serials[0]) > 0) && (d_strlen(details.serials[1]) > 0)) {
+				snprintf(buffer, d_string_buffer_size, "SNs: %s, %s", details.serials[0], details.serials[1]);
+				charts.paves->AddText(buffer);
+				snprintf(buffer, d_string_buffer_size, "Temperatures: %.01fC, %.01fC", details.temperatures[0], details.temperatures[1]);
+				charts.paves->AddText(buffer);
+			}
 			snprintf(buffer, d_string_buffer_size, "Sigma K: %.01f", details.sigma_k);
 			charts.paves->AddText(buffer);
 			snprintf(buffer, d_string_buffer_size, "Hold delay: %.01f", details.hold_delay);
@@ -95,6 +114,12 @@ int main (int argc, char *argv[]) {
 				snprintf(buffer, d_string_buffer_size, "Leakage current: %s", details.leakage);
 				charts.paves->AddText(buffer);
 			}
+			snprintf(buffer, d_string_buffer_size, "< Ped >: %.01f #pm %.01f", pedestal_mean, pedestal_rms);
+			charts.paves->AddText(buffer);
+			snprintf(buffer, d_string_buffer_size, "< #sigma_{raw} >: %.01f #pm %.01f", sigma_raw_mean, sigma_raw_rms);
+			charts.paves->AddText(buffer);
+			snprintf(buffer, d_string_buffer_size, "< #sigma >: %.01f #pm %.01f", sigma_mean, sigma_rms);
+			charts.paves->AddText(buffer);
 			f_export_histograms(output, &charts);
 		} else
 			d_log(e_log_level_ever, "Missing arguments", NULL);

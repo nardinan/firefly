@@ -18,7 +18,11 @@
 #ifndef firefly_ladder_h
 #define firefly_ladder_h
 #include <pwd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <termios.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <fftw3.h>
 #include "phys.ksu.edu/ow-functions.h"
 #include "phys.ksu.edu/dev-functions.h"
@@ -32,6 +36,8 @@
 #define d_ladder_command_grep "pgrep -fl"
 #define d_ladder_trigger_internal 0x22
 #define d_ladder_trigger_external 0x11
+#define d_ladder_value_size 8
+#define d_ladder_extension_size 3
 #define d_ladder_safe_assign(sep,res,val)\
 do{\
 	d_object_lock(sep);\
@@ -79,7 +85,7 @@ typedef struct s_ladder_command {
 typedef struct s_ladder {
 	char output[d_string_buffer_size], shadow_output[d_string_buffer_size], shadow_calibration[d_string_buffer_size], directory[d_string_buffer_size],
 	     ladder_directory[d_string_buffer_size], name[d_string_buffer_size], voltage[d_string_buffer_size], current[d_string_buffer_size],
-	     note[d_string_buffer_size], sensors[2][d_string_buffer_size], remote[d_string_buffer_size];
+	     note[d_string_buffer_size], sensors[2][d_string_buffer_size], remote[d_string_buffer_size], multimeter[d_string_buffer_size];
 	struct o_object *lock, *parameters_lock;
 	struct o_trb *device;
 	struct o_trb_event last_event;
@@ -121,6 +127,8 @@ extern int p_ladder_read_integrity(struct o_trb_event *event, unsigned char *las
 extern void p_ladder_read_calibrate(struct s_ladder *ladder);
 extern void p_ladder_read_data(struct s_ladder *ladder);
 extern void f_ladder_temperature(struct s_ladder *ladder, struct o_trbs *searcher);
+extern void p_ladder_current_analyze(struct s_ladder *ladder, const char *incoming);
+extern void f_ladder_current(struct s_ladder *ladder, time_t timeout);
 extern void f_ladder_read(struct s_ladder *ladder, time_t timeout);
 extern void p_ladder_save_calibrate(struct s_ladder *ladder);
 extern void p_ladder_load_calibrate(struct s_ladder *ladder, struct o_stream *stream);

@@ -287,6 +287,8 @@ void p_callback_parameters_action(GtkWidget *widget, struct s_environment *envir
 		gtk_toggle_button_get_active(environment->interface->parameters_configuration->show_bad_channels);
 	strncpy(environment->ladders[environment->current]->remote, gtk_entry_get_text(environment->interface->parameters_configuration->remote),
 			d_string_buffer_size);
+	strncpy(environment->ladders[environment->current]->multimeter, gtk_entry_get_text(environment->interface->parameters_configuration->multimeter),
+			d_string_buffer_size);
 	environment->ladders[environment->current]->skip =
 		gtk_spin_button_get_value_as_int(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_skip]);
 	environment->ladders[environment->current]->sigma_raw_cut =
@@ -330,6 +332,7 @@ void p_callback_parameters_show(GtkWidget *widget, struct s_environment *environ
 	gtk_toggle_button_set_active(environment->interface->parameters_configuration->show_bad_channels,
 			environment->ladders[environment->current]->show_bad_channels);
 	gtk_entry_set_text(environment->interface->parameters_configuration->remote, environment->ladders[environment->current]->remote);
+	gtk_entry_set_text(environment->interface->parameters_configuration->multimeter, environment->ladders[environment->current]->multimeter);
 	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_skip],
 			environment->ladders[environment->current]->skip);
 	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_raw_cut],
@@ -380,9 +383,10 @@ void p_callback_informations_action(GtkWidget *widget, struct s_environment *env
 	p_callback_hide_on_exit(GTK_WIDGET(environment->interface->informations_configuration->window), environment);
 }
 
-void f_informations_show(struct s_interface *interface) {
+void f_informations_show(struct s_ladder *ladder, struct s_interface *interface) {
 	gtk_entry_set_text(GTK_ENTRY(interface->informations_configuration->entries[e_interface_informations_entry_voltage]), "");
-	gtk_entry_set_text(GTK_ENTRY(interface->informations_configuration->entries[e_interface_informations_entry_current]), "");
+	gtk_entry_set_text(GTK_ENTRY(interface->informations_configuration->entries[e_interface_informations_entry_current]),
+			(d_strlen(ladder->current) > 0)?ladder->current:"");
 	gtk_entry_set_text(GTK_ENTRY(interface->informations_configuration->entries[e_interface_informations_entry_note]), "");
 	gtk_widget_show_all(GTK_WIDGET(interface->informations_configuration->window));
 	gtk_window_set_position(interface->informations_configuration->window, GTK_WIN_POS_CENTER_ON_PARENT);

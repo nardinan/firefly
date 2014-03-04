@@ -313,6 +313,7 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	d_assert(result->parameters_configuration->action = GTK_BUTTON(gtk_builder_get_object(parameters_interface, "v_action")));
 	d_assert(result->informations_configuration->action = GTK_BUTTON(gtk_builder_get_object(informations_interface, "v_ok")));
 	d_assert(result->parameters_configuration->remote = GTK_ENTRY(gtk_builder_get_object(parameters_interface, "v_remote")));
+	d_assert(result->parameters_configuration->multimeter = GTK_ENTRY(gtk_builder_get_object(parameters_interface, "v_multimeter")));
 	for (index = 0; interface_informations_entries[index]; index++)
 		d_assert(result->informations_configuration->entries[index] = GTK_ENTRY(gtk_builder_get_object(informations_interface,
 						interface_informations_entries[index])));

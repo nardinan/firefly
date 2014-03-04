@@ -46,6 +46,7 @@ void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *config
 			d_ladder_key_load_d(dictionary, save_calibration_pdf, ladder);
 			d_ladder_key_load_d(dictionary, show_bad_channels, ladder);
 			d_ladder_key_load_s(dictionary, remote, ladder);
+			d_ladder_key_load_s(dictionary, multimeter, ladder);
 			d_object_unlock(ladder->parameters_lock);
 		}
 		d_release(dictionary);
@@ -82,6 +83,7 @@ void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *config
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "save_calibration_pdf=%d\n", ladder->save_calibration_pdf));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "show_bad_channels=%d\n", ladder->show_bad_channels));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "remote=%s\n", ladder->remote));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "multimeter=%s\n", ladder->multimeter));
 			d_object_unlock(ladder->parameters_lock);
 		} d_pool_end_flush;
 		d_release(stream);
@@ -201,7 +203,106 @@ void f_ladder_temperature(struct s_ladder *ladder, struct o_trbs *searcher) { d_
 	}
 }
 
+void p_ladder_current_analyze(struct s_ladder *ladder, const char *incoming) { d_FP;
+	char value[d_ladder_value_size], extension[d_ladder_extension_size];
+	size_t pointer = 0, done;
+	int index;
+	float current = 1;
+	if ((incoming[0] == 'D') && (incoming[1] == 'C')) {
+		for (index = 2, pointer = 0, done = d_false; ((!done) && (incoming[index] != '\0')); index++) {
+			switch (incoming[index]) {
+				case '0':
+				case '1':
+				case '2':
+				case '3':
+				case '4':
+				case '5':
+				case '6':
+				case '7':
+				case '8':
+				case '9':
+				case '.':
+				case '-':
+					value[pointer++] = incoming[index];
+				case ' ':
+					break;
+				default:
+					done = d_true;
+			}
+			value[pointer] = '\0';
+		}
+		for (pointer = 0, done = d_false; ((!done) && (incoming[index] != '\0')); index++) {
+			switch (incoming[index]) {
+				case 'u':
+				case 'm':
+				case 'A':
+					extension[pointer++] = incoming[index];
+				case ' ':
+					break;
+				default:
+					done = d_true;
+			}
+			extension[pointer] = '\0';
+		}
+		if ((extension[0] == 'A') || (extension[1] == 'A')) {
+			if (extension[0] == 'u')
+				current = 1/1000;
+			else if (extension[0] == 'A')
+				current = 1000;
+			current *= atof(value);
+			snprintf(ladder->current, d_string_buffer_size, "%.01f", current);
+		}
+	}
+}
 
+void f_ladder_current(struct s_ladder *ladder, time_t timeout) { d_FP;
+	struct termios tty, old_tty;
+	int device, index = 0, readed;
+	unsigned char buffer[d_string_buffer_size], carriage[] = "\r\n", byte;
+	struct timeval current_timeval;
+	time_t begin, current;
+	memset(ladder->current, 0, d_string_buffer_size);
+	if (d_strlen(ladder->multimeter) > 0) {
+		if ((device = open(ladder->multimeter, O_RDWR|O_NOCTTY|O_NONBLOCK)) >= 0) {
+			memset(&tty, 0, sizeof(struct termios));
+			if (tcgetattr(device, &tty) == 0) {
+				old_tty = tty;
+				cfsetospeed(&tty, (speed_t)B1200);
+				cfsetospeed(&tty, (speed_t)B1200);
+				tty.c_cflag &= ~CSIZE;
+				tty.c_cflag |= CS7;
+				tty.c_cflag &= ~PARENB;
+				tty.c_cflag |= CREAD|CLOCAL|CSTOPB;
+				tty.c_cc[VMIN] = 0;
+				tty.c_cc[VTIME] = 0;
+				cfmakeraw(&tty);
+				tcflush(device, TCIFLUSH);
+				if (tcsetattr(device, TCSAFLUSH, &tty) == 0) {
+					if (write(device, carriage, sizeof(carriage)) >= 0) {
+						gettimeofday(&current_timeval, NULL);
+						begin = (current_timeval.tv_sec*1000000)+current_timeval.tv_usec;
+						do {
+							if ((readed = read(device, &byte, 1)) >= 0) {
+								byte &= 0x7f;
+								if (byte != (unsigned char)13)
+									buffer[index++] = byte;
+								else
+									break;
+							}
+							gettimeofday(&current_timeval, NULL);
+							current = (current_timeval.tv_sec*1000000)+current_timeval.tv_usec;
+						} while ((current-begin) < timeout);
+						buffer[index] = '\0';
+						if (index > 0)
+							p_ladder_current_analyze(ladder, buffer);
+					}
+					tcsetattr(device, TCSAFLUSH, &old_tty);
+				}
+			}
+			close(device);
+		}
+	}
+}
 void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 	d_object_lock(ladder->lock);
 	if ((ladder->deviced) && (ladder->device)) {
@@ -300,7 +401,7 @@ void p_ladder_analyze_finished(struct s_ladder *ladder, struct s_interface *inte
 		if (calibrated) {
 			ladder->command = e_ladder_command_stop;
 			if ((ladder->deviced) && (ladder->device))
-				f_informations_show(interface);
+				f_informations_show(ladder, interface);
 			ladder->update_interface = d_true;
 		}
 	}
@@ -374,13 +475,13 @@ void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP
 			f_chart_append_signal(charts[e_interface_alignment_fft_signal_adc_2], 0, 0, 0);
 			for (index = 0; index < d_common_data_spectrum; index++) {
 				f_chart_append_signal(charts[e_interface_alignment_fft_adc_1], 0, (index+1)*d_common_data_spectrum_step,
-					ladder->data.spectrum_adc[0][index]);
+						ladder->data.spectrum_adc[0][index]);
 				f_chart_append_signal(charts[e_interface_alignment_fft_adc_2], 0, (index+1)*d_common_data_spectrum_step,
-					ladder->data.spectrum_adc[1][index]);
+						ladder->data.spectrum_adc[1][index]);
 				f_chart_append_signal(charts[e_interface_alignment_fft_signal_adc_1], 0, (index+1)*d_common_data_spectrum_step,
-					ladder->data.spectrum_signal[0][index]);
+						ladder->data.spectrum_signal[0][index]);
 				f_chart_append_signal(charts[e_interface_alignment_fft_signal_adc_2], 0, (index+1)*d_common_data_spectrum_step,
-					ladder->data.spectrum_signal[1][index]);
+						ladder->data.spectrum_signal[1][index]);
 			}
 		} else
 			for (index = 0; index < d_trb_event_channels; index++)
@@ -579,6 +680,7 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface, 
 					name = d_string(d_string_buffer_size, "%s/%s%s", ladder->ladder_directory, ladder->output, d_common_ext_data);
 			} else {
 				f_ladder_temperature(ladder, searcher);
+				f_ladder_current(ladder, d_common_timeout_device);
 				if ((ladder->save_calibration_raw) && (d_strlen(ladder->output) > 0))
 					name = d_string(d_string_buffer_size, "%s/%s%s", ladder->ladder_directory, ladder->output,
 							d_common_ext_calibration_raw);
