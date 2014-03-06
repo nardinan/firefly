@@ -209,7 +209,7 @@ void p_ladder_current_analyze(struct s_ladder *ladder, const char *incoming) { d
 	int index;
 	float current = 1;
 	if ((incoming[0] == 'D') && (incoming[1] == 'C')) {
-		for (index = 2, pointer = 0, done = d_false; ((!done) && (incoming[index] != '\0')); index++) {
+		for (index = 2, pointer = 0, done = d_false; ((!done) && (incoming[index] != '\0'));) {
 			switch (incoming[index]) {
 				case '0':
 				case '1':
@@ -230,8 +230,10 @@ void p_ladder_current_analyze(struct s_ladder *ladder, const char *incoming) { d
 					done = d_true;
 			}
 			value[pointer] = '\0';
+			if (!done)
+				index++;
 		}
-		for (pointer = 0, done = d_false; ((!done) && (incoming[index] != '\0')); index++) {
+		for (pointer = 0, done = d_false; ((!done) && (incoming[index] != '\0'));) {
 			switch (incoming[index]) {
 				case 'u':
 				case 'm':
@@ -243,14 +245,16 @@ void p_ladder_current_analyze(struct s_ladder *ladder, const char *incoming) { d
 					done = d_true;
 			}
 			extension[pointer] = '\0';
+			if (!done)
+				index++;
 		}
 		if ((extension[0] == 'A') || (extension[1] == 'A')) {
 			if (extension[0] == 'u')
-				current = 1/1000;
+				current = 1.0f/1000.0f;
 			else if (extension[0] == 'A')
-				current = 1000;
+				current = 1000.0f;
 			current *= atof(value);
-			snprintf(ladder->current, d_string_buffer_size, "%.01f", current);
+			snprintf(ladder->current, d_string_buffer_size, "%.02f", current);
 		}
 	}
 }
