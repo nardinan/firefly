@@ -250,9 +250,11 @@ void p_ladder_current_analyze(struct s_ladder *ladder, const char *incoming) { d
 		}
 		if ((extension[0] == 'A') || (extension[1] == 'A')) {
 			if (extension[0] == 'u')
-				current = 1.0f/1000.0f;
-			else if (extension[0] == 'A')
+				current = 1f;
+			else if (extension[0] == 'm')
 				current = 1000.0f;
+			else if (extension[0] == 'A')
+				current = 1000000.0f;
 			current *= atof(value);
 			snprintf(ladder->current, d_string_buffer_size, "%.02f", current);
 		}
