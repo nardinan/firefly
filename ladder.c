@@ -250,7 +250,7 @@ void p_ladder_current_analyze(struct s_ladder *ladder, const char *incoming) { d
 		}
 		if ((extension[0] == 'A') || (extension[1] == 'A')) {
 			if (extension[0] == 'u')
-				current = 1f;
+				current = 1.0f;
 			else if (extension[0] == 'm')
 				current = 1000.0f;
 			else if (extension[0] == 'A')
@@ -606,7 +606,6 @@ void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *inte
 
 void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
 	time_t current_time = time(NULL);
-	int index;
 	ladder->readed_events = 0;
 	ladder->damaged_events = 0;
 	ladder->last_readed_events = 0;
