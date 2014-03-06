@@ -616,9 +616,6 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 	memset(ladder->data.occupancy, 0, (sizeof(int)*d_trb_event_channels));
 	memset(ladder->current, 0, (sizeof(char)*d_string_buffer_size));
 	memset(ladder->voltage, 0, (sizeof(char)*d_string_buffer_size));
-	memset(ladder->voltage, 0, (sizeof(char)*d_string_buffer_size));
-	for (index = 0; index != e_interface_informations_entry_NULL; index++)
-		gtk_entry_set_text(interface->informations_configuration->entries[index], "");
 	d_object_unlock(ladder->data.lock);
 	if (gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_action])) {
 		f_interface_clean_data(interface->charts);

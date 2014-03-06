@@ -390,7 +390,6 @@ void f_informations_show(struct s_ladder *ladder, struct s_interface *interface)
 	gtk_entry_set_text(GTK_ENTRY(interface->informations_configuration->entries[e_interface_informations_entry_note]), "");
 	gtk_widget_show_all(GTK_WIDGET(interface->informations_configuration->window));
 	gtk_window_set_position(interface->informations_configuration->window, GTK_WIN_POS_CENTER_ON_PARENT);
-	gtk_window_present(interface->informations_configuration->window);
 	gtk_window_set_keep_above(interface->informations_configuration->window, TRUE);
 }
 
