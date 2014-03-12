@@ -180,12 +180,26 @@ int f_step_interface(struct s_environment *environment, time_t current_time) { d
 }
 
 int f_step_progress(struct s_environment *environment, time_t current_time) { d_FP;
-	int readed;
+	int readed, automation;
 	float fraction = 0.0;
 	time_t total_time, elpased_time;
+	char description[d_string_buffer_size];
+	if ((automation = f_ladder_run_action(environment->ladders[environment->current], environment->interface, environment))) {
+		if (d_strlen(environment->ladders[environment->current]->action[environment->ladders[environment->current]->action_pointer].label) > 0)
+			snprintf(description, d_string_buffer_size, "Running automation [%d:%s]", environment->ladders[environment->current]->action_pointer,
+					environment->ladders[environment->current]->action[environment->ladders[environment->current]->action_pointer].label);
+		else
+			snprintf(description, d_string_buffer_size, "Running automation [%d]", environment->ladders[environment->current]->action_pointer);
+		gtk_label_set_text(environment->interface->labels[e_interface_label_status], description);
+	} else
+		gtk_label_set_text(environment->interface->labels[e_interface_label_status], NULL);
 	switch (environment->ladders[environment->current]->command) {
 		case e_ladder_command_stop:
-			gtk_progress_bar_set_text(environment->interface->progress_bar, "IDLE");
+			if ((automation) && (environment->ladders[environment->current]->action[environment->ladders[environment->current]->action_pointer].
+						command == e_ladder_command_sleep))
+				gtk_progress_bar_set_text(environment->interface->progress_bar, "SLEEPING");
+			else
+				gtk_progress_bar_set_text(environment->interface->progress_bar, "IDLE");
 			break;
 		case e_ladder_command_data:
 			gtk_progress_bar_set_text(environment->interface->progress_bar, "DATA (manual)");

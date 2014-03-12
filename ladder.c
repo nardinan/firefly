@@ -698,14 +698,14 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface, 
 	d_object_unlock(ladder->lock);
 }
 
-void f_ladder_led(struct s_ladder *ladder) {
+void f_ladder_led(struct s_ladder *ladder) { d_FP;
 	d_object_lock(ladder->lock);
 	if ((ladder->deviced) && (ladder->device))
 		ladder->device->m_led(ladder->device, d_common_timeout);
 	d_object_unlock(ladder->lock);
 }
 
-int p_ladder_rsync_execution(void) {
+int p_ladder_rsync_execution(void) { d_FP;
 	FILE *stream;
 	char buffer_output[d_string_buffer_size], buffer_input[d_string_buffer_size];
 	int founded = d_false;
@@ -718,7 +718,7 @@ int p_ladder_rsync_execution(void) {
 	return founded;
 }
 
-int f_ladder_rsync(struct s_ladder *ladder) {
+int f_ladder_rsync(struct s_ladder *ladder) { d_FP;
 	char buffer_output[d_string_buffer_size];
 	int result = d_false;
 	d_object_lock(ladder->lock);
@@ -726,9 +726,87 @@ int f_ladder_rsync(struct s_ladder *ladder) {
 		if (d_strlen(ladder->remote) > 0) {
 			snprintf(buffer_output, d_string_buffer_size, "%s \"%s/\" %s < /dev/null &", d_ladder_command_rsync, ladder->directory,
 					ladder->remote);
-			if (system(buffer_output) >= 0)
+			if (system(buffer_output) == 0)
 				result = d_true;
 		}
 	d_object_unlock(ladder->lock);
 	return result;
 }
+
+int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, struct s_environment *environment) { d_FP;
+	time_t elpased;
+	int result = d_true, finished = d_false, deviced = d_false, index;
+	d_object_lock(ladder->lock);
+		if ((ladder->deviced) && (ladder->device))
+			deviced = d_true;
+	d_object_unlock(ladder->lock);
+	if ((deviced) && (ladder->action[ladder->action_pointer].initialized)) {
+		if (ladder->action[ladder->action_pointer].starting > 0) {
+			if (ladder->action[ladder->action_pointer].command == e_ladder_command_calibration) {
+				if (ladder->command == e_ladder_command_stop) {
+					p_callback_informations_action((GtkWidget *)interface->informations_configuration->window, environment);
+					finished = d_true;
+				}
+			} else if ((elpased = time(NULL)-ladder->action[ladder->action_pointer].starting) >= ladder->action[ladder->action_pointer].duration)
+				finished = d_true;
+			if (finished) {
+				gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_action], d_false);
+				if ((d_strlen(ladder->action[ladder->action_pointer].destination) > 0) &&
+						((--ladder->action[ladder->action_pointer].counter) > 0)) {
+					ladder->action[ladder->action_pointer].starting = 0;
+					for (index = (ladder->action_pointer-1); index >= 0; index--) {
+						ladder->action[index].initialized = d_true;
+						ladder->action[index].starting = 0;
+						ladder->action[index].counter = ladder->action[index].original_counter;
+						if ((d_strlen(ladder->action[index].label) > 0) &&
+								(d_strcmp(ladder->action[index].label,
+									  ladder->action[ladder->action_pointer].destination) == 0)) {
+							ladder->action_pointer = index;
+							break;
+						}
+					}
+				} else {
+					ladder->action[ladder->action_pointer].initialized = d_false;
+					if ((++ladder->action_pointer) >= d_ladder_actions)
+						ladder->action_pointer = 0;
+				}
+			}
+		} else {
+			ladder->action[ladder->action_pointer].starting = time(NULL);
+			if (ladder->action[ladder->action_pointer].command != e_ladder_command_sleep) {
+				if (ladder->action[ladder->action_pointer].write)
+					gtk_toggle_button_set_active(interface->switches[e_interface_switch_public], d_true);
+				else
+					gtk_toggle_button_set_active(interface->switches[e_interface_switch_public], d_false);
+				switch (ladder->action[ladder->action_pointer].mode) {
+					case e_trb_mode_normal:
+						gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_normal], d_true);
+						break;
+					case e_trb_mode_calibration:
+						gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_calibration], d_true);
+						break;
+					case e_trb_mode_calibration_debug_digital:
+						gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_calibration_debug], d_true);
+				}
+				gtk_spin_button_set_value(interface->spins[e_interface_spin_dac], ladder->action[ladder->action_pointer].dac);
+				gtk_spin_button_set_value(interface->spins[e_interface_spin_channel], ladder->action[ladder->action_pointer].channel);
+				if (ladder->action[ladder->action_pointer].trigger)
+					gtk_toggle_button_set_active(interface->switches[e_interface_switch_internal], d_true);
+				else
+					gtk_toggle_button_set_active(interface->switches[e_interface_switch_internal], d_false);
+				gtk_spin_button_set_value(interface->spins[e_interface_spin_delay], ladder->action[ladder->action_pointer].hold_delay);
+				if (ladder->action[ladder->action_pointer].command == e_ladder_command_calibration)
+					gtk_toggle_button_set_active(interface->switches[e_interface_switch_calibration], d_true);
+				else
+					gtk_toggle_button_set_active(interface->switches[e_interface_switch_calibration], d_false);
+				gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_action], d_true);
+			} else
+				ladder->command = e_ladder_command_stop;
+		}
+	} else {
+		ladder->action_pointer = 0;
+		result = d_false;
+	}
+	return result;
+}
+

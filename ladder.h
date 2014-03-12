@@ -37,7 +37,9 @@
 #define d_ladder_trigger_internal 0x22
 #define d_ladder_trigger_external 0x11
 #define d_ladder_value_size 8
+#define d_ladder_action_label_size 8
 #define d_ladder_extension_size 3
+#define d_ladder_actions 32
 #define d_ladder_safe_assign(sep,res,val)\
 do{\
 	d_object_lock(sep);\
@@ -69,19 +71,22 @@ typedef enum e_ladder_commands {
         e_ladder_command_stop = 0,
         e_ladder_command_calibration,
         e_ladder_command_data,
-        e_ladder_command_automatic
+        e_ladder_command_automatic,
+	e_ladder_command_sleep
 } e_ladder_commands;
 typedef struct s_ladder_histogram_value {
 	int value, occurrence, filled;
 } s_ladder_histogram_value;
-/* TODO: this structure contain a single command */
-typedef struct s_ladder_command {
-	unsigned char DAC, channel, trigger;
-	int kind, assembly_line, quality_id, serial, position;
-	enum e_ladder_commands command;
+typedef struct s_ladder_action {
+	char label[d_ladder_action_label_size], destination[d_ladder_action_label_size];
+	unsigned short dac;
+	unsigned char channel, trigger;
 	float hold_delay;
+	enum e_ladder_commands command;
+	enum e_trb_mode mode;
 	time_t duration, starting;
-} s_ladder_command;
+	int write, initialized, counter, original_counter;
+} s_ladder_action;
 typedef struct s_ladder {
 	char output[d_string_buffer_size], shadow_output[d_string_buffer_size], shadow_calibration[d_string_buffer_size], directory[d_string_buffer_size],
 	     ladder_directory[d_string_buffer_size], name[d_string_buffer_size], voltage[d_string_buffer_size], current[d_string_buffer_size],
@@ -94,9 +99,10 @@ typedef struct s_ladder {
 	long long last_readed_time;
 	unsigned int last_readed_events, readed_events, damaged_events, event_size, listening_channel, location_pointer, skip, to_skip;
 	unsigned char last_readed_kind, last_readed_code;
-	int evented, deviced, stopped, update_interface, save_calibration_raw, save_calibration_pdf, show_bad_channels;
+	int evented, deviced, stopped, update_interface, save_calibration_raw, save_calibration_pdf, show_bad_channels, action_pointer;
 	float hertz, last_hold_delay, sigma_raw_cut, sigma_raw_noise_cut_bottom, sigma_raw_noise_cut_top, sigma_k, sigma_cut, sigma_noise_cut_bottom,
 	      sigma_noise_cut_top, occupancy_k;
+	struct s_ladder_action action[d_ladder_actions];
 	pthread_t analyze_thread;
 	struct {
 		struct o_object *lock, *write_lock;
@@ -118,6 +124,7 @@ typedef struct s_ladder {
 		int computed;
 	} data;
 } s_ladder;
+struct s_environment;
 extern owDevice v_temperature[MAX_DEVICES];
 extern unsigned int v_sensors;
 extern void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *configuration);
@@ -144,5 +151,6 @@ extern void f_ladder_configure(struct s_ladder *ladder, struct s_interface *inte
 extern void f_ladder_led(struct s_ladder *ladder);
 extern int p_ladder_rsync_execution(void);
 extern int f_ladder_rsync(struct s_ladder *ladder);
+extern int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, struct s_environment *environment);
 #endif
 
