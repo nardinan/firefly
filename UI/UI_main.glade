@@ -209,6 +209,14 @@
                         <property name="use_stock">False</property>
                       </object>
                     </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="v_utils_automator">
+                        <property name="label" translatable="yes">automator</property>
+                        <property name="visible">True</property>
+                        <property name="image">image1</property>
+                        <property name="use_stock">False</property>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>
@@ -441,6 +449,7 @@
                         <child>
                           <object class="GtkVBox" id="v_mode_grid">
                             <property name="visible">True</property>
+                            <property name="orientation">vertical</property>
                             <child>
                               <object class="GtkRadioButton" id="v_mode_normal">
                                 <property name="label" translatable="yes">Normal</property>
@@ -580,6 +589,7 @@
                         <child>
                           <object class="GtkVBox" id="v_trigger_grid">
                             <property name="visible">True</property>
+                            <property name="orientation">vertical</property>
                             <child>
                               <object class="GtkToggleButton" id="v_internal">
                                 <property name="label" translatable="yes">Internal (50Hz)</property>
@@ -653,6 +663,7 @@
                         <child>
                           <object class="GtkVBox" id="v_parameters_grid">
                             <property name="visible">True</property>
+                            <property name="orientation">vertical</property>
                             <child>
                               <object class="GtkToggleButton" id="v_calibration">
                                 <property name="label" translatable="yes">Do calibration</property>
@@ -2115,5 +2126,9 @@
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="stock">gtk-media-next</property>
   </object>
 </interface>

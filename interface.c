@@ -228,6 +228,7 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	d_assert(result->preferences = GTK_MENU_ITEM(gtk_builder_get_object(main_interface, "v_edit_preferences")));
 	d_assert(result->led = GTK_MENU_ITEM(gtk_builder_get_object(main_interface, "v_utils_led")));
 	d_assert(result->rsync = GTK_MENU_ITEM(gtk_builder_get_object(main_interface, "v_utils_rsync")));
+	d_assert(result->automator = GTK_MENU_ITEM(gtk_builder_get_object(main_interface, "v_utils_automator")));
 	for (index = 0; interface_switches[index]; index++)
 		d_assert(result->switches[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(main_interface, interface_switches[index])));
 	for (index = 0; interface_scale_switches[index]; index++)

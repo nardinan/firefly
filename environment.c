@@ -48,6 +48,7 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	g_signal_connect(G_OBJECT(result->interface->preferences), "activate", G_CALLBACK(p_callback_parameters_show), result);
 	g_signal_connect(G_OBJECT(result->interface->led), "activate", G_CALLBACK(p_callback_led), result);
 	g_signal_connect(G_OBJECT(result->interface->rsync), "activate", G_CALLBACK(p_callback_rsync), result);
+	g_signal_connect(G_OBJECT(result->interface->automator), "activate", G_CALLBACK(p_callback_automator), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_normal]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration_debug]), "toggled", G_CALLBACK(p_callback_refresh), result);
@@ -371,6 +372,33 @@ void p_callback_rsync(GtkWidget *widget, struct s_environment *environment) {
 			gtk_widget_destroy(GTK_WIDGET(dialog));
 		}
 }
+
+void p_callback_automator(GtkWidget *widget, struct s_environment *environment) {
+	GtkWidget *dialog_window;
+	struct s_exception *exception = NULL;
+	struct o_string *path;
+	struct o_stream *stream;
+	d_try {
+		if ((dialog_window = gtk_file_chooser_dialog_new("Open automator file", environment->interface->window, GTK_FILE_CHOOSER_ACTION_OPEN,
+						GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT, NULL))) {
+			if (gtk_dialog_run(GTK_DIALOG(dialog_window)) == GTK_RESPONSE_ACCEPT) {
+				if ((path = d_string(d_string_buffer_size, gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog_window))))) {
+					if ((stream = f_stream_new_file(NULL, path, "r", 0777))) {
+						f_ladder_load_actions(environment->ladders[environment->current], stream);
+						d_release(stream);
+					}
+					d_release(path);
+				} else
+					d_die(d_error_malloc);
+			}
+			gtk_widget_destroy(dialog_window);
+		}
+	} d_catch(exception) {
+		d_exception_dump(stderr, exception);
+		d_raise;
+	} d_endtry;
+}
+
 
 void p_callback_informations_action(GtkWidget *widget, struct s_environment *environment) {
 	snprintf(environment->ladders[environment->current]->voltage, d_string_buffer_size, "%s",

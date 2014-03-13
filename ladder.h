@@ -40,6 +40,7 @@
 #define d_ladder_action_label_size 8
 #define d_ladder_extension_size 3
 #define d_ladder_actions 32
+#define d_ladder_action_reset "[NEW]"
 #define d_ladder_safe_assign(sep,res,val)\
 do{\
 	d_object_lock(sep);\
@@ -74,18 +75,32 @@ typedef enum e_ladder_commands {
         e_ladder_command_automatic,
 	e_ladder_command_sleep
 } e_ladder_commands;
+typedef enum e_ladder_automators {
+	e_ladder_automator_name = 0,
+	e_ladder_automator_dac,
+	e_ladder_automator_channel,
+	e_ladder_automator_trigger,
+	e_ladder_automator_hold_delay,
+	e_ladder_automator_command,
+	e_ladder_automator_mode,
+	e_ladder_automator_duration,
+	e_ladder_automator_write,
+	e_ladder_automator_goto,
+	e_ladder_automator_steps,
+	e_ladder_automator_NULL
+} e_ladder_automators;
 typedef struct s_ladder_histogram_value {
 	int value, occurrence, filled;
 } s_ladder_histogram_value;
 typedef struct s_ladder_action {
 	char label[d_ladder_action_label_size], destination[d_ladder_action_label_size];
 	unsigned short dac;
-	unsigned char channel, trigger;
+	unsigned char channel, trigger, write, initialized;
 	float hold_delay;
 	enum e_ladder_commands command;
 	enum e_trb_mode mode;
 	time_t duration, starting;
-	int write, initialized, counter, original_counter;
+	int counter, original_counter;
 } s_ladder_action;
 typedef struct s_ladder {
 	char output[d_string_buffer_size], shadow_output[d_string_buffer_size], shadow_calibration[d_string_buffer_size], directory[d_string_buffer_size],
@@ -152,5 +167,6 @@ extern void f_ladder_led(struct s_ladder *ladder);
 extern int p_ladder_rsync_execution(void);
 extern int f_ladder_rsync(struct s_ladder *ladder);
 extern int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, struct s_environment *environment);
+extern void f_ladder_load_actions(struct s_ladder *ladder, struct o_stream *stream);
 #endif
 

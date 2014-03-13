@@ -170,7 +170,7 @@ typedef struct s_interface {
 	GtkBuilder *interface;
 	GtkWindow *window;
 	GtkLabel *labels[e_interface_label_NULL], *connected_label;
-	GtkMenuItem *preferences, *led, *rsync;
+	GtkMenuItem *preferences, *led, *rsync, *automator;
 	GtkCheckMenuItem *test_modes[e_interface_test_toggle_NULL];
 	GtkToggleButton *switches[e_interface_switch_NULL], *toggles[e_interface_toggle_NULL];
 	GtkSpinButton *spins[e_interface_spin_NULL], *bucket_spins[e_interface_bucket_spin_NULL];
