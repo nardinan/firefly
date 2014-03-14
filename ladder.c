@@ -834,12 +834,11 @@ void f_ladder_load_actions(struct s_ladder *ladder, struct o_stream *stream) {
 		memset(ladder->action, 0, (d_ladder_actions*sizeof(struct s_ladder_action)));
 		while ((readed_buffer = stream->m_read_line(stream, buffer, d_string_buffer_size))) {
 			if (d_strcmp(readed_buffer->content, d_ladder_action_reset) == 0) {
-				if ((++current_action) < d_ladder_actions)
-					ladder->action[current_action].initialized = d_true;
-				else
+				if ((++current_action) >= d_ladder_actions)
 					break;
 			} else if ((elements = readed_buffer->m_split(readed_buffer, '='))) {
-				if (elements->filled == 2)
+				if (elements->filled == 2) {
+					ladder->action[current_action].initialized = d_true;
 					if ((key = (struct o_string *)elements->m_get(elements, 0)) &&
 							(singleton = (struct o_string *)elements->m_get(elements, 1))) {
 						current_key = e_ladder_automator_NULL;
@@ -900,6 +899,7 @@ void f_ladder_load_actions(struct s_ladder *ladder, struct o_stream *stream) {
 								d_log(e_log_level_ever, "wrong key: %s", key->content);
 						}
 					}
+				}
 				d_release(elements);
 			}
 		}

@@ -6,6 +6,7 @@ write=T
 trigger=T
 [NEW]
 label=SLEEP
+command=S
 duration=15
 [NEW]
 label=DAT
@@ -18,5 +19,6 @@ duration=1800
 [NEW]
 label=AGAIN
 destination=CALI
+command=S
 duration=15
 counter=20
