@@ -772,6 +772,8 @@ int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, 
 				}
 			}
 		} else {
+			if (ladder->action_pointer == 0)
+				f_jobs_show(ladder, interface);
 			ladder->action[ladder->action_pointer].starting = time(NULL);
 			if (ladder->action[ladder->action_pointer].command != e_ladder_command_sleep) {
 				if (ladder->action[ladder->action_pointer].write)

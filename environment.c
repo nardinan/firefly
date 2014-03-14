@@ -16,34 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "environment.h"
-struct s_environment *f_environment_new(struct s_environment *supplied, const char *builder_main_path, const char *builder_scale_path,
-		const char *builder_parameters_path, const char *builder_informations_path) { d_FP;
-	GtkBuilder *main_builder, *scale_builder, *parameters_builder, *informations_builder;
-	struct s_environment *result = supplied;
+void p_environment_new_main_hook(struct s_environment *result) {
 	struct s_environment_parameters *parameters;
 	int index;
-	if (!result)
-		if (!(result = (struct s_environment *) d_calloc(sizeof(struct s_environment), 1)))
-			d_die(d_error_malloc);
-	result->lock = f_object_new_pure(NULL);
-	d_object_lock(result->lock);
-	d_assert(main_builder = gtk_builder_new());
-	d_assert(scale_builder = gtk_builder_new());
-	d_assert(parameters_builder = gtk_builder_new());
-	d_assert(informations_builder = gtk_builder_new());
-	d_assert(gtk_builder_add_from_file(main_builder, builder_main_path, NULL));
-	d_assert(gtk_builder_add_from_file(scale_builder, builder_scale_path, NULL));
-	d_assert(gtk_builder_add_from_file(parameters_builder, builder_parameters_path, NULL));
-	d_assert(gtk_builder_add_from_file(informations_builder, builder_informations_path, NULL));
-	d_assert(result->ladders[result->current] = f_ladder_new(NULL, NULL));
-	d_assert(result->interface = f_interface_new(NULL, main_builder, scale_builder, parameters_builder, informations_builder));
-	f_interface_update_configuration(result->interface, result->ladders[result->current]->deviced);
 	g_signal_connect(G_OBJECT(result->interface->files[e_interface_file_calibration]), "file-set", G_CALLBACK(p_callback_calibration), result);
 	g_signal_connect(G_OBJECT(result->interface->window), "delete-event", G_CALLBACK(p_callback_exit), result);
 	g_signal_connect(G_OBJECT(result->interface->window), "expose-event", G_CALLBACK(p_callback_start), result);
-	g_signal_connect(G_OBJECT(result->interface->scale_configuration->window), "delete-event", G_CALLBACK(p_callback_hide_on_exit), result);
-	g_signal_connect(G_OBJECT(result->interface->parameters_configuration->window), "delete-event", G_CALLBACK(p_callback_hide_on_exit), result);
-	g_signal_connect(G_OBJECT(result->interface->informations_configuration->window), "delete-event", G_CALLBACK(p_callback_hide_on_exit), result);
 	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->preferences), "activate", G_CALLBACK(p_callback_parameters_show), result);
 	g_signal_connect(G_OBJECT(result->interface->led), "activate", G_CALLBACK(p_callback_led), result);
@@ -62,9 +40,6 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	g_signal_connect(G_OBJECT(result->interface->combo_charts), "changed", G_CALLBACK(p_callback_change_chart), result);
 	g_signal_connect(G_OBJECT(result->interface->combos[e_interface_combo_kind]), "changed", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->notebook), "switch-page", G_CALLBACK(p_callback_change_page), result);
-	g_signal_connect(G_OBJECT(result->interface->scale_configuration->action), "clicked", G_CALLBACK(p_callback_scale_action), result);
-	g_signal_connect(G_OBJECT(result->interface->scale_configuration->export_csv), "clicked", G_CALLBACK(p_callback_scale_export_csv), result);
-	g_signal_connect(G_OBJECT(result->interface->scale_configuration->export_png), "clicked", G_CALLBACK(p_callback_scale_export_png), result);
 	for (index = 0; index < e_interface_alignment_NULL; index++) {
 		if ((parameters = (struct s_environment_parameters *) d_calloc(sizeof(struct s_environment_parameters), 1))) {
 			parameters->environment = result;
@@ -75,8 +50,57 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 		} else
 			d_die(d_error_malloc);
 	}
+}
+
+void p_environment_new_scale_hook(struct s_environment *result) {
+	g_signal_connect(G_OBJECT(result->interface->scale_configuration->window), "delete-event", G_CALLBACK(p_callback_hide_on_exit), result);
+	g_signal_connect(G_OBJECT(result->interface->scale_configuration->action), "clicked", G_CALLBACK(p_callback_scale_action), result);
+	g_signal_connect(G_OBJECT(result->interface->scale_configuration->export_csv), "clicked", G_CALLBACK(p_callback_scale_export_csv), result);
+	g_signal_connect(G_OBJECT(result->interface->scale_configuration->export_png), "clicked", G_CALLBACK(p_callback_scale_export_png), result);
+}
+
+void p_environment_new_parameters_hook(struct s_environment *result) {
+	g_signal_connect(G_OBJECT(result->interface->parameters_configuration->window), "delete-event", G_CALLBACK(p_callback_hide_on_exit), result);
 	g_signal_connect(G_OBJECT(result->interface->parameters_configuration->action), "clicked", G_CALLBACK(p_callback_parameters_action), result);
+}
+
+void p_environment_new_informations_hook(struct s_environment *result) {
+	g_signal_connect(G_OBJECT(result->interface->informations_configuration->window), "delete-event", G_CALLBACK(p_callback_hide_on_exit), result);
 	g_signal_connect(G_OBJECT(result->interface->informations_configuration->action), "clicked", G_CALLBACK(p_callback_informations_action), result);
+}
+
+void p_environment_new_jobs_hook(struct s_environment *result) {
+	g_signal_connect(G_OBJECT(result->interface->jobs_configuration->window), "delete-event", G_CALLBACK(p_callback_hide_on_exit), result);
+	g_signal_connect(G_OBJECT(result->interface->jobs_configuration->action), "clicked", G_CALLBACK(p_callback_jobs_action), result);
+}
+
+struct s_environment *f_environment_new(struct s_environment *supplied, const char *builder_main_path, const char *builder_scale_path,
+		const char *builder_parameters_path, const char *builder_informations_path, const char *builder_jobs_path) { d_FP;
+	GtkBuilder *main_builder, *scale_builder, *parameters_builder, *informations_builder, *jobs_builder;
+	struct s_environment *result = supplied;
+	if (!result)
+		if (!(result = (struct s_environment *) d_calloc(sizeof(struct s_environment), 1)))
+			d_die(d_error_malloc);
+	result->lock = f_object_new_pure(NULL);
+	d_object_lock(result->lock);
+	d_assert(main_builder = gtk_builder_new());
+	d_assert(scale_builder = gtk_builder_new());
+	d_assert(parameters_builder = gtk_builder_new());
+	d_assert(informations_builder = gtk_builder_new());
+	d_assert(jobs_builder = gtk_builder_new());
+	d_assert(gtk_builder_add_from_file(main_builder, builder_main_path, NULL));
+	d_assert(gtk_builder_add_from_file(scale_builder, builder_scale_path, NULL));
+	d_assert(gtk_builder_add_from_file(parameters_builder, builder_parameters_path, NULL));
+	d_assert(gtk_builder_add_from_file(informations_builder, builder_informations_path, NULL));
+	d_assert(gtk_builder_add_from_file(jobs_builder, builder_jobs_path, NULL));
+	d_assert(result->ladders[result->current] = f_ladder_new(NULL, NULL));
+	d_assert(result->interface = f_interface_new(NULL, main_builder, scale_builder, parameters_builder, informations_builder, jobs_builder));
+	f_interface_update_configuration(result->interface, result->ladders[result->current]->deviced);
+	p_environment_new_main_hook(result);
+	p_environment_new_scale_hook(result);
+	p_environment_new_parameters_hook(result);
+	p_environment_new_informations_hook(result);
+	p_environment_new_jobs_hook(result);
 	d_assert(result->searcher = f_trbs_new(NULL));
 	result->searcher->m_async_search(result->searcher, p_callback_incoming_device, d_common_timeout_device, (void *)result);
 	return result;
@@ -411,6 +435,17 @@ void p_callback_informations_action(GtkWidget *widget, struct s_environment *env
 	p_callback_hide_on_exit(GTK_WIDGET(environment->interface->informations_configuration->window), environment);
 }
 
+void p_callback_jobs_action(GtkWidget *widget, struct s_environment *environment) {
+	int index = 0;
+	gtk_toggle_button_set_active(environment->interface->toggles[e_interface_toggle_action], d_false);
+	environment->ladders[environment->current]->action_pointer = 0;
+	for (index = 0; index < d_ladder_actions; index++) {
+		environment->ladders[environment->current]->action[index].initialized = d_false;
+		environment->ladders[environment->current]->action[index].starting = 0;
+	}
+	p_callback_hide_on_exit(GTK_WIDGET(environment->interface->jobs_configuration->window), environment);
+}
+
 void f_informations_show(struct s_ladder *ladder, struct s_interface *interface) {
 	gtk_entry_set_text(GTK_ENTRY(interface->informations_configuration->entries[e_interface_informations_entry_voltage]), "");
 	gtk_entry_set_text(GTK_ENTRY(interface->informations_configuration->entries[e_interface_informations_entry_current]),
@@ -421,3 +456,8 @@ void f_informations_show(struct s_ladder *ladder, struct s_interface *interface)
 	gtk_window_set_keep_above(interface->informations_configuration->window, TRUE);
 }
 
+void f_jobs_show(struct s_ladder *ladder, struct s_interface *interface) {
+	gtk_widget_show_all(GTK_WIDGET(interface->jobs_configuration->window));
+	gtk_window_set_position(interface->jobs_configuration->window, GTK_WIN_POS_CENTER_ON_PARENT);
+	gtk_window_set_keep_above(interface->jobs_configuration->window, TRUE);
+}

@@ -3,7 +3,7 @@
   <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy project-wide -->
   <object class="GtkDialog" id="v_dialog">
-    <property name="border_width">5</property>
+    <property name="border_width">10</property>
     <property name="title" translatable="yes">Parameters</property>
     <property name="window_position">center</property>
     <property name="type_hint">normal</property>
@@ -15,6 +15,29 @@
         <property name="visible">True</property>
         <property name="orientation">vertical</property>
         <property name="spacing">2</property>
+        <child>
+          <object class="GtkLabel" id="v_disclaimer">
+            <property name="visible">True</property>
+            <property name="label" translatable="yes">Please, take a moment to fill this informations table.
+All of these data will be placed in the calibration file 
+in a human-readable format and they will be used
+to keep track of the conditions of these tests.</property>
+            <property name="justify">center</property>
+          </object>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHSeparator" id="v_separator_top">
+            <property name="visible">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="padding">5</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
         <child>
           <object class="GtkVBox" id="v_content_grid">
             <property name="visible">True</property>
@@ -97,13 +120,23 @@
               </packing>
             </child>
             <child>
+              <object class="GtkHSeparator" id="v_separator_bottom">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="padding">5</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkLabel" id="v_note_label">
                 <property name="visible">True</property>
                 <property name="xalign">0</property>
                 <property name="label" translatable="yes">Note</property>
               </object>
               <packing>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
             </child>
             <child>
@@ -118,7 +151,7 @@
             </child>
           </object>
           <packing>
-            <property name="position">1</property>
+            <property name="position">3</property>
           </packing>
         </child>
         <child internal-child="action_area">

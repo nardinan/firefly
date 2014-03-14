@@ -25,6 +25,7 @@ const char *interface_labels[] = {
 	"v_temp1",
 	"v_temp2",
 	"v_status_label",
+	"v_jobs_label",
 	NULL
 }, *interface_switches[] = {
 	"v_public",
@@ -193,8 +194,74 @@ struct s_interface_key_value location_entries[] = {
 	{NULL, NULL}
 };
 const char test_entries[] = {0x00, 'a', 'b', 'c'};
+void p_interface_new_scale(struct s_interface *result, GtkBuilder *scale_interface) {
+	int index;
+	if (!result->scale_configuration)
+		if (!(result->scale_configuration = (struct s_interface_scale *) d_calloc(sizeof(struct s_interface_scale), 1)))
+			d_die(d_error_malloc);
+	d_assert(result->scale_configuration->interface = scale_interface);
+	d_assert(result->scale_configuration->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(scale_interface), "v_scale_window")));
+	for (index = 0; interface_scale_switches[index]; index++)
+		d_assert(result->scale_configuration->switches[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(scale_interface,
+						interface_scale_switches[index])));
+	for (index = 0; interface_scale_spins[index]; index++)
+		d_assert(result->scale_configuration->spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(scale_interface, interface_scale_spins[index])));
+	d_assert(result->scale_configuration->action = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_action")));
+	d_assert(result->scale_configuration->export_csv = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_export_CSV")));
+	d_assert(result->scale_configuration->export_png = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_export_PNG")));
+}
+
+void p_interface_new_parameters(struct s_interface *result, GtkBuilder *parameters_interface) {
+	int index;
+	if (!result->parameters_configuration)
+		if (!(result->parameters_configuration = (struct s_interface_parameters *) d_calloc(sizeof(struct s_interface_parameters), 1)))
+			d_die(d_error_malloc);
+	d_assert(result->parameters_configuration->interface = parameters_interface);
+	d_assert(result->parameters_configuration->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(parameters_interface), "v_preferences_window")));
+	for (index = 0; interface_parameters_spins[index]; index++)
+		d_assert(result->parameters_configuration->spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(parameters_interface,
+						interface_parameters_spins[index])));
+	for (index = 0; interface_parameters_combos[index]; index++) {
+		d_assert(result->parameters_configuration->combos[index] = GTK_COMBO_BOX(gtk_builder_get_object(parameters_interface,
+						interface_parameters_combos[index])));
+		gtk_combo_box_set_active(GTK_COMBO_BOX(result->parameters_configuration->combos[index]), 0);
+	}
+	d_assert(result->parameters_configuration->save_raw = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_save_raw")));
+	d_assert(result->parameters_configuration->save_pdf = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_save_pdf")));
+	d_assert(result->parameters_configuration->show_bad_channels = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_show_bad_channels")));
+	d_assert(result->parameters_configuration->directory = GTK_FILE_CHOOSER_BUTTON(gtk_builder_get_object(parameters_interface, "v_workspace")));
+	for (index = 0; location_entries[index].code; index++)
+		gtk_combo_box_insert_text(result->parameters_configuration->combos[e_interface_parameters_combo_location], index,
+				location_entries[index].name);
+	d_assert(result->parameters_configuration->action = GTK_BUTTON(gtk_builder_get_object(parameters_interface, "v_action")));
+	d_assert(result->parameters_configuration->remote = GTK_ENTRY(gtk_builder_get_object(parameters_interface, "v_remote")));
+	d_assert(result->parameters_configuration->multimeter = GTK_ENTRY(gtk_builder_get_object(parameters_interface, "v_multimeter")));
+}
+
+void p_interface_new_informations(struct s_interface *result, GtkBuilder *informations_interface) {
+	int index;
+	if (!result->informations_configuration)
+		if (!(result->informations_configuration = (struct s_interface_informations *) d_calloc(sizeof(struct s_interface_informations), 1)))
+			d_die(d_error_malloc);
+	d_assert(result->informations_configuration->interface = informations_interface);
+	d_assert(result->informations_configuration->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(informations_interface), "v_dialog")));
+	d_assert(result->informations_configuration->action = GTK_BUTTON(gtk_builder_get_object(informations_interface, "v_ok")));
+	for (index = 0; interface_informations_entries[index]; index++)
+		d_assert(result->informations_configuration->entries[index] = GTK_ENTRY(gtk_builder_get_object(informations_interface,
+						interface_informations_entries[index])));
+}
+
+void p_interface_new_jobs(struct s_interface *result, GtkBuilder *jobs_interface) {
+	if (!result->jobs_configuration)
+		if (!(result->jobs_configuration = (struct s_interface_jobs *) d_calloc(sizeof(struct s_interface_jobs), 1)))
+			d_die(d_error_malloc);
+	d_assert(result->jobs_configuration->interface = jobs_interface);
+	d_assert(result->jobs_configuration->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(jobs_interface), "v_jobs_window")));
+	d_assert(result->jobs_configuration->action = GTK_BUTTON(gtk_builder_get_object(jobs_interface, "v_action")));
+}
+
 struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *main_interface, GtkBuilder *scale_interface,
-		GtkBuilder *parameters_interface, GtkBuilder *informations_interface) { d_FP;
+		GtkBuilder *parameters_interface, GtkBuilder *informations_interface, GtkBuilder *jobs_interface) { d_FP;
 	struct s_interface *result = supplied;
 	struct o_stream *stream;
 	struct o_string *path;
@@ -203,23 +270,8 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	if (!result)
 		if (!(result = (struct s_interface *) d_calloc(sizeof(struct s_interface), 1)))
 			d_die(d_error_malloc);
-	if (!result->scale_configuration)
-		if (!(result->scale_configuration = (struct s_interface_scale *) d_calloc(sizeof(struct s_interface_scale), 1)))
-			d_die(d_error_malloc);
-	if (!result->parameters_configuration)
-		if (!(result->parameters_configuration = (struct s_interface_parameters *) d_calloc(sizeof(struct s_interface_parameters), 1)))
-			d_die(d_error_malloc);
-	if (!result->informations_configuration)
-		if (!(result->informations_configuration = (struct s_interface_informations *) d_calloc(sizeof(struct s_interface_informations), 1)))
-			d_die(d_error_malloc);
 	d_assert(result->interface = main_interface);
-	d_assert(result->scale_configuration->interface = scale_interface);
-	d_assert(result->parameters_configuration->interface = parameters_interface);
-	d_assert(result->informations_configuration->interface = informations_interface);
 	d_assert(result->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(main_interface), "v_main_window")));
-	d_assert(result->scale_configuration->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(scale_interface), "v_scale_window")));
-	d_assert(result->parameters_configuration->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(parameters_interface), "v_preferences_window")));
-	d_assert(result->informations_configuration->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(informations_interface), "v_dialog")));
 	for (index = 0; interface_test_toggles[index]; index++)
 		d_assert(result->test_modes[index] = GTK_CHECK_MENU_ITEM(gtk_builder_get_object(GTK_BUILDER(main_interface), interface_test_toggles[index])));
 	for (index = 0; interface_labels[index]; index++)
@@ -231,9 +283,6 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	d_assert(result->automator = GTK_MENU_ITEM(gtk_builder_get_object(main_interface, "v_utils_automator")));
 	for (index = 0; interface_switches[index]; index++)
 		d_assert(result->switches[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(main_interface, interface_switches[index])));
-	for (index = 0; interface_scale_switches[index]; index++)
-		d_assert(result->scale_configuration->switches[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(scale_interface,
-						interface_scale_switches[index])));
 	for (index = 0; interface_spins[index]; index++)
 		d_assert(result->spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(main_interface, interface_spins[index])));
 	for (index = 0; interface_bucket_spins[index]; index++)
@@ -244,11 +293,6 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	gtk_spin_button_set_value(result->bucket_spins[e_interface_bucket_spin_data], d_common_data_events_default);
 	gtk_spin_button_set_value(result->bucket_spins[e_interface_bucket_spin_calibration], d_common_calibration_events_default);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_serial], 0.0);
-	for (index = 0; interface_scale_spins[index]; index++)
-		d_assert(result->scale_configuration->spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(scale_interface, interface_scale_spins[index])));
-	for (index = 0; interface_parameters_spins[index]; index++)
-		d_assert(result->parameters_configuration->spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(parameters_interface,
-						interface_parameters_spins[index])));
 	for (index = 0; interface_combos[index]; index++) {
 		d_assert(result->combos[index] = GTK_COMBO_BOX(gtk_builder_get_object(main_interface, interface_combos[index])));
 		gtk_combo_box_set_active(GTK_COMBO_BOX(result->combos[index]), 0);
@@ -262,23 +306,11 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	for (index = 0; assembly_entries[index].name; index++)
 		gtk_combo_box_insert_text(result->combos[e_interface_combo_assembly], index, assembly_entries[index].name);
 	gtk_combo_box_set_active(result->combos[e_interface_combo_assembly], 0);
-	for (index = 0; interface_parameters_combos[index]; index++) {
-		d_assert(result->parameters_configuration->combos[index] = GTK_COMBO_BOX(gtk_builder_get_object(parameters_interface,
-						interface_parameters_combos[index])));
-		gtk_combo_box_set_active(GTK_COMBO_BOX(result->parameters_configuration->combos[index]), 0);
-	}
 	d_assert(result->combo_charts = GTK_COMBO_BOX(gtk_builder_get_object(main_interface, "v_charts_list")));
 	for (index = 0; interface_toggles[index]; index++)
 		d_assert(result->toggles[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(main_interface, interface_toggles[index])));
-	d_assert(result->parameters_configuration->save_raw = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_save_raw")));
-	d_assert(result->parameters_configuration->save_pdf = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_save_pdf")));
-	d_assert(result->parameters_configuration->show_bad_channels = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_show_bad_channels")));
 	for (index = 0; interface_files[index]; index++)
 		d_assert(result->files[index] = GTK_FILE_CHOOSER_BUTTON(gtk_builder_get_object(main_interface, interface_files[index])));
-	d_assert(result->parameters_configuration->directory = GTK_FILE_CHOOSER_BUTTON(gtk_builder_get_object(parameters_interface, "v_workspace")));
-	for (index = 0; location_entries[index].code; index++)
-		gtk_combo_box_insert_text(result->parameters_configuration->combos[e_interface_parameters_combo_location], index,
-				location_entries[index].name);
 	for (index = 0; interface_alignments[index]; index++) {
 		gtk_combo_box_insert_text(result->combo_charts, index, interface_name[index]);
 		d_assert(result->alignments[index] = GTK_ALIGNMENT(gtk_builder_get_object(main_interface, interface_alignments[index])));
@@ -308,16 +340,10 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	d_assert(result->main_interface_alignment = GTK_ALIGNMENT(gtk_builder_get_object(main_interface, "v_charts_main_master_alignment")));
 	d_assert(result->progress_bar = GTK_PROGRESS_BAR(gtk_builder_get_object(main_interface, "v_action_bar")));
 	d_assert(result->notebook = GTK_NOTEBOOK(gtk_builder_get_object(main_interface, "v_charts_notebook")));
-	d_assert(result->scale_configuration->action = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_action")));
-	d_assert(result->scale_configuration->export_csv = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_export_CSV")));
-	d_assert(result->scale_configuration->export_png = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_export_PNG")));
-	d_assert(result->parameters_configuration->action = GTK_BUTTON(gtk_builder_get_object(parameters_interface, "v_action")));
-	d_assert(result->informations_configuration->action = GTK_BUTTON(gtk_builder_get_object(informations_interface, "v_ok")));
-	d_assert(result->parameters_configuration->remote = GTK_ENTRY(gtk_builder_get_object(parameters_interface, "v_remote")));
-	d_assert(result->parameters_configuration->multimeter = GTK_ENTRY(gtk_builder_get_object(parameters_interface, "v_multimeter")));
-	for (index = 0; interface_informations_entries[index]; index++)
-		d_assert(result->informations_configuration->entries[index] = GTK_ENTRY(gtk_builder_get_object(informations_interface,
-						interface_informations_entries[index])));
+	p_interface_new_informations(result, informations_interface);
+	p_interface_new_scale(result, scale_interface);
+	p_interface_new_parameters(result, parameters_interface);
+	p_interface_new_jobs(result, jobs_interface);
 	f_interface_show(result, e_interface_alignment_adc);
 	return result;
 }

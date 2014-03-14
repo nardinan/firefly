@@ -18,7 +18,7 @@ trigger=N
 duration=1800
 [NEW]
 label=AGAIN
-destination=CALI
+destination=CAL
 command=S
 duration=15
 counter=20

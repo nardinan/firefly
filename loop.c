@@ -23,7 +23,7 @@ struct s_loop_call steps[] = {
 	{"redraw slow charts (i.e. Pedestal)", 0, 250000, f_step_plot_slow},
 	{"redraw fast charts (i.e. ADC)", 0, 100000, f_step_plot_fast},
 	{"update 'statistics' panel and refresh other components", 0, 500000, f_step_interface},
-	{"update the progress bar", 0, 100000, f_step_progress},
+	{"update the progress bar and running automations", 0, 100000, f_step_progress},
 	{ NULL, 0, 0, NULL }
 };
 
@@ -183,16 +183,25 @@ int f_step_progress(struct s_environment *environment, time_t current_time) { d_
 	int readed, automation;
 	float fraction = 0.0;
 	time_t total_time, elpased_time;
-	char description[d_string_buffer_size];
+	char name[d_string_buffer_size], description[d_string_buffer_size];
 	if ((automation = f_ladder_run_action(environment->ladders[environment->current], environment->interface, environment))) {
 		if (d_strlen(environment->ladders[environment->current]->action[environment->ladders[environment->current]->action_pointer].label) > 0)
-			snprintf(description, d_string_buffer_size, "Running automation [%d:%s]", environment->ladders[environment->current]->action_pointer,
-					environment->ladders[environment->current]->action[environment->ladders[environment->current]->action_pointer].label);
+			snprintf(name, d_string_buffer_size, "Automation[%d:%s (%ld secs)]", environment->ladders[environment->current]->action_pointer,
+					environment->ladders[environment->current]->action[environment->ladders[environment->current]->action_pointer].label,
+					environment->ladders[environment->current]->action[environment->ladders[environment->current]->action_pointer].duration);
 		else
-			snprintf(description, d_string_buffer_size, "Running automation [%d]", environment->ladders[environment->current]->action_pointer);
-		gtk_label_set_text(environment->interface->labels[e_interface_label_status], description);
+			snprintf(name, d_string_buffer_size, "Automation[%d (%ld secs)]", environment->ladders[environment->current]->action_pointer,
+					environment->ladders[environment->current]->action[environment->ladders[environment->current]->action_pointer].duration);
+		if (d_strlen(environment->ladders[environment->current]->action[environment->ladders[environment->current]->action_pointer].destination) > 0)
+			snprintf(description, d_string_buffer_size, "Running %s and then GOTO %s (again for %d/%d times)", name,
+					environment->ladders[environment->current]->action[environment->ladders[environment->current]->action_pointer].destination,
+					environment->ladders[environment->current]->action[environment->ladders[environment->current]->action_pointer].counter,
+					environment->ladders[environment->current]->action[environment->ladders[environment->current]->action_pointer].original_counter);
+		else
+			snprintf(description, d_string_buffer_size, "Running %s and then NEXT", name);
+		gtk_label_set_text(environment->interface->labels[e_interface_label_jobs], description);
 	} else
-		gtk_label_set_text(environment->interface->labels[e_interface_label_status], NULL);
+		gtk_label_set_text(environment->interface->labels[e_interface_label_jobs], NULL);
 	switch (environment->ladders[environment->current]->command) {
 		case e_ladder_command_stop:
 			if ((automation) && (environment->ladders[environment->current]->action[environment->ladders[environment->current]->action_pointer].
@@ -203,6 +212,13 @@ int f_step_progress(struct s_environment *environment, time_t current_time) { d_
 			break;
 		case e_ladder_command_data:
 			gtk_progress_bar_set_text(environment->interface->progress_bar, "DATA (manual)");
+			if (automation) {
+				total_time = environment->ladders[environment->current]->
+					action[environment->ladders[environment->current]->action_pointer].duration;
+				elpased_time = current_time-environment->ladders[environment->current]->
+					action[environment->ladders[environment->current]->action_pointer].starting;
+				fraction = ((float)elpased_time/(float)total_time);
+			}
 			break;
 		case e_ladder_command_calibration:
 			gtk_progress_bar_set_text(environment->interface->progress_bar, "CALIBRATION");

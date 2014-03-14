@@ -35,6 +35,7 @@ typedef enum e_interface_labels {
 	e_interface_label_temperature1,
 	e_interface_label_temperature2,
 	e_interface_label_status,
+	e_interface_label_jobs,
 	e_interface_label_NULL
 } e_interface_labels;
 typedef enum e_interface_switches {
@@ -166,6 +167,11 @@ typedef struct s_interface_parameters {
 	GtkFileChooserButton *directory;
 	GtkButton *action;
 } s_interface_parameters;
+typedef struct s_interface_jobs {
+	GtkBuilder *interface;
+	GtkWindow *window;
+	GtkButton *action;
+} s_interface_jobs;
 typedef struct s_interface {
 	GtkBuilder *interface;
 	GtkWindow *window;
@@ -183,9 +189,10 @@ typedef struct s_interface {
 	struct s_interface_scale *scale_configuration;
 	struct s_interface_parameters *parameters_configuration;
 	struct s_interface_informations *informations_configuration;
+	struct s_interface_jobs *jobs_configuration;
 } s_interface;
 extern struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *main_interface, GtkBuilder *scale_interface,
-		GtkBuilder *parameters_interface, GtkBuilder *informations_interface);
+		GtkBuilder *parameters_interface, GtkBuilder *informations_interface, GtkBuilder *jobs_interface);
 extern void f_interface_update_configuration(struct s_interface *interface, int deviced);
 extern void f_interface_lock(struct s_interface *interface, int lock);
 extern void f_interface_show(struct s_interface *interface, enum e_interface_alignments chart);

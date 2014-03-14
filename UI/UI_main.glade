@@ -2110,6 +2110,15 @@
             <property name="visible">True</property>
             <property name="spacing">2</property>
             <child>
+              <object class="GtkLabel" id="v_jobs_label">
+                <property name="visible">True</property>
+                <property name="xalign">0</property>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkLabel" id="v_status_label">
                 <property name="visible">True</property>
                 <property name="xalign">1</property>
