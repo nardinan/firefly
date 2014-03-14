@@ -80,8 +80,8 @@ extern void f_read_calibration(struct o_stream *stream, float *pedestal, float *
 extern void p_compress_event_cluster(struct s_singleton_cluster_details *cluster, unsigned int first_channel, unsigned int last_channel, float *sigma,
 		float *signal, float *common_noise);
 extern int f_compress_event(struct o_trb_event *event, struct o_stream *stream, struct o_stream *cn_stream, time_t timestamp, unsigned int number,
-		float high_treshold, float low_treshold, float sigma_k, float *pedestal, float *sigma);
+		float high_treshold, float low_treshold, float sigma_k, float *pedestal, float *sigma, int *flags);
 extern struct s_singleton_cluster_details *f_decompress_event(struct o_stream *stream, struct s_singleton_event_header *header);
 extern void f_compress_data(struct o_string *input_path, struct o_string *output_path, struct o_string *cn_output_path, float high_treshold,
-		float low_treshold, float sigma_k, float *pedestal, float *sigma);
+		float low_treshold, float sigma_k, float *pedestal, float *sigma, int *flags);
 #endif

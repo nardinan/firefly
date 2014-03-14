@@ -161,7 +161,7 @@ void p_compress_event_cluster(struct s_singleton_cluster_details *cluster, unsig
 }
 
 int f_compress_event(struct o_trb_event *event, struct o_stream *stream, struct o_stream *cn_stream, time_t timestamp, unsigned int number,
-		float high_treshold, float low_treshold, float sigma_k, float *pedestal, float *sigma) {
+		float high_treshold, float low_treshold, float sigma_k, float *pedestal, float *sigma, int *flags) {
 	int index, channel, va, startup, entries, first_channel, last_channel, peak_readed = d_false, discard = d_false;
 	float value, common_noise_on_va, common_noise[d_trb_event_vas], signal[d_trb_event_channels], signal_over_noise;
 	struct s_singleton_event_header event_header = {
@@ -202,7 +202,7 @@ int f_compress_event(struct o_trb_event *event, struct o_stream *stream, struct 
 			signal[channel] = event->values[channel]-pedestal[channel]-common_noise[(channel/d_trb_event_channels_on_va)];
 			signal_over_noise = signal[channel]/sigma[channel];
 			if (signal_over_noise >= low_treshold) {
-				if (signal_over_noise >= high_treshold)
+				if ((flags[channel] == 0) && (signal_over_noise >= high_treshold))
 					peak_readed = d_true;
 				if (first_channel < 0)
 					first_channel = channel;
@@ -269,7 +269,7 @@ struct s_singleton_cluster_details *f_decompress_event(struct o_stream *stream, 
 }
 
 void f_compress_data(struct o_string *input_path, struct o_string *output_path, struct o_string *cn_output_path, float high_treshold, float low_treshold,
-		float sigma_k, float *pedestal, float *sigma) {
+		float sigma_k, float *pedestal, float *sigma, int *flags) {
 	int buffer_fill = 0, event_number = 0, compressed_events = 0, last_clusters = 0, read_again = d_true, index, clusters,
 	event_size = d_trb_event_size_normal;
 	float written_bytes = 0;
@@ -305,7 +305,7 @@ void f_compress_data(struct o_string *input_path, struct o_string *output_path, 
 			}
 			if (event->filled) {
 				if ((clusters = f_compress_event(event, output_stream, cn_output_stream, time(NULL), event_number, high_treshold, low_treshold,
-								sigma_k, pedestal, sigma)) > 0) {
+								sigma_k, pedestal, sigma, flags)) > 0) {
 					compressed_events++;
 					last_clusters = clusters;
 				}

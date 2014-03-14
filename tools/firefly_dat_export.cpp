@@ -31,8 +31,8 @@ typedef struct s_data_charts {
 	TH1F *n_channels, *common_noise, *signals, *signals_array[5], *signal_over_noise, *strips_gravity, *main_strips_gravity, *eta, *eta_array[5],
 	     *channel_one, *channels_two, *channels_two_major, *channels_two_minor, *signal_one, *signals_two, *signals_two_major, *signals_two_minor,
 	     *etas[d_cuts_steps];
-	TH2F *signal_eta;
-	TH1D *profile;
+	TH2F *signal_eta, *signal_gravity, *n_channels_gravity;
+	TH1D *profile, *profile_sg, *profile_nc_g;
 } s_data_charts;
 void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 	struct o_stream *stream;
@@ -65,11 +65,13 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 											break;
 										}
 								}
+							charts->signal_gravity->Fill(clusters[index].header.strips_gravity, value);
 							if ((clusters[index].header.strips >= 1) && (clusters[index].header.strips <= 5))
 								charts->signals_array[clusters[index].header.strips-1]->Fill(value);
 						}
 						if (charts->n_channels)
 							charts->n_channels->Fill(clusters[index].header.strips);
+						charts->n_channels_gravity->Fill(clusters[index].header.strips_gravity, clusters[index].header.strips);
 						if (charts->common_noise)
 							charts->common_noise->Fill(clusters[index].values[clusters[index].header.strips]);
 						if (charts->signal_over_noise)
@@ -153,6 +155,10 @@ void f_export_histograms(struct o_string *output, struct s_data_charts *charts) 
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->eta);
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->signal_eta);
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->profile);
+	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->signal_gravity);
+	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->profile_sg);
+	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->n_channels_gravity);
+	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->profile_nc_g);
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "TTTTTT", charts->eta, charts->eta_array[0], charts->eta_array[1],
 			charts->eta_array[2], charts->eta_array[3], charts->eta_array[4]);
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_last, "HIST", "TTTTTT", charts->eta, charts->etas[0], charts->etas[1],
@@ -199,7 +205,9 @@ int main (int argc, char *argv[]) {
 				snprintf(buffer, d_string_buffer_size, "Eta of clusters with #strips == %d", (index+1));
 				charts.eta_array[index] = d_chart(buffer, 500, 0.0, 1.0);
 			}
-			charts.signal_eta = d_chart_2D("signal over eta;Eta;Signal", 100, 0.0, 1.0, 300, 0, 300);
+			charts.signal_eta = d_chart_2D("signal over eta;Eta;Signal", 100, 0.0, 1.0, 300.0, 0.0, 300.0);
+			charts.signal_gravity = d_chart_2D("signal over gravity;CoG;Signal", d_trb_event_channels, 0.0, d_trb_event_channels, 2000.0, 0.0, 400.0);
+			charts.n_channels_gravity = d_chart_2D("Number of channels over gravity;CoG;NoC", d_trb_event_channels, 0.0, d_trb_event_channels, 40.0, 0.0, 40.0);
 			for (index = 0; index < d_cuts_steps; index++) {
 				snprintf(buffer, d_string_buffer_size, "Eta of clusters with signal %.00f-%.00f;Eta;# Entries", cuts[index].low,
 						cuts[index].top);
@@ -207,6 +215,8 @@ int main (int argc, char *argv[]) {
 			}
 			f_fill_histograms(compressed, &charts);
 			charts.profile = (TH1D *) charts.signal_eta->ProfileX("Signal over eta (Profile)");
+			charts.profile_sg = (TH1D *) charts.signal_gravity->ProfileX("Signal over gravity (Profile)");
+			charts.profile_nc_g = (TH1D *) charts.n_channels_gravity->ProfileX("Number of channels over gravity (Profile)");
 			range_start = charts.signal_over_noise->GetMean()-5.0*charts.signal_over_noise->GetRMS();
 			range_end = charts.signal_over_noise->GetMean()+10.0*charts.signal_over_noise->GetRMS();
 			charts.signal_over_noise->GetXaxis()->SetRangeUser(range_start, range_end);
