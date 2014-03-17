@@ -641,6 +641,10 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 		if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_calibration])) {
 			f_interface_clean_calibration(interface->charts);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.next, 0);
+			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.next_occupancy, 0);
+			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.size_occupancy, 0);
+			if (ladder->occupancy_bucket)
+				d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.size_occupancy, ladder->occupancy_bucket);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.computed, d_false);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.calibrated, d_false);
 			d_ladder_safe_assign(ladder->parameters_lock, ladder->to_skip, ladder->skip);

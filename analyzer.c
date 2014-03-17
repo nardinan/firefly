@@ -92,9 +92,9 @@ void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 					}
 					done = d_true;
 				}
-			}
-		} else
-			done = d_true;
+			} else
+				done = d_true;
+		}
 		d_object_unlock(ladder->calibration.write_lock);
 		if (done) {
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.computed, d_true);

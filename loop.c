@@ -224,7 +224,8 @@ int f_step_progress(struct s_environment *environment, time_t current_time) { d_
 			gtk_progress_bar_set_text(environment->interface->progress_bar, "CALIBRATION");
 			readed = environment->ladders[environment->current]->readed_events-environment->ladders[environment->current]->skip;
 			if (readed >= 0)
-				fraction = ((float)readed/(float)environment->ladders[environment->current]->calibration.size);
+				fraction = ((float)readed/(float)(environment->ladders[environment->current]->calibration.size+
+							environment->ladders[environment->current]->calibration.size_occupancy));
 			break;
 		default:
 			gtk_progress_bar_set_text(environment->interface->progress_bar, "DATA (auto)");
