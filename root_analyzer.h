@@ -32,7 +32,7 @@ extern "C" {
 #include <serenity/structures/infn/infn.h>
 #include "compression.h"
 }
-#define d_style_empty {NAN,NAN,NAN,NAN,kTRUE,kYellow,3010,kBlack,1.0}
+#define d_style_empty {NAN,NAN,NAN,NAN,kTRUE,kYellow,3010,kBlack,1}
 #define d_chart(nam,bks,min,max) f_create_histogram(nam,nam,bks,min,max,common_style)
 #define d_chart_2D(nam,bksx,minx,maxx,bksy,miny,maxy) f_create_2D_histogram(nam,nam,bksx,minx,maxx,bksy,miny,maxy,common_style)
 typedef struct s_chart_style {

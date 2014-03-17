@@ -112,18 +112,20 @@ typedef struct s_ladder {
 	enum e_ladder_commands command;
 	time_t starting_time, finish_time;
 	long long last_readed_time;
-	unsigned int last_readed_events, readed_events, damaged_events, event_size, listening_channel, location_pointer, skip, to_skip;
+	unsigned int last_readed_events, readed_events, damaged_events, event_size, listening_channel, location_pointer, skip, to_skip, percent_occupancy,
+		     action_pointer, occupancy_bucket;
 	unsigned char last_readed_kind, last_readed_code;
-	int evented, deviced, stopped, update_interface, save_calibration_raw, save_calibration_pdf, show_bad_channels, action_pointer;
+	int evented, deviced, stopped, update_interface, save_calibration_raw, save_calibration_pdf, show_bad_channels, compute_occupancy;
 	float hertz, last_hold_delay, sigma_raw_cut, sigma_raw_noise_cut_bottom, sigma_raw_noise_cut_top, sigma_k, sigma_cut, sigma_noise_cut_bottom,
 	      sigma_noise_cut_top, occupancy_k;
 	struct s_ladder_action action[d_ladder_actions];
 	pthread_t analyze_thread;
 	struct {
 		struct o_object *lock, *write_lock;
-		unsigned int next, size;
-		struct o_trb_event events[d_common_calibration_events];
-		float pedestal[d_trb_event_channels], sigma_raw[d_trb_event_channels], sigma[d_trb_event_channels], temperature[2];
+		unsigned int next, next_occupancy, size, size_occupancy;
+		struct o_trb_event events[d_common_calibration_events], occupancy_events[d_common_occupancy_events];
+		float pedestal[d_trb_event_channels], sigma_raw[d_trb_event_channels], sigma[d_trb_event_channels], occupancy[d_trb_event_channels],
+			temperature[2];
 		int computed, calibrated, flags[d_trb_event_channels];
 	} calibration;
 	struct {

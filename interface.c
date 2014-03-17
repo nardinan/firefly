@@ -63,6 +63,8 @@ const char *interface_labels[] = {
 	"v_sigma_noise_cut_bottom",
 	"v_sigma_noise_cut_top",
 	"v_occupancy_k",
+	"v_occupancy_bucket",
+	"v_occupancy_percent",
 	NULL
 }, *interface_combos[] = {
 	"v_kind",
@@ -229,6 +231,7 @@ void p_interface_new_parameters(struct s_interface *result, GtkBuilder *paramete
 	d_assert(result->parameters_configuration->save_raw = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_save_raw")));
 	d_assert(result->parameters_configuration->save_pdf = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_save_pdf")));
 	d_assert(result->parameters_configuration->show_bad_channels = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_show_bad_channels")));
+	d_assert(result->parameters_configuration->compute_occupancy = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_occupancy")));
 	d_assert(result->parameters_configuration->directory = GTK_FILE_CHOOSER_BUTTON(gtk_builder_get_object(parameters_interface, "v_workspace")));
 	for (index = 0; location_entries[index].code; index++)
 		gtk_combo_box_insert_text(result->parameters_configuration->combos[e_interface_parameters_combo_location], index,

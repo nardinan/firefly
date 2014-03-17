@@ -79,6 +79,8 @@ typedef enum e_interface_parameters_spins {
 	e_interface_parameters_spin_sigma_noise_cut_bottom,
 	e_interface_parameters_spin_sigma_noise_cut_top,
 	e_interface_parameters_spin_occupancy_k,
+	e_interface_parameters_spin_occupancy_bucket,
+	e_interface_parameters_spin_occupancy_percent,
 	e_interface_parameters_spin_NULL
 } e_interface_parameters_spins;
 typedef enum e_interface_combos {
@@ -162,7 +164,7 @@ typedef struct s_interface_parameters {
 	GtkWindow *window;
 	GtkSpinButton *spins[e_interface_parameters_spin_NULL];
 	GtkComboBox *combos[e_interface_parameters_combo_NULL];
-	GtkToggleButton *save_raw, *save_pdf, *show_bad_channels;
+	GtkToggleButton *save_raw, *save_pdf, *show_bad_channels, *compute_occupancy;
 	GtkEntry *remote, *multimeter;
 	GtkFileChooserButton *directory;
 	GtkButton *action;
