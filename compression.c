@@ -202,7 +202,8 @@ int f_compress_event(struct o_trb_event *event, struct o_stream *stream, struct 
 			signal[channel] = event->values[channel]-pedestal[channel]-common_noise[(channel/d_trb_event_channels_on_va)];
 			signal_over_noise = signal[channel]/sigma[channel];
 			if (signal_over_noise >= low_treshold) {
-				if ((flags[channel] == 0) && (signal_over_noise >= high_treshold))
+				if ((!d_trb_event_has_flag(flags[channel], e_trb_event_channel_damaged_sigma)) &&
+					(!d_trb_event_has_flag(flags[channel], e_trb_event_channel_damaged_occupancy)) && (signal_over_noise >= high_treshold))
 					peak_readed = d_true;
 				if (first_channel < 0)
 					first_channel = channel;

@@ -80,7 +80,7 @@ void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 								value = ladder->calibration.occupancy_events[index].values[channel]-
 									ladder->calibration.pedestal[channel]-cn[va];
 								if (value > (d_common_occupancy_error*ladder->calibration.sigma[channel]))
-									ladder->calibration.occupancy[channel]++;
+									ladder->calibration.occupancy[channel] += 1.0f;
 							}
 						}
 					for (channel = 0; channel < d_trb_event_channels; channel++) {
