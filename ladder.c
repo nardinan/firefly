@@ -319,6 +319,7 @@ void f_ladder_current(struct s_ladder *ladder, time_t timeout) { d_FP;
 		}
 	}
 }
+
 void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 	d_object_lock(ladder->lock);
 	if ((ladder->deviced) && (ladder->device)) {
