@@ -27,6 +27,7 @@ void p_environment_new_main_hook(struct s_environment *result) {
 	g_signal_connect(G_OBJECT(result->interface->led), "activate", G_CALLBACK(p_callback_led), result);
 	g_signal_connect(G_OBJECT(result->interface->rsync), "activate", G_CALLBACK(p_callback_rsync), result);
 	g_signal_connect(G_OBJECT(result->interface->automator), "activate", G_CALLBACK(p_callback_automator), result);
+	g_signal_connect(G_OBJECT(result->interface->temperature), "activate", G_CALLBACK(p_callback_temperature), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_normal]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration_debug]), "toggled", G_CALLBACK(p_callback_refresh), result);
@@ -435,6 +436,9 @@ void p_callback_automator(GtkWidget *widget, struct s_environment *environment) 
 	} d_endtry;
 }
 
+void p_callback_temperature(GtkWidget *widget, struct s_environment *environment) {
+	f_ladder_temperature(environment->ladders[environment->current], environment->searcher);
+}
 
 void p_callback_informations_action(GtkWidget *widget, struct s_environment *environment) {
 	snprintf(environment->ladders[environment->current]->voltage, d_string_buffer_size, "%s",

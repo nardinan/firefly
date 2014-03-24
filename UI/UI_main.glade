@@ -217,6 +217,14 @@
                         <property name="use_stock">False</property>
                       </object>
                     </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="v_utils_temperature">
+                        <property name="label" translatable="yes">read temperature</property>
+                        <property name="visible">True</property>
+                        <property name="image">image2</property>
+                        <property name="use_stock">False</property>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>
@@ -2139,5 +2147,9 @@
   <object class="GtkImage" id="image1">
     <property name="visible">True</property>
     <property name="stock">gtk-media-next</property>
+  </object>
+  <object class="GtkImage" id="image2">
+    <property name="visible">True</property>
+    <property name="stock">gtk-color-picker</property>
   </object>
 </interface>
