@@ -20,7 +20,7 @@
 #include <fftw3.h>
 #include "ladder.h"
 extern void p_analyzer_thread_calibrate_channels(struct s_ladder *ladder, float sigma_k, float sigma_cut_bottom, float sigma_cut_top, float *values,
-		size_t size, enum e_trb_event_channels flag);
+		size_t size, enum e_trb_event_channels flag_low, enum e_trb_event_channels flag_high, enum e_trb_event_channels flag_rms);
 extern void p_analyzer_thread_calibrate(struct s_ladder *ladder);
 extern void p_analyzer_sine_noise(size_t elements, float *input, float frequency);
 extern void p_analyzer_spectrum(size_t elements, float *input, float *output);

@@ -463,11 +463,7 @@ void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP
 		if (ladder->last_readed_kind != 0xa3) {
 			for (index = 0; index < d_trb_event_channels; index++) {
 				va = (index/d_trb_event_channels_on_va);
-				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 1, index, ladder->data.mean_no_pedestal[index]);
-				if (ladder->show_bad_channels)
-					f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 0, index,
-							((ladder->calibration.flags[index]&e_trb_event_channel_damaged)==e_trb_event_channel_damaged)?
-							charts[e_interface_alignment_adc_pedestal]->axis_y.range[1]:0);
+				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal], 0, index, ladder->data.mean_no_pedestal[index]);
 				value = ladder->data.mean_no_pedestal[index]-ladder->data.cn[va];
 				f_chart_append_signal(charts[e_interface_alignment_adc_pedestal_cn], 0, index, value);
 				f_chart_append_signal(charts[e_interface_alignment_signal], 0, index, value);

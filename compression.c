@@ -104,9 +104,7 @@ void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_r
 							pedestal[channel] = d_array_cast(atof, elements, singleton, 3, 0.0);
 							sigma_raw[channel] = d_array_cast(atof, elements, singleton, 4, 0.0);
 							sigma[channel] = d_array_cast(atof, elements, singleton, 5, 0.0);
-							flag[channel] = 0;
-							if (d_array_cast(atoi, elements, singleton, 6, 0))
-								flag[channel] = e_trb_event_channel_damaged;
+							flag[channel] = d_array_cast(atoi, elements, singleton, 6, 0);
 						}
 					}
 					d_release(elements);
@@ -202,8 +200,7 @@ int f_compress_event(struct o_trb_event *event, struct o_stream *stream, struct 
 			signal[channel] = event->values[channel]-pedestal[channel]-common_noise[(channel/d_trb_event_channels_on_va)];
 			signal_over_noise = signal[channel]/sigma[channel];
 			if (signal_over_noise >= low_treshold) {
-				if ((!d_trb_event_has_flag(flags[channel], e_trb_event_channel_damaged_sigma)) &&
-					(!d_trb_event_has_flag(flags[channel], e_trb_event_channel_damaged_occupancy)) && (signal_over_noise >= high_treshold))
+				if ((!FLAGGED(flags[channel], e_trb_event_channel_bad) && (signal_over_noise >= high_treshold)))
 					peak_readed = d_true;
 				if (first_channel < 0)
 					first_channel = channel;

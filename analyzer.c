@@ -17,7 +17,7 @@
  */
 #include "analyzer.h"
 void p_analyzer_thread_calibrate_channels(struct s_ladder *ladder, float sigma_k, float sigma_cut_bottom, float sigma_cut_top, float *values,
-		size_t size, enum e_trb_event_channels flag) { d_FP;
+		size_t size, enum e_trb_event_channels flag_low, enum e_trb_event_channels flag_high, enum e_trb_event_channels flag_rms) { d_FP;
 	float total = 0, total_square = 0, pedestal, rms, fraction = (1.0/(float)size);
 	int index;
 	for (index = 0; index < size; index++) {
@@ -28,12 +28,20 @@ void p_analyzer_thread_calibrate_channels(struct s_ladder *ladder, float sigma_k
 	total *= fraction;
 	total_square *= fraction;
 	rms = sqrt(fabs((total_square-(total*total))));
-	for (index = 0; index < size; index++)
-		if ((values[index] > pedestal+(sigma_k*rms)) || (values[index] < pedestal-(sigma_k*rms)) ||
-				(values[index] > sigma_cut_top) || (values[index] < sigma_cut_bottom)) {
-			ladder->calibration.flags[index] |= e_trb_event_channel_damaged;
-			ladder->calibration.flags[index] |= flag;
+	for (index = 0; index < size; index++) {
+		if (values[index] > sigma_cut_top) {
+			ladder->calibration.flags[index] |= e_trb_event_channel_bad;
+			ladder->calibration.flags[index] |= flag_high;
 		}
+		if (values[index] < sigma_cut_bottom) {
+			ladder->calibration.flags[index] |= e_trb_event_channel_bad;
+			ladder->calibration.flags[index] |= flag_low;
+		}
+		if ((values[index] > pedestal+(sigma_k*rms)) || (values[index] < pedestal-(sigma_k*rms))) {
+			ladder->calibration.flags[index] |= e_trb_event_channel_bad;
+			ladder->calibration.flags[index] |= flag_rms;
+		}
+	}
 }
 
 void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
@@ -52,11 +60,12 @@ void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 			d_assert(p_trb_event_sigma_raw(ladder->calibration.events, next, ladder->calibration.sigma_raw));
 			p_analyzer_thread_calibrate_channels(ladder, ladder->sigma_raw_cut, ladder->sigma_raw_noise_cut_bottom,
 					ladder->sigma_raw_noise_cut_top, ladder->calibration.sigma_raw, d_trb_event_channels,
-					e_trb_event_channel_damaged_sigma_raw);
+					e_trb_event_channel_bad_sigma_raw_low, e_trb_event_channel_bad_sigma_raw_high, e_trb_event_channel_bad_sigma_raw_rms);
 			d_assert(p_trb_event_sigma(ladder->calibration.events, next, ladder->sigma_k, ladder->calibration.sigma_raw,
 						ladder->calibration.pedestal, ladder->calibration.flags, ladder->calibration.sigma));
 			p_analyzer_thread_calibrate_channels(ladder, ladder->sigma_cut, ladder->sigma_noise_cut_bottom, ladder->sigma_noise_cut_top,
-					ladder->calibration.sigma, d_trb_event_channels, e_trb_event_channel_damaged_sigma);
+					ladder->calibration.sigma, d_trb_event_channels, e_trb_event_channel_bad_sigma_low, e_trb_event_channel_bad_sigma_high,
+					e_trb_event_channel_bad_sigma_rms);
 			if (size_occupancy > 0) {
 				if (next_occupancy >= size_occupancy) {
 					memset(ladder->calibration.occupancy, 0, (sizeof(float)*d_trb_event_channels));
@@ -65,8 +74,7 @@ void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 							cn[va] = 0;
 							for (channel = startup, entries = 0, common_noise_on_va = 0;
 									channel < (startup+d_trb_event_channels_on_va); channel++)
-								if (!d_trb_event_has_flag(ladder->calibration.flags[channel],
-											e_trb_event_channel_damaged_sigma_raw)) {
+								if (!FLAGGED_sigma_raw(ladder->calibration.flags[channel])) {
 									value = ladder->calibration.occupancy_events[index].values[channel]-
 										ladder->calibration.pedestal[channel];
 									if (fabs(value) < (ladder->sigma_k*ladder->calibration.sigma[channel])) {
@@ -86,8 +94,8 @@ void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 					for (channel = 0; channel < d_trb_event_channels; channel++) {
 						ladder->calibration.occupancy[channel] /= next_occupancy;
 						if (ladder->calibration.occupancy[channel] > occupancy_bad_value) {
-							ladder->calibration.flags[channel] |= e_trb_event_channel_damaged;
-							ladder->calibration.flags[channel] |= e_trb_event_channel_damaged_occupancy;
+							ladder->calibration.flags[channel] |= e_trb_event_channel_bad;
+							ladder->calibration.flags[channel] |= e_trb_event_channel_bad_occupancy;
 						}
 					}
 					done = d_true;
@@ -157,7 +165,8 @@ void p_analyzer_thread_data(struct s_ladder *ladder) { d_FP;
 						ladder->data.cn[va] = 0;
 						for (channel = startup, entries = 0, common_noise_on_va = 0; channel < (startup+d_trb_event_channels_on_va);
 								channel++)
-							if (!d_trb_event_has_flag(ladder->calibration.flags[channel], e_trb_event_channel_damaged_sigma_raw))
+							if ((!FLAGGED_sigma_raw(ladder->calibration.flags[channel])) &&
+									(!FLAGGED_occupancy(ladder->calibration.flags[channel])))
 								if (fabs(ladder->data.mean_no_pedestal[channel]) <
 										(ladder->sigma_k*ladder->calibration.sigma[channel])) {
 									common_noise_on_va += ladder->data.mean_no_pedestal[channel];
@@ -177,10 +186,14 @@ void p_analyzer_thread_data(struct s_ladder *ladder) { d_FP;
 							ladder->data.cn_bucket[index][va] = 0;
 							for (channel = startup, entries = 0, common_noise_on_va = 0;
 									channel < (startup+d_trb_event_channels_on_va); channel++)  {
-								value = ladder->data.events[index].values[channel]-ladder->calibration.pedestal[channel];
-								if (fabs(value) < (ladder->sigma_k*ladder->calibration.sigma[channel])) {
-									common_noise_on_va += value;
-									entries++;
+								if ((!FLAGGED_sigma_raw(ladder->calibration.flags[channel])) &&
+										(!FLAGGED_occupancy(ladder->calibration.flags[channel]))) {
+									value = ladder->data.events[index].values[channel]-
+										ladder->calibration.pedestal[channel];
+									if (fabs(value) < (ladder->sigma_k*ladder->calibration.sigma[channel])) {
+										common_noise_on_va += value;
+										entries++;
+									}
 								}
 							}
 							if (entries > 0)
