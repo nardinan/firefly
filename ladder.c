@@ -434,7 +434,7 @@ void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) {
 			f_chart_append_signal(charts[e_interface_alignment_pedestal], 0, index, ladder->calibration.pedestal[index]);
 			f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 1, index, ladder->calibration.sigma_raw[index]);
 			if (ladder->show_bad_channels)
-				f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 0, index, -(ladder->calibration.flags[index]));
+				f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 0, index, -((float)ladder->calibration.flags[index]/10.0));
 			f_chart_append_signal(charts[e_interface_alignment_sigma], 0, index, ladder->calibration.sigma[index]);
 			f_chart_append_histogram(charts[e_interface_alignment_histogram_pedestal], 0, ladder->calibration.pedestal[index]);
 			f_chart_append_histogram(charts[e_interface_alignment_histogram_sigma_raw], 0, ladder->calibration.sigma_raw[index]);
