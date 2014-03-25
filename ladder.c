@@ -118,6 +118,7 @@ void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *config
 }
 
 struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) { d_FP;
+	FILE *stream;
 	struct s_ladder *result = supplied;
 	struct passwd *pw;
 	char configuration[d_string_buffer_size];
@@ -148,6 +149,10 @@ struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) {
 		p_ladder_new_configuration_load(result, configuration);
 	}
 	snprintf(result->log, d_string_buffer_size, "%s", d_common_log);
+	if (!(stream = fopen(result->log, "a")))
+		snprintf(result->log, d_string_buffer_size, "%s", d_common_log_safe);
+	else
+		fclose(stream);
 	pthread_create(&(result->analyze_thread), NULL, f_analyzer_thread, (void *)result);
 	return result;
 }
