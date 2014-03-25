@@ -20,6 +20,22 @@
 #include "environment.h"
 owDevice v_temperature[MAX_DEVICES];
 unsigned int v_sensors = 0;
+void f_ladder_log(struct s_ladder *ladder, const char *format, ...) {
+	va_list arguments;
+	char time_buffer[d_string_buffer_size];
+	time_t current_time = time(NULL);
+	FILE *stream = NULL;
+	strftime(time_buffer, d_string_buffer_size, d_common_interface_time_format, localtime(&current_time));
+	if ((stream = fopen(ladder->log, "wa"))) {
+		fprintf(stream, "[%s]@[%s]", ladder->name, time_buffer);
+		va_start(arguments, format);
+		vfprintf(stream, format, arguments);
+		va_end(arguments);
+		fputc('\n', stream);
+		fclose(stream);
+	}
+}
+
 void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *configuration) { d_FP;
 	struct o_stream *stream;
 	struct o_string *path;
@@ -131,6 +147,7 @@ struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) {
 		snprintf(configuration, d_string_buffer_size, "%s%s", pw->pw_dir, d_common_configuration);
 		p_ladder_new_configuration_load(result, configuration);
 	}
+	snprintf(result->log, d_string_buffer_size, "%s", d_common_log);
 	pthread_create(&(result->analyze_thread), NULL, f_analyzer_thread, (void *)result);
 	return result;
 }
@@ -209,6 +226,8 @@ void f_ladder_temperature(struct s_ladder *ladder, struct o_trbs *searcher) { d_
 					}
 			}
 		}
+		f_ladder_log(ladder, "temperature sensors has been readed. [%s]-> %.02fC; [%s]-> %.02fC", ladder->sensors[0],
+				ladder->calibration.temperature[0], ladder->sensors[1], ladder->calibration.temperature[1]);
 		releaseAdapter();
 	}
 }
@@ -404,6 +423,7 @@ void p_ladder_load_calibrate(struct s_ladder *ladder, struct o_stream *stream) {
 		ladder->calibration.calibrated = d_true;
 		ladder->calibration.computed = d_true;
 		d_object_unlock(ladder->calibration.lock);
+		f_ladder_log(ladder, "calibration file has been loaded: %s", stream->name->content);
 	} d_catch (exception) {
 		d_exception_dump(stderr, exception);
 		d_raise;
@@ -760,7 +780,9 @@ int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, 
 					p_callback_informations_action((GtkWidget *)interface->informations_configuration->window, environment);
 					finished = d_true;
 				}
-			} else if ((elpased = time(NULL)-ladder->action[ladder->action_pointer].starting) >= ladder->action[ladder->action_pointer].duration)
+			} else if ((ladder->action[ladder->action_pointer].command == e_ladder_command_temperature) ||
+					((elpased = time(NULL)-ladder->action[ladder->action_pointer].starting) >=
+					 ladder->action[ladder->action_pointer].duration))
 				finished = d_true;
 			if (finished) {
 				gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_action], d_false);
@@ -788,7 +810,12 @@ int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, 
 			if (ladder->action_pointer == 0)
 				f_jobs_show(ladder, interface);
 			ladder->action[ladder->action_pointer].starting = time(NULL);
-			if (ladder->action[ladder->action_pointer].command != e_ladder_command_sleep) {
+			if ((ladder->action[ladder->action_pointer].command == e_ladder_command_sleep) ||
+					(ladder->action[ladder->action_pointer].command == e_ladder_command_temperature)) {
+				ladder->command = e_ladder_command_stop;
+				if (ladder->action[ladder->action_pointer].command == e_ladder_command_temperature)
+					f_ladder_temperature(ladder, environment->searcher);
+			} else {
 				if (ladder->action[ladder->action_pointer].write)
 					gtk_toggle_button_set_active(interface->switches[e_interface_switch_public], d_true);
 				else
@@ -815,8 +842,7 @@ int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, 
 				else
 					gtk_toggle_button_set_active(interface->switches[e_interface_switch_calibration], d_false);
 				gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_action], d_true);
-			} else
-				ladder->command = e_ladder_command_stop;
+			}
 		}
 	} else {
 		ladder->action_pointer = 0;
@@ -899,6 +925,8 @@ void f_ladder_load_actions(struct s_ladder *ladder, struct o_stream *stream) {
 									ladder->action[current_action].command = e_ladder_command_calibration;
 								else if (d_strcmp(singleton->content, "D") == 0)
 									ladder->action[current_action].command = e_ladder_command_data;
+								else if (d_strcmp(singleton->content, "T") == 0)
+									ladder->action[current_action].command = e_ladder_command_temperature;
 								else
 									ladder->action[current_action].command = e_ladder_command_sleep;
 								break;

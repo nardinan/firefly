@@ -73,7 +73,8 @@ typedef enum e_ladder_commands {
         e_ladder_command_calibration,
         e_ladder_command_data,
         e_ladder_command_automatic,
-	e_ladder_command_sleep
+	e_ladder_command_sleep,
+	e_ladder_command_temperature
 } e_ladder_commands;
 typedef enum e_ladder_automators {
 	e_ladder_automator_name = 0,
@@ -105,7 +106,8 @@ typedef struct s_ladder_action {
 typedef struct s_ladder {
 	char output[d_string_buffer_size], shadow_output[d_string_buffer_size], shadow_calibration[d_string_buffer_size], directory[d_string_buffer_size],
 	     ladder_directory[d_string_buffer_size], name[d_string_buffer_size], voltage[d_string_buffer_size], current[d_string_buffer_size],
-	     note[d_string_buffer_size], sensors[2][d_string_buffer_size], remote[d_string_buffer_size], multimeter[d_string_buffer_size];
+	     note[d_string_buffer_size], sensors[2][d_string_buffer_size], remote[d_string_buffer_size], multimeter[d_string_buffer_size],
+	     log[d_string_buffer_size];
 	struct o_object *lock, *parameters_lock;
 	struct o_trb *device;
 	struct o_trb_event last_event;
@@ -144,6 +146,7 @@ typedef struct s_ladder {
 struct s_environment;
 extern owDevice v_temperature[MAX_DEVICES];
 extern unsigned int v_sensors;
+extern void f_ladder_log(struct s_ladder *ladder, const char *format, ...);
 extern void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *configuration);
 extern void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *confgiuration);
 extern struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device);

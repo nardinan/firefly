@@ -1,0 +1,8 @@
+label=SLEEP
+command=S
+duration=60
+[NEW]
+label=TEMP
+command=T
+destination=SLEEP
+counter=20
