@@ -1,3 +1,5 @@
+# this job reads informations from temperature sensors
+# every minute for 20 times
 label=SLEEP
 command=S
 duration=60

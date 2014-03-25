@@ -881,76 +881,79 @@ void f_ladder_load_actions(struct s_ladder *ladder, struct o_stream *stream) {
 	d_try {
 		memset(ladder->action, 0, (d_ladder_actions*sizeof(struct s_ladder_action)));
 		while ((readed_buffer = stream->m_read_line(stream, buffer, d_string_buffer_size))) {
-			if (d_strcmp(readed_buffer->content, d_ladder_action_reset) == 0) {
-				if ((++current_action) >= d_ladder_actions)
-					break;
-			} else if ((elements = readed_buffer->m_split(readed_buffer, '='))) {
-				if (elements->filled == 2) {
-					ladder->action[current_action].initialized = d_true;
-					if ((key = (struct o_string *)elements->m_get(elements, 0)) &&
-							(singleton = (struct o_string *)elements->m_get(elements, 1))) {
-						current_key = e_ladder_automator_NULL;
-						for (index = 0; buffers[index]; index++)
-							if (d_strcmp(buffers[index], key->content) == 0) {
-								current_key = (enum e_ladder_automators)index;
-								break;
+			if ((d_strlen(readed_buffer->content) > 0) && (readed_buffer->content[0] != '#')) {
+				if (d_strcmp(readed_buffer->content, d_ladder_action_reset) == 0) {
+					if ((++current_action) >= d_ladder_actions)
+						break;
+				} else if ((elements = readed_buffer->m_split(readed_buffer, '='))) {
+					if (elements->filled == 2) {
+						ladder->action[current_action].initialized = d_true;
+						if ((key = (struct o_string *)elements->m_get(elements, 0)) &&
+								(singleton = (struct o_string *)elements->m_get(elements, 1))) {
+							current_key = e_ladder_automator_NULL;
+							for (index = 0; buffers[index]; index++)
+								if (d_strcmp(buffers[index], key->content) == 0) {
+									current_key = (enum e_ladder_automators)index;
+									break;
+								}
+							switch (current_key) {
+								case e_ladder_automator_name:
+									strncpy(ladder->action[current_action].label, singleton->content,
+											d_ladder_action_label_size);
+									break;
+								case e_ladder_automator_goto:
+									strncpy(ladder->action[current_action].destination, singleton->content,
+											d_ladder_action_label_size);
+									break;
+								case e_ladder_automator_dac:
+									ladder->action[current_action].dac = atoi(singleton->content);
+									break;
+								case e_ladder_automator_channel:
+									ladder->action[current_action].channel = atoi(singleton->content);
+									break;
+								case e_ladder_automator_duration:
+									ladder->action[current_action].duration = atoi(singleton->content);
+									break;
+								case e_ladder_automator_steps:
+									ladder->action[current_action].counter = atoi(singleton->content);
+									ladder->action[current_action].original_counter = atoi(singleton->content);
+									break;
+								case e_ladder_automator_hold_delay:
+									ladder->action[current_action].hold_delay = atof(singleton->content);
+									break;
+								case e_ladder_automator_trigger:
+									if (d_strcmp(singleton->content, "T") == 0)
+										ladder->action[current_action].trigger = d_true;
+									break;
+								case e_ladder_automator_write:
+									if (d_strcmp(singleton->content, "T") == 0)
+										ladder->action[current_action].write = d_true;
+									break;
+								case e_ladder_automator_command:
+									if (d_strcmp(singleton->content, "C") == 0)
+										ladder->action[current_action].command = e_ladder_command_calibration;
+									else if (d_strcmp(singleton->content, "D") == 0)
+										ladder->action[current_action].command = e_ladder_command_data;
+									else if (d_strcmp(singleton->content, "T") == 0)
+										ladder->action[current_action].command = e_ladder_command_temperature;
+									else
+										ladder->action[current_action].command = e_ladder_command_sleep;
+									break;
+								case e_ladder_automator_mode:
+									if (d_strcmp(singleton->content, "N") == 0)
+										ladder->action[current_action].mode = e_trb_mode_normal;
+									else if (d_strcmp(singleton->content, "G") == 0)
+										ladder->action[current_action].mode = e_trb_mode_calibration;
+									else
+										ladder->action[current_action].mode = e_trb_mode_calibration_debug_digital;
+									break;
+								default:
+									d_log(e_log_level_ever, "wrong key: %s", key->content);
 							}
-						switch (current_key) {
-							case e_ladder_automator_name:
-								strncpy(ladder->action[current_action].label, singleton->content, d_ladder_action_label_size);
-								break;
-							case e_ladder_automator_goto:
-								strncpy(ladder->action[current_action].destination, singleton->content,
-										d_ladder_action_label_size);
-								break;
-							case e_ladder_automator_dac:
-								ladder->action[current_action].dac = atoi(singleton->content);
-								break;
-							case e_ladder_automator_channel:
-								ladder->action[current_action].channel = atoi(singleton->content);
-								break;
-							case e_ladder_automator_duration:
-								ladder->action[current_action].duration = atoi(singleton->content);
-								break;
-							case e_ladder_automator_steps:
-								ladder->action[current_action].counter = atoi(singleton->content);
-								ladder->action[current_action].original_counter = atoi(singleton->content);
-								break;
-							case e_ladder_automator_hold_delay:
-								ladder->action[current_action].hold_delay = atof(singleton->content);
-								break;
-							case e_ladder_automator_trigger:
-								if (d_strcmp(singleton->content, "T") == 0)
-									ladder->action[current_action].trigger = d_true;
-								break;
-							case e_ladder_automator_write:
-								if (d_strcmp(singleton->content, "T") == 0)
-									ladder->action[current_action].write = d_true;
-								break;
-							case e_ladder_automator_command:
-								if (d_strcmp(singleton->content, "C") == 0)
-									ladder->action[current_action].command = e_ladder_command_calibration;
-								else if (d_strcmp(singleton->content, "D") == 0)
-									ladder->action[current_action].command = e_ladder_command_data;
-								else if (d_strcmp(singleton->content, "T") == 0)
-									ladder->action[current_action].command = e_ladder_command_temperature;
-								else
-									ladder->action[current_action].command = e_ladder_command_sleep;
-								break;
-							case e_ladder_automator_mode:
-								if (d_strcmp(singleton->content, "N") == 0)
-									ladder->action[current_action].mode = e_trb_mode_normal;
-								else if (d_strcmp(singleton->content, "G") == 0)
-									ladder->action[current_action].mode = e_trb_mode_calibration;
-								else
-									ladder->action[current_action].mode = e_trb_mode_calibration_debug_digital;
-								break;
-							default:
-								d_log(e_log_level_ever, "wrong key: %s", key->content);
 						}
 					}
+					d_release(elements);
 				}
-				d_release(elements);
 			}
 		}
 	} d_catch(exception) {
