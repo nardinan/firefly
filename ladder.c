@@ -26,8 +26,8 @@ void f_ladder_log(struct s_ladder *ladder, const char *format, ...) {
 	time_t current_time = time(NULL);
 	FILE *stream = NULL;
 	strftime(time_buffer, d_string_buffer_size, d_common_interface_time_format, localtime(&current_time));
-	if ((stream = fopen(ladder->log, "wa"))) {
-		fprintf(stream, "[%s]@[%s]", ladder->name, time_buffer);
+	if ((stream = fopen(ladder->log, "a"))) {
+		fprintf(stream, "@[%s]", time_buffer);
 		va_start(arguments, format);
 		vfprintf(stream, format, arguments);
 		va_end(arguments);
@@ -226,7 +226,7 @@ void f_ladder_temperature(struct s_ladder *ladder, struct o_trbs *searcher) { d_
 					}
 			}
 		}
-		f_ladder_log(ladder, "temperature sensors has been readed. [%s]-> %.02fC; [%s]-> %.02fC", ladder->sensors[0],
+		f_ladder_log(ladder, "temperature sensors have been readed. [%s]-> %.02fC; [%s]-> %.02fC", ladder->sensors[0],
 				ladder->calibration.temperature[0], ladder->sensors[1], ladder->calibration.temperature[1]);
 		releaseAdapter();
 	}
@@ -408,6 +408,7 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 						d_common_ext_calibration_pdf);
 				system(buffer);
 			}
+			f_ladder_log(ladder, "calibration file has been written: %s", name->content);
 		}
 		d_release(name);
 	}
