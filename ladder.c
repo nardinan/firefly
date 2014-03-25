@@ -153,6 +153,7 @@ struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) {
 		snprintf(result->log, d_string_buffer_size, "%s", d_common_log_safe);
 	else
 		fclose(stream);
+	d_log(e_log_level_ever, "selected log file: %s", result->log);
 	pthread_create(&(result->analyze_thread), NULL, f_analyzer_thread, (void *)result);
 	return result;
 }
