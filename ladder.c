@@ -852,6 +852,7 @@ int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, 
 			}
 		}
 	} else {
+		p_callback_jobs_action(NULL, environment);
 		ladder->action_pointer = 0;
 		result = d_false;
 	}
