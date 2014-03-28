@@ -852,8 +852,8 @@ int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, 
 			}
 		}
 	} else {
-		p_callback_jobs_action(NULL, environment);
 		ladder->action_pointer = 0;
+		p_callback_hide_on_exit(GTK_WIDGET(environment->interface->jobs_configuration->window), environment);
 		result = d_false;
 	}
 	return result;
