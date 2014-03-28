@@ -45,8 +45,8 @@ void p_analyzer_thread_calibrate_channels(struct s_ladder *ladder, float sigma_k
 }
 
 void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
-	int next, next_occupancy, size, size_occupancy, computed, done = d_false, index, startup, entries, channel, va;
-	float cn[d_trb_event_vas], common_noise_on_va, value, occupancy_bad_value = ((float)ladder->percent_occupancy/100.0);
+	int next, next_occupancy, size, size_occupancy, computed, done = d_false, index, channel;
+	float cn[d_trb_event_vas], value, occupancy_bad_value = ((float)ladder->percent_occupancy/100.0);
 	d_ladder_safe_assign(ladder->calibration.lock, computed, ladder->calibration.computed);
 	if (!computed) {
 		d_ladder_safe_assign(ladder->calibration.lock, next, ladder->calibration.next);
@@ -69,28 +69,16 @@ void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 			if (size_occupancy > 0) {
 				if (next_occupancy >= size_occupancy) {
 					memset(ladder->calibration.occupancy, 0, (sizeof(float)*d_trb_event_channels));
-					for (index = 0; index < next_occupancy; index++)
-						for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
-							cn[va] = 0;
-							for (channel = startup, entries = 0, common_noise_on_va = 0;
-									channel < (startup+d_trb_event_channels_on_va); channel++)
-								if (!FLAGGED_sigma_raw(ladder->calibration.flags[channel])) {
-									value = ladder->calibration.occupancy_events[index].values[channel]-
-										ladder->calibration.pedestal[channel];
-									if (fabs(value) < (ladder->sigma_k*ladder->calibration.sigma[channel])) {
-										common_noise_on_va += value;
-										entries++;
-									}
-								}
-							if (entries > 0)
-								cn[va] = (common_noise_on_va/(float)entries);
-							for (channel = startup; channel < (startup+d_trb_event_channels_on_va); channel++) {
-								value = ladder->calibration.occupancy_events[index].values[channel]-
-									ladder->calibration.pedestal[channel]-cn[va];
-								if (value > (d_common_occupancy_error*ladder->calibration.sigma[channel]))
-									ladder->calibration.occupancy[channel] += 1.0f;
-							}
+					for (index = 0; index < next_occupancy; index++) {
+						p_trb_event_cn(ladder->calibration.occupancy_events[index].values, ladder->sigma_k,
+								ladder->calibration.pedestal, ladder->calibration.sigma, ladder->calibration.flags, cn);
+						for (channel = 0; channel < d_trb_event_channels; channel++) {
+							value = ladder->calibration.occupancy_events[index].values[channel]-
+								ladder->calibration.pedestal[channel]-cn[(int)(channel/d_trb_event_channels_on_va)];
+							if (value > (d_common_occupancy_error*ladder->calibration.sigma[channel]))
+								ladder->calibration.occupancy[channel] += 1.0f;
 						}
+					}
 					for (channel = 0; channel < d_trb_event_channels; channel++) {
 						ladder->calibration.occupancy[channel] /= next_occupancy;
 						if (ladder->calibration.occupancy[channel] > occupancy_bad_value) {
@@ -141,8 +129,8 @@ void p_analyzer_spectrum(size_t elements, float *input, float *output) { d_FP;
 }
 
 void p_analyzer_thread_data(struct s_ladder *ladder) { d_FP;
-	int index, next, size, computed, channel, channel_on_event, va, startup, entries, not_first[d_trb_event_channels] = {d_false}, adc, noise;
-	float value, value_no_pedestal, common_noise_on_va;
+	int index, next, size, computed, channel, channel_on_event, not_first[d_trb_event_channels] = {d_false}, adc, noise;
+	float value, value_no_pedestal;
 	d_ladder_safe_assign(ladder->data.lock, computed, ladder->data.computed);
 	if (!computed) {
 		d_ladder_safe_assign(ladder->data.lock, next, ladder->data.next);
@@ -161,20 +149,8 @@ void p_analyzer_thread_data(struct s_ladder *ladder) { d_FP;
 						ladder->data.mean[channel] = value/(float)next;
 						ladder->data.mean_no_pedestal[channel] = value_no_pedestal/(float)next;
 					}
-					for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
-						ladder->data.cn[va] = 0;
-						for (channel = startup, entries = 0, common_noise_on_va = 0; channel < (startup+d_trb_event_channels_on_va);
-								channel++)
-							if ((!FLAGGED_sigma_raw(ladder->calibration.flags[channel])) &&
-									(!FLAGGED_occupancy(ladder->calibration.flags[channel])))
-								if (fabs(ladder->data.mean_no_pedestal[channel]) <
-										(ladder->sigma_k*ladder->calibration.sigma[channel])) {
-									common_noise_on_va += ladder->data.mean_no_pedestal[channel];
-									entries++;
-								}
-						if (entries > 0)
-							ladder->data.cn[va] = (common_noise_on_va/(float)entries);
-					}
+					p_trb_event_cn_no_pedestal(ladder->data.mean_no_pedestal, ladder->sigma_k, ladder->calibration.sigma,
+							ladder->calibration.flags, ladder->data.cn);
 					for (adc = 0; adc < d_trb_event_adcs; adc++) {
 						memset(ladder->data.spectrum_adc[adc], 0, sizeof(float)*d_common_data_spectrum);
 						memset(ladder->data.spectrum_adc_pedestal[adc], 0, sizeof(float)*d_common_data_spectrum);
@@ -182,48 +158,33 @@ void p_analyzer_thread_data(struct s_ladder *ladder) { d_FP;
 					}
 					ladder->data.buckets_size = next;
 					for (index = 0, noise = 0; index < next; index++) {
-						for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
-							ladder->data.cn_bucket[index][va] = 0;
-							for (channel = startup, entries = 0, common_noise_on_va = 0;
-									channel < (startup+d_trb_event_channels_on_va); channel++)  {
-								if ((!FLAGGED_sigma_raw(ladder->calibration.flags[channel])) &&
-										(!FLAGGED_occupancy(ladder->calibration.flags[channel]))) {
-									value = ladder->data.events[index].values[channel]-
-										ladder->calibration.pedestal[channel];
-									if (fabs(value) < (ladder->sigma_k*ladder->calibration.sigma[channel])) {
-										common_noise_on_va += value;
-										entries++;
-									}
-								}
-							}
-							if (entries > 0)
-								ladder->data.cn_bucket[index][va] = (common_noise_on_va/(float)entries);
-							for (channel = startup; channel < (startup+d_trb_event_channels_on_va); channel++) {
-								ladder->data.adc_bucket[index][channel] = ladder->data.events[index].values[channel];
-								ladder->data.adc_pedestal_bucket[index][channel] = (ladder->data.events[index].values[channel]-
-										ladder->calibration.pedestal[channel]);
-								ladder->data.signal_bucket[index][channel] = (ladder->data.events[index].values[channel]-
-										ladder->calibration.pedestal[channel]-ladder->data.cn_bucket[index][va]);
-								if ((channel%5) == 0) ladder->data.signal_bucket[index][channel] += sinf((float)channel);
-								if (!not_first[channel]) {
-									ladder->data.signal_bucket_maximum[channel] =
-										ladder->data.signal_bucket[index][channel];
-									ladder->data.signal_bucket_minimum[channel] =
-										ladder->data.signal_bucket[index][channel];
-									not_first[channel] = d_true;
-								} else if (ladder->data.signal_bucket[index][channel] >
-										ladder->data.signal_bucket_maximum[channel])
-									ladder->data.signal_bucket_maximum[channel] =
-										ladder->data.signal_bucket[index][channel];
-								else if (ladder->data.signal_bucket[index][channel] <
-										ladder->data.signal_bucket_minimum[channel])
-									ladder->data.signal_bucket_minimum[channel] =
-										ladder->data.signal_bucket[index][channel];
-								ladder->data.signal_over_noise_bucket[index][channel] =
-									ladder->data.signal_bucket[index][channel]/ladder->calibration.sigma[channel];
-								if (ladder->data.signal_over_noise_bucket[index][channel] > ladder->occupancy_k)
-									ladder->data.occupancy[channel]++;
-							}
+						p_trb_event_cn(ladder->data.events[index].values, ladder->sigma_k, ladder->calibration.pedestal,
+								ladder->calibration.sigma, ladder->calibration.flags, ladder->data.cn_bucket[index]);
+						for (channel = 0; channel < d_trb_event_channels; channel++) {
+							ladder->data.adc_bucket[index][channel] = ladder->data.events[index].values[channel];
+							ladder->data.adc_pedestal_bucket[index][channel] = (ladder->data.events[index].values[channel]-
+									ladder->calibration.pedestal[channel]);
+							ladder->data.signal_bucket[index][channel] = (ladder->data.events[index].values[channel]-
+									ladder->calibration.pedestal[channel]-
+									ladder->data.cn_bucket[index][(int)(channel/d_trb_event_channels_on_va)]);
+							if (!not_first[channel]) {
+								ladder->data.signal_bucket_maximum[channel] =
+									ladder->data.signal_bucket[index][channel];
+								ladder->data.signal_bucket_minimum[channel] =
+									ladder->data.signal_bucket[index][channel];
+								not_first[channel] = d_true;
+							} else if (ladder->data.signal_bucket[index][channel] >
+									ladder->data.signal_bucket_maximum[channel])
+								ladder->data.signal_bucket_maximum[channel] =
+									ladder->data.signal_bucket[index][channel];
+							else if (ladder->data.signal_bucket[index][channel] <
+									ladder->data.signal_bucket_minimum[channel])
+								ladder->data.signal_bucket_minimum[channel] =
+									ladder->data.signal_bucket[index][channel];
+							ladder->data.signal_over_noise_bucket[index][channel] =
+								ladder->data.signal_bucket[index][channel]/ladder->calibration.sigma[channel];
+							if (ladder->data.signal_over_noise_bucket[index][channel] > ladder->occupancy_k)
+								ladder->data.occupancy[channel]++;
 						}
 						for (adc = 0; adc < d_trb_event_adcs; adc ++) {
 							p_analyzer_spectrum(d_trb_event_channels_half,

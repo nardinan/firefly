@@ -160,8 +160,8 @@ void p_compress_event_cluster(struct s_singleton_cluster_details *cluster, unsig
 
 int f_compress_event(struct o_trb_event *event, struct o_stream *stream, struct o_stream *cn_stream, time_t timestamp, unsigned int number,
 		float high_treshold, float low_treshold, float sigma_k, float *pedestal, float *sigma, int *flags) {
-	int index, channel, va, startup, entries, first_channel, last_channel, peak_readed = d_false, discard = d_false;
-	float value, common_noise_on_va, common_noise[d_trb_event_vas], signal[d_trb_event_channels], signal_over_noise;
+	int index, va, channel, first_channel, last_channel, peak_readed = d_false, discard = d_false;
+	float common_noise[d_trb_event_vas], signal[d_trb_event_channels], signal_over_noise;
 	struct s_singleton_event_header event_header = {
 		d_compress_tag,
 		.timestamp=timestamp,
@@ -171,18 +171,7 @@ int f_compress_event(struct o_trb_event *event, struct o_stream *stream, struct 
 	};
 	struct s_singleton_cluster_details clusters[d_trb_event_channels];
 	struct o_string *singleton;
-	for (va = 0, startup = 0; va < d_trb_event_vas; startup += d_trb_event_channels_on_va, va++) {
-		common_noise[va] = 0;
-		for (channel = startup, entries = 0, common_noise_on_va = 0; channel < (startup+d_trb_event_channels_on_va); channel++) {
-			value = event->values[channel]-pedestal[channel];
-			if (fabs(value) < (sigma_k*sigma[channel])) {
-				common_noise_on_va += value;
-				entries++;
-			}
-		}
-		if (entries)
-			common_noise[va] = (common_noise_on_va/(float)entries);
-	}
+	p_trb_event_cn(event->values, sigma_k, pedestal, sigma, flags, common_noise);
 	if (cn_stream) {
 		singleton = d_string(d_string_buffer_size, "%.03f,%.03f,%.03f,%.03f,%.03f,%.03f\n", common_noise[0], common_noise[1], common_noise[2],
 				common_noise[3], common_noise[4], common_noise[5]);
