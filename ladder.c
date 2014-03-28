@@ -592,6 +592,7 @@ void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *inte
 			gtk_spin_button_get_value_as_int(interface->spins[e_interface_spin_serial]),
 			(gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_top]))?'T':'B');
 	snprintf(ladder->ladder_directory, d_string_buffer_size, "%s/%s", ladder->directory, ladder->name);
+	mkdir(ladder->directory, 0777);
 	mkdir(ladder->ladder_directory, 0777);
 	if (ladder->command == e_ladder_command_calibration) {
 		for (index = 0; index < e_interface_test_toggle_NULL; index++)
