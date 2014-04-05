@@ -17,26 +17,28 @@
  */
 #include "loop.h"
 struct s_loop_call steps[] = {
-	{"verify that miniTRB is still connected to the system", 0, 2000000, f_step_check_device},
-	{"compute the speed of miniTRB incoming data (in Herz)", 0, 1000000, f_step_check_hertz},
-	{"read an event from miniTRB", 0, 1000, f_step_read},
-	{"redraw slow charts (i.e. Pedestal)", 0, 250000, f_step_plot_slow},
-	{"redraw fast charts (i.e. ADC)", 0, 100000, f_step_plot_fast},
-	{"update 'statistics' panel and refresh other components", 0, 500000, f_step_interface},
-	{"update the progress bar and running automations", 0, 100000, f_step_progress},
+	{"verify that miniTRB is still connected to the system", 0, 4000000, f_step_check_device},
+	{"compute the speed of miniTRB incoming data (in Herz)", 0, 4000000, f_step_check_hertz},
+	{"read an event from miniTRB", 0, 800, f_step_read},
+	{"redraw slow charts (i.e. Pedestal)", 0, 2000000, f_step_plot_slow},
+	{"redraw fast charts (i.e. ADC)", 0, 500000, f_step_plot_fast},
+	{"update 'statistics' panel and refresh other components", 0, 1000000, f_step_interface},
+	{"update the progress bar and running automations", 0, 1000000, f_step_progress},
 	{ NULL, 0, 0, NULL }
 };
 
 int f_loop_iteration(struct s_environment *environment) {
 	struct timeval current_time;
-	long long usecs;
+	long long usecs, real_timeout;
+	float performance_k = (environment->ladders[environment->current]->performance_k/100.0);
 	int index = 0, result;
 	usleep(d_common_timeout_loop);
 	if (d_object_trylock(environment->lock)) {
 		gettimeofday(&current_time, NULL);
 		usecs = (1000000l*(long long)current_time.tv_sec)+current_time.tv_usec;
 		while (steps[index].function) {
-			if (usecs > (steps[index].last_execution+steps[index].timeout)) {
+			real_timeout = ((float)steps[index].timeout)*performance_k;
+			if (usecs > (steps[index].last_execution+real_timeout)) {
 				if ((result = steps[index].function(environment, current_time.tv_sec)) != 0)
 					d_log(d_log_level_default, "Warning, step \"%s\" [error code: %d]", steps[index].description, result);
 				steps[index].last_execution = usecs;

@@ -49,6 +49,7 @@ void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *config
 			d_object_lock(ladder->parameters_lock);
 			d_ladder_key_load_s(dictionary, directory, ladder);
 			d_ladder_key_load_d(dictionary, location_pointer, ladder);
+			d_ladder_key_load_f(dictionary, performance_k, ladder);
 			d_ladder_key_load_d(dictionary, skip, ladder);
 			d_ladder_key_load_f(dictionary, sigma_raw_cut, ladder);
 			d_ladder_key_load_f(dictionary, sigma_raw_noise_cut_bottom, ladder);
@@ -63,6 +64,7 @@ void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *config
 			d_ladder_key_load_d(dictionary, show_bad_channels, ladder);
 			d_ladder_key_load_s(dictionary, remote, ladder);
 			d_ladder_key_load_s(dictionary, multimeter, ladder);
+			d_ladder_key_load_s(dictionary, power_supply, ladder);
 			d_ladder_key_load_d(dictionary, compute_occupancy, ladder);
 			d_ladder_key_load_d(dictionary, occupancy_bucket, ladder);
 			d_ladder_key_load_d(dictionary, percent_occupancy, ladder);
@@ -89,6 +91,7 @@ void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *config
 			d_object_lock(ladder->parameters_lock);
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "directory=%s\n", ladder->directory));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "location_pointer=%d\n", ladder->location_pointer));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "performance_k=%f\n", ladder->performance_k));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "skip=%d\n", ladder->skip));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "sigma_raw_cut=%f\n", ladder->sigma_raw_cut));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "sigma_raw_noise_cut_bottom=%f\n", ladder->sigma_raw_noise_cut_bottom));
@@ -103,6 +106,7 @@ void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *config
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "show_bad_channels=%d\n", ladder->show_bad_channels));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "remote=%s\n", ladder->remote));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "multimeter=%s\n", ladder->multimeter));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "power_supply=%s\n", ladder->power_supply));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "compute_occupancy=%d\n", ladder->compute_occupancy));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "occupancy_bucket=%d\n", ladder->occupancy_bucket));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "percent_occupancy=%d\n", ladder->percent_occupancy));
@@ -232,7 +236,7 @@ void f_ladder_temperature(struct s_ladder *ladder, struct o_trbs *searcher) { d_
 					}
 			}
 		}
-		f_ladder_log(ladder, "temperature sensors have been readed. [%s]-> %.02fC; [%s]-> %.02fC", ladder->sensors[0],
+		f_ladder_log(ladder, "temperature sensors have been readed: [%s]-> %.02fC; [%s]-> %.02fC", ladder->sensors[0],
 				ladder->calibration.temperature[0], ladder->sensors[1], ladder->calibration.temperature[1]);
 		releaseAdapter();
 	}
@@ -334,8 +338,10 @@ void f_ladder_current(struct s_ladder *ladder, time_t timeout) { d_FP;
 							current = (current_timeval.tv_sec*1000000)+current_timeval.tv_usec;
 						} while ((current-begin) < timeout);
 						buffer[index] = '\0';
-						if (index > 0)
+						if (index > 0) {
 							p_ladder_current_analyze(ladder, buffer);
+							f_ladder_log(ladder, "leakage current has been readed: %suA", ladder->current);
+						}
 					}
 					tcsetattr(device, TCSAFLUSH, &old_tty);
 				}

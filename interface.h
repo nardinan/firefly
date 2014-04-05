@@ -162,10 +162,11 @@ typedef struct s_interface_scale {
 typedef struct s_interface_parameters {
 	GtkBuilder *interface;
 	GtkWindow *window;
+	GtkScale *performance;
 	GtkSpinButton *spins[e_interface_parameters_spin_NULL];
 	GtkComboBox *combos[e_interface_parameters_combo_NULL];
 	GtkToggleButton *save_raw, *save_pdf, *show_bad_channels, *compute_occupancy;
-	GtkEntry *remote, *multimeter;
+	GtkEntry *remote, *multimeter, *power_supply;
 	GtkFileChooserButton *directory;
 	GtkButton *action;
 } s_interface_parameters;

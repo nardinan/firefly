@@ -315,6 +315,10 @@ void p_callback_parameters_action(GtkWidget *widget, struct s_environment *envir
 			d_string_buffer_size);
 	strncpy(environment->ladders[environment->current]->multimeter, gtk_entry_get_text(environment->interface->parameters_configuration->multimeter),
 			d_string_buffer_size);
+	strncpy(environment->ladders[environment->current]->power_supply, gtk_entry_get_text(environment->interface->parameters_configuration->power_supply),
+			d_string_buffer_size);
+	environment->ladders[environment->current]->performance_k =
+		gtk_range_get_value(GTK_RANGE(environment->interface->parameters_configuration->performance));
 	environment->ladders[environment->current]->skip =
 		gtk_spin_button_get_value_as_int(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_skip]);
 	environment->ladders[environment->current]->sigma_raw_cut =
@@ -365,6 +369,9 @@ void p_callback_parameters_show(GtkWidget *widget, struct s_environment *environ
 			environment->ladders[environment->current]->show_bad_channels);
 	gtk_entry_set_text(environment->interface->parameters_configuration->remote, environment->ladders[environment->current]->remote);
 	gtk_entry_set_text(environment->interface->parameters_configuration->multimeter, environment->ladders[environment->current]->multimeter);
+	gtk_entry_set_text(environment->interface->parameters_configuration->power_supply, environment->ladders[environment->current]->power_supply);
+	gtk_range_set_value(GTK_RANGE(environment->interface->parameters_configuration->performance),
+			environment->ladders[environment->current]->performance_k);
 	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_skip],
 			environment->ladders[environment->current]->skip);
 	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_sigma_raw_cut],

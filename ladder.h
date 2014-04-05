@@ -107,7 +107,7 @@ typedef struct s_ladder {
 	char output[d_string_buffer_size], shadow_output[d_string_buffer_size], shadow_calibration[d_string_buffer_size], directory[d_string_buffer_size],
 	     ladder_directory[d_string_buffer_size], name[d_string_buffer_size], voltage[d_string_buffer_size], current[d_string_buffer_size],
 	     note[d_string_buffer_size], sensors[2][d_string_buffer_size], remote[d_string_buffer_size], multimeter[d_string_buffer_size],
-	     log[d_string_buffer_size];
+	     power_supply[d_string_buffer_size], log[d_string_buffer_size];
 	struct o_object *lock, *parameters_lock;
 	struct o_trb *device;
 	struct o_trb_event last_event;
@@ -119,7 +119,7 @@ typedef struct s_ladder {
 	unsigned char last_readed_kind, last_readed_code;
 	int evented, deviced, stopped, update_interface, save_calibration_raw, save_calibration_pdf, show_bad_channels, compute_occupancy;
 	float hertz, last_hold_delay, sigma_raw_cut, sigma_raw_noise_cut_bottom, sigma_raw_noise_cut_top, sigma_k, sigma_cut, sigma_noise_cut_bottom,
-	      sigma_noise_cut_top, occupancy_k;
+	      sigma_noise_cut_top, occupancy_k, performance_k;
 	struct s_ladder_action action[d_ladder_actions];
 	pthread_t analyze_thread;
 	struct {
