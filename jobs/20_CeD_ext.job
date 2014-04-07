@@ -1,3 +1,5 @@
+# this job does a calibration and a data acquisition
+# of about an half hour for 20 times
 label=CAL
 hold_delay=6.6
 mode=N
