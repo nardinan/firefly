@@ -28,6 +28,7 @@
 #include "phys.ksu.edu/dev-functions.h"
 #include "interface.h"
 #include "compression.h"
+#include "rs232_device.h"
 #define d_ladder_directory_test "test"
 #define d_ladder_directory_data "data"
 #define d_ladder_directory_draft "draft"

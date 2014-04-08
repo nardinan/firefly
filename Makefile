@@ -1,4 +1,4 @@
-objects = chart.o interface.o compression.o ladder.o analyzer.o environment.o loop.o firefly.o dev-functions.o ow-functions.o
+objects = chart.o interface.o compression.o ladder.o analyzer.o environment.o loop.o firefly.o dev-functions.o ow-functions.o rs232_device.o
 objects_compressor = compression.o firefly_compress.o
 objects_analyzer = compression.o root_analyzer.o firefly_dat_export.o
 objects_calibration_export = compression.o root_analyzer.o firefly_cal_export.o
@@ -54,7 +54,10 @@ compression.o: compression.c compression.h
 analyzer.o: analyzer.c analyzer.h ladder.h
 	$(cc) $(cflags) analyzer.c
 
-ladder.o: ladder.c ladder.h interface.h compression.h phys.ksu.edu/ow-functions.h phys.ksu.edu/dev-functions.h
+rs232_device.o: rs232_device.c rs232_device.h
+	$(cc) $(cflags) rs232_device.c
+
+ladder.o: ladder.c ladder.h interface.h compression.h phys.ksu.edu/ow-functions.h phys.ksu.edu/dev-functions.h rs232_device.h
 	$(cc) $(cflags) ladder.c
 
 environment.o: environment.c environment.h ladder.h

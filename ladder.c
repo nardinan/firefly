@@ -240,113 +240,21 @@ void f_ladder_temperature(struct s_ladder *ladder, struct o_trbs *searcher) { d_
 				ladder->calibration.temperature[0], ladder->sensors[1], ladder->calibration.temperature[1]);
 		releaseAdapter();
 	}
-}
-
-void p_ladder_current_analyze(struct s_ladder *ladder, const char *incoming) { d_FP;
-	char value[d_ladder_value_size], extension[d_ladder_extension_size];
-	size_t pointer = 0, done;
-	int index;
-	float current = 1;
-	if ((incoming[0] == 'D') && (incoming[1] == 'C')) {
-		for (index = 2, pointer = 0, done = d_false; ((!done) && (incoming[index] != '\0'));) {
-			switch (incoming[index]) {
-				case '0':
-				case '1':
-				case '2':
-				case '3':
-				case '4':
-				case '5':
-				case '6':
-				case '7':
-				case '8':
-				case '9':
-				case '.':
-				case '-':
-					value[pointer++] = incoming[index];
-				case ' ':
-					break;
-				default:
-					done = d_true;
-			}
-			value[pointer] = '\0';
-			if (!done)
-				index++;
-		}
-		for (pointer = 0, done = d_false; ((!done) && (incoming[index] != '\0'));) {
-			switch (incoming[index]) {
-				case 'u':
-				case 'm':
-				case 'A':
-					extension[pointer++] = incoming[index];
-				case ' ':
-					break;
-				default:
-					done = d_true;
-			}
-			extension[pointer] = '\0';
-			if (!done)
-				index++;
-		}
-		if ((extension[0] == 'A') || (extension[1] == 'A')) {
-			if (extension[0] == 'u')
-				current = 1.0f;
-			else if (extension[0] == 'm')
-				current = 1000.0f;
-			else if (extension[0] == 'A')
-				current = 1000000.0f;
-			current *= atof(value);
-			snprintf(ladder->current, d_string_buffer_size, "%.02f", current);
-		}
-	}
+	f_ladder_current(ladder, d_common_timeout_device);
 }
 
 void f_ladder_current(struct s_ladder *ladder, time_t timeout) { d_FP;
-	struct termios tty, old_tty;
-	int device, index = 0, readed;
-	unsigned char buffer[d_string_buffer_size], carriage[] = "\r\n", byte;
-	struct timeval current_timeval;
-	time_t begin, current;
-	memset(ladder->current, 0, d_string_buffer_size);
+	unsigned char buffer[d_string_buffer_size];
+	struct termios tty;
+	int device;
 	if (d_strlen(ladder->multimeter) > 0) {
-		if ((device = open(ladder->multimeter, O_RDWR|O_NOCTTY|O_NONBLOCK)) >= 0) {
-			memset(&tty, 0, sizeof(struct termios));
-			if (tcgetattr(device, &tty) == 0) {
-				old_tty = tty;
-				cfsetospeed(&tty, (speed_t)B1200);
-				cfsetospeed(&tty, (speed_t)B1200);
-				tty.c_cflag &= ~CSIZE;
-				tty.c_cflag |= CS7;
-				tty.c_cflag &= ~PARENB;
-				tty.c_cflag |= CREAD|CLOCAL|CSTOPB;
-				tty.c_cc[VMIN] = 0;
-				tty.c_cc[VTIME] = 0;
-				cfmakeraw(&tty);
-				tcflush(device, TCIFLUSH);
-				if (tcsetattr(device, TCSAFLUSH, &tty) == 0) {
-					if (write(device, carriage, sizeof(carriage)) >= 0) {
-						gettimeofday(&current_timeval, NULL);
-						begin = (current_timeval.tv_sec*1000000)+current_timeval.tv_usec;
-						do {
-							if ((readed = read(device, &byte, 1)) >= 0) {
-								byte &= 0x7f;
-								if (byte != (unsigned char)13)
-									buffer[index++] = byte;
-								else
-									break;
-							}
-							gettimeofday(&current_timeval, NULL);
-							current = (current_timeval.tv_sec*1000000)+current_timeval.tv_usec;
-						} while ((current-begin) < timeout);
-						buffer[index] = '\0';
-						if (index > 0) {
-							p_ladder_current_analyze(ladder, buffer);
-							f_ladder_log(ladder, "leakage current has been readed: %suA", ladder->current);
-						}
-					}
-					tcsetattr(device, TCSAFLUSH, &old_tty);
-				}
+		if (f_rs232_open(ladder->multimeter, &device, &tty)) {
+			f_rs232_write(device, NULL, 0);
+			if ((f_rs232_read(device, buffer, d_string_buffer_size, timeout)) > 0) {
+				f_rs232_protek_format(buffer, ladder->current, d_string_buffer_size);
+				f_ladder_log(ladder, "leakage current has been readed: %suA", ladder->current);
 			}
-			close(device);
+			f_rs232_close(device, tty);
 		}
 	}
 }
@@ -674,7 +582,7 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.next, 0);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.next_occupancy, 0);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.size_occupancy, 0);
-			if (ladder->occupancy_bucket)
+			if (ladder->compute_occupancy)
 				d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.size_occupancy, ladder->occupancy_bucket);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.computed, d_false);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.calibrated, d_false);
