@@ -103,13 +103,23 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	p_environment_new_informations_hook(result);
 	p_environment_new_jobs_hook(result);
 	d_assert(result->searcher = f_trbs_new(NULL));
-	result->searcher->m_async_search(result->searcher, p_callback_incoming_device, d_common_timeout_device, (void *)result);
+	result->searcher->m_trb_setup(result->searcher, p_callback_incoming_trb, (void *)result);
+	result->searcher->m_dev_setup(result->searcher, p_callback_incoming_device, (void *)result);
+	result->searcher->m_async_search(result->searcher, d_common_timeout_device);
 	return result;
 }
 
-int p_callback_incoming_device(struct o_trb *device, void *v_environment) { d_FP;
+int p_callback_incoming_trb(struct o_trb *device, void *v_environment) { d_FP;
 	struct s_environment *environment = (struct s_environment *)v_environment;
 	return f_ladder_device(environment->ladders[environment->current], device);
+}
+
+int p_callback_incoming_device(struct usb_device *device, struct usb_dev_handle *handler, void *v_environment) { d_FP;
+	char manufacturer[d_string_buffer_size] = {0}, product[d_string_buffer_size] = {0};
+	usb_get_string_simple(handler, device->descriptor.iManufacturer, manufacturer, d_string_buffer_size);
+	usb_get_string_simple(handler, device->descriptor.iProduct, product, d_string_buffer_size);
+	/* TODO: check for new device */
+	return d_false;
 }
 
 void p_callback_exit(GtkWidget *widget, struct s_environment *environment) { d_FP;
@@ -315,8 +325,6 @@ void p_callback_parameters_action(GtkWidget *widget, struct s_environment *envir
 			d_string_buffer_size);
 	strncpy(environment->ladders[environment->current]->multimeter, gtk_entry_get_text(environment->interface->parameters_configuration->multimeter),
 			d_string_buffer_size);
-	strncpy(environment->ladders[environment->current]->power_supply, gtk_entry_get_text(environment->interface->parameters_configuration->power_supply),
-			d_string_buffer_size);
 	environment->ladders[environment->current]->performance_k =
 		gtk_range_get_value(GTK_RANGE(environment->interface->parameters_configuration->performance));
 	environment->ladders[environment->current]->skip =
@@ -369,7 +377,6 @@ void p_callback_parameters_show(GtkWidget *widget, struct s_environment *environ
 			environment->ladders[environment->current]->show_bad_channels);
 	gtk_entry_set_text(environment->interface->parameters_configuration->remote, environment->ladders[environment->current]->remote);
 	gtk_entry_set_text(environment->interface->parameters_configuration->multimeter, environment->ladders[environment->current]->multimeter);
-	gtk_entry_set_text(environment->interface->parameters_configuration->power_supply, environment->ladders[environment->current]->power_supply);
 	gtk_range_set_value(GTK_RANGE(environment->interface->parameters_configuration->performance),
 			environment->ladders[environment->current]->performance_k);
 	gtk_spin_button_set_value(environment->interface->parameters_configuration->spins[e_interface_parameters_spin_skip],
@@ -484,3 +491,4 @@ void f_jobs_show(struct s_ladder *ladder, struct s_interface *interface) {
 	gtk_window_set_position(interface->jobs_configuration->window, GTK_WIN_POS_CENTER_ON_PARENT);
 	gtk_window_set_keep_above(interface->jobs_configuration->window, TRUE);
 }
+

@@ -33,6 +33,7 @@
 #define d_common_timeout_analyze 500000
 #define d_common_timeout_device 1500000
 #define d_common_timeout_temperature 200000
+#define d_common_temperature_tries 15
 #define d_common_file_time_format "_%m.%d.%Y-%H.%M.%S"
 #define d_common_interface_time_format "%d %b %Y %H:%M:%S"
 #define d_common_calibration_events 1024

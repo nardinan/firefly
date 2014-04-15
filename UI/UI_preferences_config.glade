@@ -206,29 +206,6 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="v_power_supply_label">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Power supply TTY</property>
-                      </object>
-                      <packing>
-                        <property name="top_attach">7</property>
-                        <property name="bottom_attach">8</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkEntry" id="v_power_supply">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="invisible_char">&#x25CF;</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">1</property>
-                        <property name="right_attach">2</property>
-                        <property name="top_attach">7</property>
-                        <property name="bottom_attach">8</property>
-                      </packing>
-                    </child>
-                    <child>
                       <object class="GtkHScale" id="v_performance">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -269,6 +246,12 @@
                         <property name="top_attach">9</property>
                         <property name="bottom_attach">10</property>
                       </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
                     </child>
                     <child>
                       <placeholder/>

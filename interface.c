@@ -241,7 +241,6 @@ void p_interface_new_parameters(struct s_interface *result, GtkBuilder *paramete
 	d_assert(result->parameters_configuration->action = GTK_BUTTON(gtk_builder_get_object(parameters_interface, "v_action")));
 	d_assert(result->parameters_configuration->remote = GTK_ENTRY(gtk_builder_get_object(parameters_interface, "v_remote")));
 	d_assert(result->parameters_configuration->multimeter = GTK_ENTRY(gtk_builder_get_object(parameters_interface, "v_multimeter")));
-	d_assert(result->parameters_configuration->power_supply = GTK_ENTRY(gtk_builder_get_object(parameters_interface, "v_power_supply")));
 }
 
 void p_interface_new_informations(struct s_interface *result, GtkBuilder *informations_interface) {
