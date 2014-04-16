@@ -416,7 +416,6 @@ void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP
 				f_chart_append_envelope(charts[e_interface_alignment_envelope_signal], 0, index,
 						ladder->data.signal_bucket_minimum[index], ladder->data.signal_bucket_maximum[index]);
 			}
-			charts[e_interface_alignment_adc_pedestal]->kind[0] = e_chart_kind_histogram;
 			for (index = 0; index < ladder->data.buckets_size; index++) {
 				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_1], 0, ladder->data.cn_bucket[index][0]);
 				f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_2], 0, ladder->data.cn_bucket[index][1]);
@@ -492,7 +491,8 @@ int f_ladder_device(struct s_ladder *ladder, struct o_trb *device) { d_FP;
 
 void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
 	int written, selected_kind, selected_assembly, selected_quality, index, founded = d_false;
-	char test_code = 0x00, buffer_output[d_string_buffer_size], buffer_input[d_string_buffer_size], buffer_name[d_string_buffer_size];
+	char test_code = 0x00, buffer_output[d_string_buffer_size], buffer_input[d_string_buffer_size], buffer_name[d_string_buffer_size],
+		clean_name[d_string_buffer_size];
 	FILE *stream;
 	selected_kind = gtk_combo_box_get_active(interface->combos[e_interface_combo_kind]);
 	written = snprintf(ladder->name, d_string_buffer_size, "%s", kind_entries[selected_kind].code);
@@ -525,13 +525,14 @@ void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *inte
 		snprintf(ladder->ladder_directory, d_string_buffer_size, "%s/%s/%s", ladder->directory, ladder->name, d_ladder_directory_data);
 		mkdir(ladder->ladder_directory, 0777);
 	}
+	snprintf(clean_name, d_string_buffer_size, "%s_%s", ladder->name, location_entries[ladder->location_pointer].code);
 	if (test_code != 0x00)
 		snprintf(buffer_name, d_string_buffer_size, "%s_%s_%c", ladder->name, location_entries[ladder->location_pointer].code, test_code);
 	else
 		snprintf(buffer_name, d_string_buffer_size, "%s_%s", ladder->name, location_entries[ladder->location_pointer].code);
 	memset(ladder->shadow_calibration, 0, d_string_buffer_size);
 	for (index = 0, founded = d_false; (!founded); index++) {
-		snprintf(buffer_output, d_string_buffer_size, "%s/%s/%s/%s_%03d%s", ladder->directory, ladder->name, d_ladder_directory_draft, buffer_name,
+		snprintf(buffer_output, d_string_buffer_size, "%s/%s/%s/%s_%03d%s", ladder->directory, ladder->name, d_ladder_directory_draft, clean_name,
 				index, d_common_ext_calibration);
 		if ((stream = fopen(buffer_output, "r"))) {
 			memcpy(ladder->shadow_calibration, buffer_output, d_string_buffer_size);
