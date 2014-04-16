@@ -81,13 +81,13 @@ int main (int argc, char *argv[]) {
 		if ((calibration) && (output)) {
 			common_style.fill_color = kWhite;
 			common_style.show_stats = kFALSE;
-			charts.pedestal = d_chart("Pedestal;Channel;ADC", d_trb_event_channels, 0.0, d_trb_event_channels);
+			charts.pedestal = d_chart("Pedestal;Channel;ADC", d_trb_event_channels, 0.0, d_trb_event_channels-1);
 			charts.pedestal->GetYaxis()->SetRangeUser(0, 1000);
 			charts.pedestal->GetXaxis()->SetNdivisions(1606, kFALSE);
-			charts.sigma_raw = d_chart("Sigma raw;Channel;Sigma raw", d_trb_event_channels, 0.0, d_trb_event_channels);
+			charts.sigma_raw = d_chart("Sigma raw;Channel;Sigma raw", d_trb_event_channels, 0.0, d_trb_event_channels-1);
 			charts.sigma_raw->GetYaxis()->SetRangeUser(0, 20);
 			charts.sigma_raw->GetXaxis()->SetNdivisions(1606, kFALSE);
-			charts.sigma = d_chart("Sigma;Channel;Sigma", d_trb_event_channels, 0.0, d_trb_event_channels);
+			charts.sigma = d_chart("Sigma;Channel;Sigma", d_trb_event_channels, 0.0, d_trb_event_channels-1);
 			charts.sigma->GetYaxis()->SetRangeUser(0, 10);
 			charts.sigma->GetXaxis()->SetNdivisions(1606, kFALSE);
 			f_fill_histograms(calibration, &charts);

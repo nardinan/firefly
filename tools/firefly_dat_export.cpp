@@ -198,16 +198,16 @@ int main (int argc, char *argv[]) {
 			charts.channels_two = d_chart("Signal overs noise (SN) of clusters with #strips == 2", 5000, 0.0, 100.0);
 			charts.channels_two_major = d_chart("Signal over noise (SN) of SEED strip in  clusters with #strips == 2", 5000, 0.0, 100.0);
 			charts.channels_two_minor = d_chart("Signal over noise (SN) of SECONDARY strip in clusters with #strips == 2", 5000, 0.0, 100.0);
-			charts.strips_gravity = d_chart("Center of gravity;Gravity;# Entries", d_trb_event_channels, 0.0, d_trb_event_channels);
-			charts.main_strips_gravity = d_chart("Center of gravity of SEED strips", d_trb_event_channels, 0.0, d_trb_event_channels);
+			charts.strips_gravity = d_chart("Center of gravity;Gravity;# Entries", d_trb_event_channels, 0.0, d_trb_event_channels-1);
+			charts.main_strips_gravity = d_chart("Center of gravity of SEED strips", d_trb_event_channels, 0.0, d_trb_event_channels-1);
 			charts.eta = d_chart("Eta;Eta;# Entries", 500, 0.0, 1.0);
 			for (index = 0; index < 5; index++) {
 				snprintf(buffer, d_string_buffer_size, "Eta of clusters with #strips == %d", (index+1));
 				charts.eta_array[index] = d_chart(buffer, 500, 0.0, 1.0);
 			}
 			charts.signal_eta = d_chart_2D("signal over eta;Eta;Signal", 100, 0.0, 1.0, 300.0, 0.0, 300.0);
-			charts.signal_gravity = d_chart_2D("signal over gravity;CoG;Signal", d_trb_event_channels, 0.0, d_trb_event_channels, 2000.0, 0.0, 400.0);
-			charts.n_channels_gravity = d_chart_2D("Number of channels over gravity;CoG;NoC", d_trb_event_channels, 0.0, d_trb_event_channels, 40.0, 0.0, 40.0);
+			charts.signal_gravity = d_chart_2D("signal over gravity;CoG;Signal", d_trb_event_channels, 0.0, d_trb_event_channels-1, 2000.0, 0.0, 400.0);
+			charts.n_channels_gravity = d_chart_2D("Number of channels over gravity;CoG;NoC", d_trb_event_channels, 0.0, d_trb_event_channels-1, 40.0, 0.0, 40.0);
 			for (index = 0; index < d_cuts_steps; index++) {
 				snprintf(buffer, d_string_buffer_size, "Eta of clusters with signal %.00f-%.00f;Eta;# Entries", cuts[index].low,
 						cuts[index].top);

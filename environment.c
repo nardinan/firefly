@@ -118,7 +118,7 @@ int p_callback_incoming_device(struct usb_device *device, struct usb_dev_handle 
 	char manufacturer[d_string_buffer_size] = {0}, product[d_string_buffer_size] = {0};
 	usb_get_string_simple(handler, device->descriptor.iManufacturer, manufacturer, d_string_buffer_size);
 	usb_get_string_simple(handler, device->descriptor.iProduct, product, d_string_buffer_size);
-	/* TODO: check for new device */
+	/* TODO: check for new device (the power supply) */
 	return d_false;
 }
 
