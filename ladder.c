@@ -19,7 +19,7 @@
 #include "analyzer.h"
 #include "environment.h"
 owDevice v_temperature[MAX_DEVICES];
-unsigned int v_sensors = 0;
+int v_sensors = 0;
 void f_ladder_log(struct s_ladder *ladder, const char *format, ...) {
 	va_list arguments;
 	char time_buffer[d_string_buffer_size];
@@ -211,33 +211,35 @@ void f_ladder_temperature(struct s_ladder *ladder, struct o_trbs *searcher) { d_
 		initialized = d_true;
 	d_object_unlock(searcher->search_semaphore);
 	if (initialized) {
-		v_sensors = makeDeviceList(v_temperature);
-		for (sensors = 0, temperature_sensors = 0; sensors < v_sensors; sensors++) {
-			setupDevice(&(v_temperature[sensors]));
-			doConversion(&(v_temperature[sensors]));
-			if (temperature_sensors < 2) {
-				for (index = 0; index < SERIAL_SIZE; index++)
-					snprintf(ladder->sensors[temperature_sensors]+(strlen("00")*index), d_string_buffer_size-(strlen("00")*index), "%02x",
-							(unsigned char)v_temperature[sensors].SN[index]);
-				temperature_sensors++;
+		if ((v_sensors = makeDeviceList(v_temperature)) > 0) {
+			for (sensors = 0, temperature_sensors = 0; sensors < v_sensors; sensors++) {
+				setupDevice(&(v_temperature[sensors]));
+				doConversion(&(v_temperature[sensors]));
+				if (temperature_sensors < 2) {
+					for (index = 0; index < SERIAL_SIZE; index++)
+						snprintf(ladder->sensors[temperature_sensors]+(strlen("00")*index), d_string_buffer_size-(strlen("00")*index),
+								"%02x", (unsigned char)v_temperature[sensors].SN[index]);
+					temperature_sensors++;
+				}
 			}
-		}
-		current_sensor = 0;
-		while ((current_sensor < temperature_sensors) && (tries > 0)) {
-			usleep(d_common_timeout_temperature);
-			for (sensors = 0, current_sensor = 0; sensors < v_sensors; sensors++) {
-				if ((v_temperature[sensors].SN[0] == 0x10) || (v_temperature[sensors].SN[0] == 0x22) || (v_temperature[sensors].SN[0] == 0x28))
-					if (current_sensor < 2) {
-						if (readDevice(&(v_temperature[sensors]), &(ladder->calibration.temperature[current_sensor])) < 0)
-							break;
-						current_sensor++;
-					}
+			current_sensor = 0;
+			while ((current_sensor < temperature_sensors) && (tries > 0)) {
+				usleep(d_common_timeout_temperature);
+				for (sensors = 0, current_sensor = 0; sensors < v_sensors; sensors++) {
+					if ((v_temperature[sensors].SN[0] == 0x10) || (v_temperature[sensors].SN[0] == 0x22) ||
+							(v_temperature[sensors].SN[0] == 0x28))
+						if (current_sensor < 2) {
+							if (readDevice(&(v_temperature[sensors]), &(ladder->calibration.temperature[current_sensor])) < 0)
+								break;
+							current_sensor++;
+						}
+				}
+				tries--;
 			}
-			tries--;
+			if (tries)
+				f_ladder_log(ladder, "temperature sensors have been readed: [%s]-> %.02fC; [%s]-> %.02fC", ladder->sensors[0],
+						ladder->calibration.temperature[0], ladder->sensors[1], ladder->calibration.temperature[1]);
 		}
-		if (tries)
-			f_ladder_log(ladder, "temperature sensors have been readed: [%s]-> %.02fC; [%s]-> %.02fC", ladder->sensors[0],
-					ladder->calibration.temperature[0], ladder->sensors[1], ladder->calibration.temperature[1]);
 		releaseAdapter();
 	}
 	f_ladder_current(ladder, d_common_timeout_device);
@@ -338,7 +340,7 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 void p_ladder_load_calibrate(struct s_ladder *ladder, struct o_stream *stream) { d_FP;
 	struct s_exception *exception = NULL;
 	d_try {
-		d_object_lock(ladder->calibration.lock);
+		d_object_lock(laddee->calibration.lock);
 		f_read_calibration(stream, ladder->calibration.pedestal, ladder->calibration.sigma_raw, ladder->calibration.sigma,
 				ladder->calibration.flags, NULL);
 		ladder->calibration.calibrated = d_true;
@@ -492,7 +494,7 @@ int f_ladder_device(struct s_ladder *ladder, struct o_trb *device) { d_FP;
 void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *interface) { d_FP;
 	int written, selected_kind, selected_assembly, selected_quality, index, founded = d_false;
 	char test_code = 0x00, buffer_output[d_string_buffer_size], buffer_input[d_string_buffer_size], buffer_name[d_string_buffer_size],
-		clean_name[d_string_buffer_size];
+	     clean_name[d_string_buffer_size];
 	FILE *stream;
 	selected_kind = gtk_combo_box_get_active(interface->combos[e_interface_combo_kind]);
 	written = snprintf(ladder->name, d_string_buffer_size, "%s", kind_entries[selected_kind].code);
