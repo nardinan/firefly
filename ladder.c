@@ -346,10 +346,10 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 			for (channel = 0; channel < d_trb_event_channels; channel++) {
 				va = channel/d_trb_event_channels_on_va;
 				channel_on_va = channel%d_trb_event_channels_on_va;
-				string = f_string_new(string, d_string_buffer_size, "%d, %d, %d, %.03f, %.03f, %.03f, %d\n", channel, va, channel_on_va,
+				string = f_string_new(string, d_string_buffer_size, "%d, %d, %d, %.03f, %.03f, %.03f, %d, %f\n", channel, va, channel_on_va,
 						ladder->calibration.pedestal[channel], ladder->calibration.sigma_raw[channel],
-						ladder->calibration.sigma[channel],
-						ladder->calibration.flags[channel]);
+						ladder->calibration.sigma[channel], ladder->calibration.flags[channel], 
+						ladder->calibration.gain_calibration[channel]);
 				stream->m_write_string(stream, string);
 			}
 			string = f_string_new(string, d_string_buffer_size, "\n%s\n", ladder->note);
@@ -374,6 +374,7 @@ void p_ladder_load_calibrate(struct s_ladder *ladder, struct o_stream *stream) {
 	struct s_exception *exception = NULL;
 	d_try {
 		d_object_lock(ladder->calibration.lock);
+		memset(ladder->calibration.gain_calibration, 0, sizeof(float)*d_trb_event_channels);
 		f_read_calibration(stream, ladder->calibration.pedestal, ladder->calibration.sigma_raw, ladder->calibration.sigma, 
 				ladder->calibration.flags, ladder->calibration.gain_calibration, NULL);
 		ladder->calibration.calibrated = d_true;
@@ -416,10 +417,8 @@ void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) {
 			f_chart_append_histogram(charts[e_interface_alignment_histogram_pedestal], 0, ladder->calibration.pedestal[index]);
 			f_chart_append_histogram(charts[e_interface_alignment_histogram_sigma_raw], 0, ladder->calibration.sigma_raw[index]);
 			f_chart_append_histogram(charts[e_interface_alignment_histogram_sigma], 0, ladder->calibration.sigma[index]);
-			if (ladder->calibration.size_gain_calibration_step > 0) {
-				f_chart_append_signal(charts[e_interface_alignment_gain], 0, index, ladder->calibration.gain_calibration[index]);
-				f_chart_append_histogram(charts[e_interface_alignment_histogram_gain], 0, ladder->calibration.gain_calibration[index]);
-			}
+			f_chart_append_signal(charts[e_interface_alignment_gain], 0, index, ladder->calibration.gain_calibration[index]);
+			f_chart_append_histogram(charts[e_interface_alignment_histogram_gain], 0, ladder->calibration.gain_calibration[index]);
 		}
 		charts[e_interface_alignment_sigma_raw]->kind[0] = e_chart_kind_histogram;
 		ladder->calibration.step = e_ladder_calibration_step_pedestal;
@@ -428,6 +427,7 @@ void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) {
 		ladder->calibration.size_occupancy = 0;
 		if (ladder->compute_occupancy)
 			ladder->calibration.size_occupancy = ladder->occupancy_bucket;
+		memset(ladder->calibration.gain_calibration, 0, sizeof(float)*d_trb_event_channels);
 		ladder->calibration.next_gain_calibration = 0;
 		ladder->calibration.size_gain_calibration = 0;
 		ladder->calibration.next_gain_calibration_step = 0;
@@ -638,6 +638,7 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.size_occupancy, 0);
 			if (ladder->compute_occupancy)
 				d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.size_occupancy, ladder->occupancy_bucket);
+			memset(ladder->calibration.gain_calibration, 0, sizeof(float)*d_trb_event_channels);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.next_gain_calibration, 0);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.size_gain_calibration, 0);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.next_gain_calibration_step, 0);
