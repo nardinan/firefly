@@ -24,6 +24,7 @@ extern "C" {
 }
 struct s_chart_style common_style = d_style_empty;
 int v_chart_split_x = 1, v_chart_split_y = 1;
+char v_canvas_title[d_string_buffer_size];
 TH1F *f_create_histogram(const char *name, const char *labels, int bins_number, float x_low, float x_up, struct s_chart_style style) {
 	TH1F *result;
 	if ((result = new TH1F(name, labels, bins_number, x_low, x_up))) {
@@ -138,6 +139,7 @@ void p_export_histograms_singleton(struct o_string *output, int log_y, int grid_
 			legend->Draw();
 		canvas->Modified();
 		canvas->Update();
+		canvas->SetTitle(v_canvas_title);
 		canvas->Print(real_output->content, "pdf");
 		d_release(real_output);
 		delete canvas;

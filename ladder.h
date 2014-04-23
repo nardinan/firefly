@@ -77,6 +77,11 @@ typedef enum e_ladder_commands {
 	e_ladder_command_sleep,
 	e_ladder_command_temperature
 } e_ladder_commands;
+typedef enum e_ladder_calibration_steps {
+	e_ladder_calibration_step_pedestal = 0,
+	e_ladder_calibration_step_occupancy,
+	e_ladder_calibration_step_gain
+} e_ladder_calibration_steps;
 typedef enum e_ladder_automators {
 	e_ladder_automator_name = 0,
 	e_ladder_automator_dac,
@@ -108,7 +113,7 @@ typedef struct s_ladder {
 	char output[d_string_buffer_size], shadow_output[d_string_buffer_size], shadow_calibration[d_string_buffer_size], directory[d_string_buffer_size],
 	     ladder_directory[d_string_buffer_size], name[d_string_buffer_size], voltage[d_string_buffer_size], current[d_string_buffer_size],
 	     note[d_string_buffer_size], sensors[2][d_string_buffer_size], remote[d_string_buffer_size], multimeter[d_string_buffer_size],
-	     power_supply[d_string_buffer_size], log[d_string_buffer_size];
+	     power_supply[d_string_buffer_size], log[d_string_buffer_size], official_log[d_string_buffer_size];
 	struct o_object *lock, *parameters_lock;
 	struct o_trb *device;
 	struct o_trb_event last_event;
@@ -116,20 +121,24 @@ typedef struct s_ladder {
 	time_t starting_time, finish_time;
 	long long last_readed_time;
 	unsigned int last_readed_events, readed_events, damaged_events, event_size, listening_channel, location_pointer, skip, to_skip, percent_occupancy,
-		     action_pointer, occupancy_bucket;
+		     action_pointer, occupancy_bucket, gain_calibration_bucket, gain_calibration_steps, gain_calibration_dac_bottom, gain_calibration_dac_top;
 	unsigned char last_readed_kind, last_readed_code;
-	int evented, deviced, stopped, update_interface, save_calibration_raw, save_calibration_pdf, show_bad_channels, compute_occupancy;
+	int evented, deviced, stopped, update_interface, save_calibration_raw, save_calibration_pdf, compute_occupancy, compute_gain_calibration;
 	float hertz, last_hold_delay, sigma_raw_cut, sigma_raw_noise_cut_bottom, sigma_raw_noise_cut_top, sigma_k, sigma_cut, sigma_noise_cut_bottom,
 	      sigma_noise_cut_top, occupancy_k, performance_k;
 	struct s_ladder_action action[d_ladder_actions];
 	pthread_t analyze_thread;
 	struct {
+		enum e_ladder_calibration_steps step;
 		struct o_object *lock, *write_lock;
-		unsigned int next, next_occupancy, size, size_occupancy;
-		struct o_trb_event events[d_common_calibration_events], occupancy_events[d_common_occupancy_events];
+		unsigned int next, next_occupancy, next_gain_calibration, next_gain_calibration_step, size, size_occupancy, size_gain_calibration,
+			     size_gain_calibration_step;
+		struct o_trb_event events[d_common_calibration_events], occupancy_events[d_common_occupancy_events], 
+				   gain_calibration_events[d_common_gain_calibration_steps][d_common_gain_calibration_events];
 		float pedestal[d_trb_event_channels], sigma_raw[d_trb_event_channels], sigma[d_trb_event_channels], occupancy[d_trb_event_channels],
-			temperature[2];
-		int computed, calibrated, flags[d_trb_event_channels];
+			gain_calibration_mean[d_common_gain_calibration_steps][d_trb_event_channels], gain_calibration[d_trb_event_channels], temperature[2],
+			gain_calibration_step;
+		int computed, calibrated, reconfigure, flags[d_trb_event_channels];
 	} calibration;
 	struct {
 		struct o_object *lock;

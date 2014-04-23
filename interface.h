@@ -81,6 +81,10 @@ typedef enum e_interface_parameters_spins {
 	e_interface_parameters_spin_occupancy_k,
 	e_interface_parameters_spin_occupancy_bucket,
 	e_interface_parameters_spin_occupancy_percent,
+	e_interface_parameters_spin_gain_calibration_bucket,
+	e_interface_parameters_spin_gain_calibration_steps,
+	e_interface_parameters_spin_gain_calibration_dac_top,
+	e_interface_parameters_spin_gain_calibration_dac_bottom,
 	e_interface_parameters_spin_NULL
 } e_interface_parameters_spins;
 typedef enum e_interface_combos {
@@ -130,9 +134,11 @@ typedef enum e_interface_alignments {
 	e_interface_alignment_pedestal,
 	e_interface_alignment_sigma_raw,
 	e_interface_alignment_sigma,
+	e_interface_alignment_gain,
 	e_interface_alignment_histogram_pedestal,
 	e_interface_alignment_histogram_sigma_raw,
 	e_interface_alignment_histogram_sigma,
+	e_interface_alignment_histogram_gain,
 	e_interface_alignment_histogram_cn_1,
 	e_interface_alignment_histogram_cn_2,
 	e_interface_alignment_histogram_cn_3,
@@ -165,7 +171,7 @@ typedef struct s_interface_parameters {
 	GtkScale *performance;
 	GtkSpinButton *spins[e_interface_parameters_spin_NULL];
 	GtkComboBox *combos[e_interface_parameters_combo_NULL];
-	GtkToggleButton *save_raw, *save_pdf, *show_bad_channels, *compute_occupancy;
+	GtkToggleButton *save_raw, *save_pdf, *compute_occupancy, *compute_gain_calibration;
 	GtkEntry *remote, *multimeter;
 	GtkFileChooserButton *directory;
 	GtkButton *action;

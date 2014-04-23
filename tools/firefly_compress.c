@@ -32,7 +32,8 @@ int main (int argc, char *argv[]) {
 	struct o_stream *stream;
 	struct s_exception *exception = NULL;
 	int arguments = 0, flags[d_trb_event_channels], backup;
-	float high_treshold = 8.0f, low_treshold = 3.0f, pedestal[d_trb_event_channels], sigma_raw[d_trb_event_channels], sigma[d_trb_event_channels];
+	float high_treshold = 8.0f, low_treshold = 3.0f, pedestal[d_trb_event_channels], sigma_raw[d_trb_event_channels], sigma[d_trb_event_channels],
+	      gain[d_trb_event_channels];
 	d_try {
 		d_compress_argument(arguments, "-c", calibration, d_string_pure, "No calibration file specified (-c)");
 		d_compress_argument(arguments, "-d", data, d_string_pure, "No data file specified (-d)");
@@ -57,7 +58,7 @@ int main (int argc, char *argv[]) {
 		}
 		if ((calibration) && (data) && (output)) {
 			stream = f_stream_new_file(NULL, calibration, "r", 0777);
-			f_read_calibration(stream, pedestal, sigma_raw, sigma, flags, NULL);
+			f_read_calibration(stream, pedestal, sigma_raw, sigma, flags, gain, NULL);
 			f_compress_data(data, output, output_cn, high_treshold, low_treshold, 10.0, pedestal, sigma, flags);
 			f_check_compression(output);
 		} else

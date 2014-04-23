@@ -75,7 +75,7 @@ typedef enum e_calibration_details {
 extern unsigned int min_strip, max_strip, min_strips, max_strips;
 extern float max_common_noise, min_signal_over_noise;
 extern unsigned int f_get_parameter(const char *flag, int argc, char **argv);
-extern void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_raw, float *sigma, int *flag,
+extern void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_raw, float *sigma, int *flag, float *gain,
 		struct s_singleton_calibration_details *details);
 extern void p_compress_event_cluster(struct s_singleton_cluster_details *cluster, unsigned int first_channel, unsigned int last_channel, float *sigma,
 		float *signal, float *common_noise);

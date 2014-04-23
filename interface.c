@@ -65,6 +65,10 @@ const char *interface_labels[] = {
 	"v_occupancy_k",
 	"v_occupancy_bucket",
 	"v_occupancy_percent",
+	"v_gain_calibration_bucket",
+	"v_gain_calibration_steps",
+	"v_gain_calibration_dac_top",
+	"v_gain_calibration_dac_bottom",
 	NULL
 }, *interface_combos[] = {
 	"v_kind",
@@ -107,9 +111,11 @@ const char *interface_labels[] = {
 	"v_calibration_pedestal_alignment",
 	"v_calibration_sigma_raw_alignment",
 	"v_calibration_sigma_alignment",
+	"v_calibration_gain_alignment",
 	"v_calibration_histogram_pedestal_alignment",
 	"v_calibration_histogram_sigma_raw_alignment",
 	"v_calibration_histogram_sigma_alignment",
+	"v_calibration_histogram_gain_alignment",
 	"v_data_cn_1_alignment",
 	"v_data_cn_2_alignment",
 	"v_data_cn_3_alignment",
@@ -132,9 +138,11 @@ const char *interface_labels[] = {
 	"styles/pedestal.keys",
 	"styles/sigma_raw.keys",
 	"styles/sigma.keys",
+	"styles/gain.keys",
 	"styles/histogram_pedestal.keys",
 	"styles/histogram_sigma_raw.keys",
 	"styles/histogram_sigma.keys",
+	"styles/histogram_gain.keys",
 	"styles/histogram_cn.keys",
 	"styles/histogram_cn.keys",
 	"styles/histogram_cn.keys",
@@ -156,9 +164,11 @@ const char *interface_labels[] = {
 	"pedestal",
 	"sigma_raw",
 	"sigma",
+	"gain",
 	"histogram_pedestal",
 	"histogram_sigma_raw",
 	"histogram_sigma",
+	"histogram_gain",
 	"common_noise_va1",
 	"common_noise_va2",
 	"common_noise_va3",
@@ -232,8 +242,9 @@ void p_interface_new_parameters(struct s_interface *result, GtkBuilder *paramete
 	}
 	d_assert(result->parameters_configuration->save_raw = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_save_raw")));
 	d_assert(result->parameters_configuration->save_pdf = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_save_pdf")));
-	d_assert(result->parameters_configuration->show_bad_channels = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_show_bad_channels")));
 	d_assert(result->parameters_configuration->compute_occupancy = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_occupancy")));
+	d_assert(result->parameters_configuration->compute_gain_calibration = 
+			GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_gain_calibration")));
 	d_assert(result->parameters_configuration->directory = GTK_FILE_CHOOSER_BUTTON(gtk_builder_get_object(parameters_interface, "v_workspace")));
 	for (index = 0; location_entries[index].code; index++)
 		gtk_combo_box_insert_text(result->parameters_configuration->combos[e_interface_parameters_combo_location], index,
@@ -449,9 +460,11 @@ void f_interface_clean_calibration(struct s_chart **charts) {
 	f_chart_flush(charts[e_interface_alignment_pedestal]);
 	f_chart_flush(charts[e_interface_alignment_sigma_raw]);
 	f_chart_flush(charts[e_interface_alignment_sigma]);
+	f_chart_flush(charts[e_interface_alignment_gain]);
 	f_chart_flush(charts[e_interface_alignment_histogram_pedestal]);
 	f_chart_flush(charts[e_interface_alignment_histogram_sigma_raw]);
 	f_chart_flush(charts[e_interface_alignment_histogram_sigma]);
+	f_chart_flush(charts[e_interface_alignment_histogram_gain]);
 }
 
 void f_interface_clean_data(struct s_chart **charts) {

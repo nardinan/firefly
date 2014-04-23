@@ -46,6 +46,7 @@ typedef enum e_pdf_pages {
 } e_pdf_pages;
 extern struct s_chart_style common_style;
 extern int v_chart_split_x, v_chart_split_y;
+extern char v_canvas_title[d_string_buffer_size];
 #define d_multiple_chart ((v_chart_split_x > 1) || (v_chart_split_y > 1))
 extern TH1F *f_create_histogram(const char *name, const char *labels, int bins_number, float x_low, float x_up, struct s_chart_style style);
 extern TH2F *f_create_2D_histogram(const char *name, const char *labels, int bins_number_x, float x_low, float x_up, int bins_number_y, float y_low,

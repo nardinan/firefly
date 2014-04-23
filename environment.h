@@ -32,8 +32,7 @@ typedef struct s_environment {
 	struct o_object *lock;
 	struct o_trbs *searcher;
 	struct s_interface *interface;
-	struct s_ladder *ladders[d_environment_ladders];
-	unsigned int current;
+	struct s_ladder *ladder; /* ladders_bucket[] */
 } s_environment;
 typedef struct s_environment_parameters {
 	struct s_environment *environment;

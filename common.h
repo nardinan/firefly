@@ -42,6 +42,8 @@
 #define d_common_data_events_default 128
 #define d_common_occupancy_events 5120
 #define d_common_occupancy_error 3.0
+#define d_common_gain_calibration_events 512
+#define d_common_gain_calibration_steps 10
 #define d_common_data_spectrum ((d_trb_event_channels_half/2)+1)
 #define d_common_data_spectrum_step 5.2
 #define d_assert(a) if(!(a))d_die("[ASSERT|firefly] - fail testing %s", #a)

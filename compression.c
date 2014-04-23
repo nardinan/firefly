@@ -26,7 +26,8 @@ unsigned int f_get_parameter(const char *flag, int argc, char *argv[]) {
 	return result;
 }
 
-void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_raw, float *sigma, int *flag, struct s_singleton_calibration_details *details) {
+void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_raw, float *sigma, int *flag, float *gain, 
+		struct s_singleton_calibration_details *details) {
 	int channel, is_information;
 	struct o_string *readed_buffer, *buffer = NULL, *key = NULL, *singleton;
 	struct o_array *elements;
@@ -98,13 +99,15 @@ void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_r
 			}
 			if (!is_information)
 				if ((elements = readed_buffer->m_split(readed_buffer, ','))) {
-					if (elements->filled == 7) { /* <ID = 0> <VA = 1> <ID in VA = 2> <Pedestal = 3> <Sigma raw = 4> <Sigma = 5> <Flag = 6> */
+					if (elements->filled >= 7) { /* <ID = 0> <VA = 1> <ID in VA = 2> <Pedestal = 3> <Sigma raw = 4> <Sigma = 5> <Flag = 6> <?Gain Calibration = 7> */
 						channel = d_array_cast(atoi, elements, singleton, 0, d_trb_event_channels);
 						if ((channel >= 0) && (channel < d_trb_event_channels)) {
 							pedestal[channel] = d_array_cast(atof, elements, singleton, 3, 0.0);
 							sigma_raw[channel] = d_array_cast(atof, elements, singleton, 4, 0.0);
 							sigma[channel] = d_array_cast(atof, elements, singleton, 5, 0.0);
 							flag[channel] = d_array_cast(atoi, elements, singleton, 6, 0);
+							if (elements->filled >= 8)
+								gain[channel] = d_array_cast(atof, elements, singleton, 7, 0);
 						}
 					}
 					d_release(elements);
