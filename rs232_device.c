@@ -82,7 +82,7 @@ void f_rs232_protek_format(unsigned char *incoming, unsigned char *output, size_
 	char value[d_string_argument_size], extension[d_string_argument_size];
 	size_t pointer = 0, done;
 	int index;
-	float current = 1;
+	float result = 1.0f, factor = 1.0f;
 	if ((incoming[0] == 'D') && (incoming[1] == 'C')) {
 		for (index = 2, pointer = 0, done = d_false; ((!done) && (incoming[index] != '\0'));) {
 			switch (incoming[index]) {
@@ -113,6 +113,7 @@ void f_rs232_protek_format(unsigned char *incoming, unsigned char *output, size_
 				case 'u':
 				case 'm':
 				case 'A':
+				case 'V':
 					extension[pointer++] = incoming[index];
 				case ' ':
 					break;
@@ -123,16 +124,21 @@ void f_rs232_protek_format(unsigned char *incoming, unsigned char *output, size_
 			if (!done)
 				index++;
 		}
-		if ((extension[0] == 'A') || (extension[1] == 'A')) {
-			if (extension[0] == 'u')
-				current = 1.0f;
-			else if (extension[0] == 'm')
-				current = 1000.0f;
-			else if (extension[0] == 'A')
-				current = 1000000.0f;
-			current *= atof(value);
-			snprintf(output, size, "%.02f", current);
+		switch(extension[0]) {
+			case 'u':
+				factor = 1.0f;
+				break;
+			case 'm':
+				factor = 1000.0f;
+				break;
+			default:
+				factor = 1000000.0f;
 		}
+		if ((extension[0] == 'A') || (extension[1] == 'A'))
+			result = atof(value)*factor;
+		else if ((extension[0] == 'V') || (extension[1] == 'V'))
+			result = (atof(value)/1000000)*factor;
+		snprintf(output, size, "%.02f", result);
 	}
 }
 
