@@ -109,7 +109,7 @@ void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 							sum_x_squares += (index*index);
 							sum_products += (index*ladder->calibration.gain_calibration_mean[index][channel]);
 						}
-						ladder->calibration.gain_calibration[index] = ((size_gain_calibration_step*sum_products)-(sum_x*sum_y))/
+						ladder->calibration.gain_calibration[channel] = ((size_gain_calibration_step*sum_products)-(sum_x*sum_y))/
 							((size_gain_calibration_step*sum_x_squares)-(sum_x*sum_x));
 					}
 					done = d_true;

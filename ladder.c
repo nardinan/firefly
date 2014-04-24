@@ -346,7 +346,7 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 			for (channel = 0; channel < d_trb_event_channels; channel++) {
 				va = channel/d_trb_event_channels_on_va;
 				channel_on_va = channel%d_trb_event_channels_on_va;
-				string = f_string_new(string, d_string_buffer_size, "%d, %d, %d, %.03f, %.03f, %.03f, %d, %f\n", channel, va, channel_on_va,
+				string = f_string_new(string, d_string_buffer_size, "%d, %d, %d, %.03f, %.03f, %.03f, %d, %.03f\n", channel, va, channel_on_va,
 						ladder->calibration.pedestal[channel], ladder->calibration.sigma_raw[channel],
 						ladder->calibration.sigma[channel], ladder->calibration.flags[channel], 
 						ladder->calibration.gain_calibration[channel]);
@@ -427,7 +427,6 @@ void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) {
 		ladder->calibration.size_occupancy = 0;
 		if (ladder->compute_occupancy)
 			ladder->calibration.size_occupancy = ladder->occupancy_bucket;
-		memset(ladder->calibration.gain_calibration, 0, sizeof(float)*d_trb_event_channels);
 		ladder->calibration.next_gain_calibration = 0;
 		ladder->calibration.size_gain_calibration = 0;
 		ladder->calibration.next_gain_calibration_step = 0;
