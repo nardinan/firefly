@@ -194,7 +194,7 @@ void p_ladder_read_calibrate(struct s_ladder *ladder) { d_FP;
 							sizeof(struct o_trb_event));
 				} else if ((ladder->calibration.size_gain_calibration_step > 0) &&
 						(ladder->calibration.next_gain_calibration_step < ladder->calibration.size_gain_calibration_step)) {
-					if (!ladder->calibrate.next_gain_calibration_step)
+					if (!ladder->calibration.next_gain_calibration_step)
 						if ((ladder->save_calibration_raw) && (d_strlen(ladder->output) > 0))
 							if ((ladder->deviced) && (ladder->device)) {
 								name = d_string(d_string_buffer_size, "%s/%s_gain%s", ladder->ladder_directory, ladder->output,
