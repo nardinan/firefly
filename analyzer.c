@@ -45,7 +45,7 @@ void p_analyzer_thread_calibrate_channels(struct s_ladder *ladder, float sigma_k
 }
 
 void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
-	int next, next_occupancy, next_gain_calibration_step, size, size_occupancy, size_gain_calibration_step, size_gain_calibration, computed, 
+	int next, next_occupancy, next_gain_calibration_step, size, size_occupancy, size_gain_calibration_step, size_gain_calibration, computed,
 	    done = d_false, index, channel;
 	float cn[d_trb_event_vas], value, occupancy_bad_value = ((float)ladder->percent_occupancy/100.0), sum_x, sum_y, sum_x_squares, sum_products;
 	d_ladder_safe_assign(ladder->calibration.lock, computed, ladder->calibration.computed);
@@ -102,15 +102,15 @@ void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 						p_trb_event_pedestal(ladder->calibration.gain_calibration_events[index], size_gain_calibration,
 								ladder->calibration.gain_calibration_mean[index]);
 					for (channel = 0; channel < d_trb_event_channels; channel++) {
-						for (index = 0, sum_x = 0, sum_y = 0, sum_x_squares = 0, sum_products = 0; index < size_gain_calibration_step; 
+						for (index = 0, sum_x = 0, sum_y = 0, sum_x_squares = 0, sum_products = 0; index < size_gain_calibration_step;
 								index++) {
 							sum_x += index;
 							sum_y += ladder->calibration.gain_calibration_mean[index][channel];
 							sum_x_squares += (index*index);
 							sum_products += (index*ladder->calibration.gain_calibration_mean[index][channel]);
 						}
-						ladder->calibration.gain_calibration[channel] = ((size_gain_calibration_step*sum_products)-(sum_x*sum_y))/
-							((size_gain_calibration_step*sum_x_squares)-(sum_x*sum_x));
+						ladder->calibration.gain_calibration[channel] = (((size_gain_calibration_step*sum_products)-(sum_x*sum_y))/
+							((size_gain_calibration_step*sum_x_squares)-(sum_x*sum_x)))/ladder->calibration.gain_calibration_step;
 					}
 					done = d_true;
 				}

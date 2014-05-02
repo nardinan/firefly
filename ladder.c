@@ -180,28 +180,37 @@ int p_ladder_read_integrity(struct o_trb_event *event, unsigned char *last_reade
 }
 
 void p_ladder_read_calibrate(struct s_ladder *ladder) { d_FP;
+	struct o_string *name;
 	if (ladder->to_skip == 0)
 		if (ladder->last_event.filled) {
 			if (p_ladder_read_integrity(&(ladder->last_event), &(ladder->last_readed_code))) {
 				d_object_lock(ladder->calibration.lock);
 				if (ladder->calibration.next < ladder->calibration.size)
 					memcpy(&(ladder->calibration.events[ladder->calibration.next++]), &(ladder->last_event), sizeof(struct o_trb_event));
-				else if ((ladder->calibration.size_occupancy > 0) && 
+				else if ((ladder->calibration.size_occupancy > 0) &&
 						(ladder->calibration.next_occupancy < ladder->calibration.size_occupancy)) {
 					ladder->calibration.step = e_ladder_calibration_step_occupancy;
 					memcpy(&(ladder->calibration.occupancy_events[ladder->calibration.next_occupancy++]), &(ladder->last_event),
 							sizeof(struct o_trb_event));
 				} else if ((ladder->calibration.size_gain_calibration_step > 0) &&
 						(ladder->calibration.next_gain_calibration_step < ladder->calibration.size_gain_calibration_step)) {
+					if (!ladder->calibrate.next_gain_calibration_step)
+						if ((ladder->save_calibration_raw) && (d_strlen(ladder->output) > 0))
+							if ((ladder->deviced) && (ladder->device)) {
+								name = d_string(d_string_buffer_size, "%s/%s_gain%s", ladder->ladder_directory, ladder->output,
+										d_common_ext_calibration_raw);
+								ladder->device->m_close_stream(ladder->device);
+								ladder->device->m_stream(ladder->device, NULL, name, "w", 0777);
+								d_release(name);
+							}
 					ladder->calibration.step = e_ladder_calibration_step_gain;
 					if (ladder->calibration.reconfigure) {
 						if ((ladder->deviced) && (ladder->device)) {
-							ladder->device->m_close_stream(ladder->device);
 							ladder->device->m_stop(ladder->device, d_common_timeout);
-							ladder->device->m_setup(ladder->device, d_ladder_trigger_internal, ladder->last_hold_delay, 
+							ladder->device->m_setup(ladder->device, d_ladder_trigger_internal, ladder->last_hold_delay,
 									e_trb_mode_calibration, (ladder->gain_calibration_dac_bottom+
 										(ladder->calibration.gain_calibration_step*
-										 (float)ladder->calibration.next_gain_calibration_step)), 0x00, 
+										 (float)ladder->calibration.next_gain_calibration_step)), 0x00,
 									d_common_timeout);
 						}
 						ladder->calibration.reconfigure = d_false;
@@ -348,7 +357,7 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 				channel_on_va = channel%d_trb_event_channels_on_va;
 				string = f_string_new(string, d_string_buffer_size, "%d, %d, %d, %.03f, %.03f, %.03f, %d, %.03f\n", channel, va, channel_on_va,
 						ladder->calibration.pedestal[channel], ladder->calibration.sigma_raw[channel],
-						ladder->calibration.sigma[channel], ladder->calibration.flags[channel], 
+						ladder->calibration.sigma[channel], ladder->calibration.flags[channel],
 						ladder->calibration.gain_calibration[channel]);
 				stream->m_write_string(stream, string);
 			}
@@ -375,7 +384,7 @@ void p_ladder_load_calibrate(struct s_ladder *ladder, struct o_stream *stream) {
 	d_try {
 		d_object_lock(ladder->calibration.lock);
 		memset(ladder->calibration.gain_calibration, 0, sizeof(float)*d_trb_event_channels);
-		f_read_calibration(stream, ladder->calibration.pedestal, ladder->calibration.sigma_raw, ladder->calibration.sigma, 
+		f_read_calibration(stream, ladder->calibration.pedestal, ladder->calibration.sigma_raw, ladder->calibration.sigma,
 				ladder->calibration.flags, ladder->calibration.gain_calibration, NULL);
 		ladder->calibration.calibrated = d_true;
 		ladder->calibration.computed = d_true;

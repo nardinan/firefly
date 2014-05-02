@@ -95,7 +95,7 @@ int main (int argc, char *argv[]) {
 			charts.sigma->GetYaxis()->SetRangeUser(0, 10);
 			charts.sigma->GetXaxis()->SetNdivisions(1606, kFALSE);
 			charts.gain = d_chart(";Channel;Gain", d_trb_event_channels, 0.0, d_trb_event_channels);
-			charts.gain->GetYaxis()->SetRangeUser(0, 360);
+			charts.gain->GetYaxis()->SetRangeUser(0, 15);
 			charts.gain->GetXaxis()->SetNdivisions(1606, kFALSE);
 			f_fill_histograms(calibration, &charts);
 			charts.paves_left = new TPaveText(0.1, 0.1, 0.9, 0.9);
