@@ -35,6 +35,7 @@
 #define d_ladder_command_rsync "rsync -az --exclude *.dat -e ssh"
 #define d_ladder_command_search "rsync -az"
 #define d_ladder_command_grep "pgrep -fl"
+#define d_ladder_command_grep_exclude "grep -v grep"
 #define d_ladder_trigger_internal 0x22
 #define d_ladder_trigger_external 0x11
 #define d_ladder_value_size 8
