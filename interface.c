@@ -91,6 +91,10 @@ const char *interface_labels[] = {
 	"v_test_a",
 	"v_test_b",
 	"v_test_c",
+	"v_test_d",
+	"v_test_e",
+	"v_test_f",
+	"v_test_g",
 	NULL
 }, *interface_files[] = {
 	"v_calibration_file",
@@ -206,7 +210,7 @@ struct s_interface_key_value location_entries[] = {
 	{"FM", "Flight model"},
 	{NULL, NULL}
 };
-const char test_entries[] = {0x00, 'a', 'b', 'c'};
+const char test_entries[] = {0x00, 'a', 'b', 'c', 'd', 'e', 'f', 'g'};
 void p_interface_new_scale(struct s_interface *result, GtkBuilder *scale_interface) {
 	int index;
 	if (!result->scale_configuration)
