@@ -29,7 +29,7 @@
 #define d_common_ext_calibration_pdf ".pdf"
 #define d_common_exporter "tools/firefly_cal_export.bin"
 #define d_common_timeout 500
-#define d_common_timeout_loop 100
+#define d_common_timeout_loop 400
 #define d_common_timeout_analyze 500000
 #define d_common_timeout_device 1500000
 #define d_common_timeout_temperature 200000
