@@ -171,7 +171,7 @@ typedef struct s_interface_parameters {
 	GtkScale *performance;
 	GtkSpinButton *spins[e_interface_parameters_spin_NULL];
 	GtkComboBox *combos[e_interface_parameters_combo_NULL];
-	GtkToggleButton *save_raw, *save_pdf, *compute_occupancy, *compute_gain_calibration;
+	GtkToggleButton *save_raw, *read_temperature, *read_atomic, *save_pdf, *compute_occupancy, *compute_gain_calibration;
 	GtkEntry *remote, *multimeter;
 	GtkFileChooserButton *directory;
 	GtkButton *action;

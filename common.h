@@ -23,6 +23,7 @@
 #define d_common_configuration "/.firefly.cfg"
 #define d_common_log "/var/log/firefly.log"
 #define d_common_log_safe "./firefly.log"
+#define d_common_lock_file "./firefly.lock"
 #define d_common_ext_data ".dat"
 #define d_common_ext_calibration ".cal"
 #define d_common_ext_calibration_raw ".craw"

@@ -117,9 +117,9 @@ int f_step_interface(struct s_environment *environment, time_t current_time) { d
 	float bytes;
 	strftime(buffer, d_string_buffer_size, d_common_interface_time_format, localtime(&current_time));
 	gtk_label_set_text(environment->interface->labels[e_interface_label_current_time], buffer);
-	snprintf(value, d_string_buffer_size, "%.02f C", environment->ladder->calibration.temperature[0]);
+	snprintf(value, d_string_buffer_size, "%.02f C (%s)", environment->ladder->calibration.temperature[0], environment->ladder->sensors[0]);
 	gtk_label_set_text(environment->interface->labels[e_interface_label_temperature1], value);
-	snprintf(value, d_string_buffer_size, "%.02f C", environment->ladder->calibration.temperature[1]);
+	snprintf(value, d_string_buffer_size, "%.02f C (%s)", environment->ladder->calibration.temperature[1], environment->ladder->sensors[1]);
 	gtk_label_set_text(environment->interface->labels[e_interface_label_temperature2], value);
 	d_object_lock(environment->ladder->lock);
 	if (environment->ladder->command != e_ladder_command_stop) {
@@ -132,7 +132,7 @@ int f_step_interface(struct s_environment *environment, time_t current_time) { d
 				snprintf(value, d_string_buffer_size, "<span foreground='#009900'>%d</span>", environment->ladder->readed_events);
 		} else
 			snprintf(value, d_string_buffer_size, "%d", environment->ladder->readed_events);
-		snprintf(buffer, d_string_buffer_size, "%s (~%.01fHz) [<span foreground='#990000'>%d</span>]", value, environment->ladder->hertz, 
+		snprintf(buffer, d_string_buffer_size, "%s (~%.01fHz) [<span foreground='#990000'>%d</span>]", value, environment->ladder->hertz,
 				environment->ladder->damaged_events);
 		gtk_label_set_markup(environment->interface->labels[e_interface_label_events], buffer);
 		if (strlen(environment->ladder->output) > 0) {
@@ -203,7 +203,10 @@ int f_step_progress(struct s_environment *environment, time_t current_time) { d_
 				gtk_progress_bar_set_text(environment->interface->progress_bar, "IDLE");
 			break;
 		case e_ladder_command_data:
-			gtk_progress_bar_set_text(environment->interface->progress_bar, "DATA (manual)");
+			if ((environment->ladder->read_atomic) && (v_atomic_lock == -1))
+				gtk_progress_bar_set_text(environment->interface->progress_bar, "Waiting for lock ...");
+			else
+				gtk_progress_bar_set_text(environment->interface->progress_bar, "DATA (manual)");
 			if (automation) {
 				total_time = environment->ladder->action[environment->ladder->action_pointer].duration;
 				elpased_time = current_time-environment->ladder->action[environment->ladder->action_pointer].starting;
@@ -212,24 +215,27 @@ int f_step_progress(struct s_environment *environment, time_t current_time) { d_
 			break;
 		case e_ladder_command_calibration:
 			d_ladder_safe_assign(environment->ladder->calibration.lock, current_step, environment->ladder->calibration.step);
-			switch (current_step) {
-				case e_ladder_calibration_step_pedestal:
-					gtk_progress_bar_set_text(environment->interface->progress_bar, "CALIBRATION (Pedestal & Sigma)");
-					break;
-				case e_ladder_calibration_step_occupancy:
-					gtk_progress_bar_set_text(environment->interface->progress_bar, "CALIBRATION (Occupancy)");
-					break;
-				case e_ladder_calibration_step_gain:
-					snprintf(description, d_string_buffer_size, "CALIBRATION (Gain DAC %d)", 
-							(int)(environment->ladder->gain_calibration_dac_bottom+
-							 (environment->ladder->calibration.gain_calibration_step*
-							  environment->ladder->calibration.next_gain_calibration_step)));
-					gtk_progress_bar_set_text(environment->interface->progress_bar, description);
-					break;
-				default:
-					gtk_progress_bar_set_text(environment->interface->progress_bar, "CALIBRATION");
-					break;
-			}
+			if ((environment->ladder->read_atomic) && (v_atomic_lock == -1))
+				gtk_progress_bar_set_text(environment->interface->progress_bar, "Waiting for lock ...");
+			else
+				switch (current_step) {
+					case e_ladder_calibration_step_pedestal:
+						gtk_progress_bar_set_text(environment->interface->progress_bar, "CALIBRATION (Pedestal & Sigma)");
+						break;
+					case e_ladder_calibration_step_occupancy:
+						gtk_progress_bar_set_text(environment->interface->progress_bar, "CALIBRATION (Occupancy)");
+						break;
+					case e_ladder_calibration_step_gain:
+						snprintf(description, d_string_buffer_size, "CALIBRATION (Gain DAC %d)",
+								(int)(environment->ladder->gain_calibration_dac_bottom+
+									(environment->ladder->calibration.gain_calibration_step*
+									 environment->ladder->calibration.next_gain_calibration_step)));
+						gtk_progress_bar_set_text(environment->interface->progress_bar, description);
+						break;
+					default:
+						gtk_progress_bar_set_text(environment->interface->progress_bar, "CALIBRATION");
+						break;
+				}
 			readed = environment->ladder->readed_events-environment->ladder->skip;
 			if (readed >= 0) {
 				total_events = environment->ladder->calibration.size+environment->ladder->calibration.size_occupancy+

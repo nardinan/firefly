@@ -314,6 +314,8 @@ void p_callback_parameters_action(GtkWidget *widget, struct s_environment *envir
 			d_string_buffer_size);
 	environment->ladder->save_calibration_raw = gtk_toggle_button_get_active(environment->interface->parameters_configuration->save_raw);
 	environment->ladder->save_calibration_pdf = gtk_toggle_button_get_active(environment->interface->parameters_configuration->save_pdf);
+	environment->ladder->read_temperature = gtk_toggle_button_get_active(environment->interface->parameters_configuration->read_temperature);
+	environment->ladder->read_atomic = gtk_toggle_button_get_active(environment->interface->parameters_configuration->read_atomic);
 	strncpy(environment->ladder->remote, gtk_entry_get_text(environment->interface->parameters_configuration->remote), d_string_buffer_size);
 	strncpy(environment->ladder->multimeter, gtk_entry_get_text(environment->interface->parameters_configuration->multimeter), d_string_buffer_size);
 	environment->ladder->performance_k = gtk_range_get_value(GTK_RANGE(environment->interface->parameters_configuration->performance));
@@ -369,6 +371,8 @@ void p_callback_parameters_show(GtkWidget *widget, struct s_environment *environ
 	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(environment->interface->parameters_configuration->directory), environment->ladder->directory);
 	gtk_toggle_button_set_active(environment->interface->parameters_configuration->save_raw, environment->ladder->save_calibration_raw);
 	gtk_toggle_button_set_active(environment->interface->parameters_configuration->save_pdf, environment->ladder->save_calibration_pdf);
+	gtk_toggle_button_set_active(environment->interface->parameters_configuration->read_temperature, environment->ladder->read_temperature);
+	gtk_toggle_button_set_active(environment->interface->parameters_configuration->read_atomic, environment->ladder->read_atomic);
 	gtk_entry_set_text(environment->interface->parameters_configuration->remote, environment->ladder->remote);
 	gtk_entry_set_text(environment->interface->parameters_configuration->multimeter, environment->ladder->multimeter);
 	gtk_range_set_value(GTK_RANGE(environment->interface->parameters_configuration->performance), environment->ladder->performance_k);

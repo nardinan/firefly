@@ -19,7 +19,7 @@
 #include "analyzer.h"
 #include "environment.h"
 owDevice v_temperature[MAX_DEVICES];
-int v_sensors = 0;
+int v_sensors = 0, v_atomic_lock = -1;
 void f_ladder_log(struct s_ladder *ladder, const char *format, ...) {
 	va_list arguments;
 	char time_buffer[d_string_buffer_size];
@@ -61,6 +61,8 @@ void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *config
 			d_ladder_key_load_f(dictionary, occupancy_k, ladder);
 			d_ladder_key_load_d(dictionary, save_calibration_raw, ladder);
 			d_ladder_key_load_d(dictionary, save_calibration_pdf, ladder);
+			d_ladder_key_load_d(dictionary, read_temperature, ladder);
+			d_ladder_key_load_d(dictionary, read_atomic, ladder);
 			d_ladder_key_load_s(dictionary, remote, ladder);
 			d_ladder_key_load_s(dictionary, multimeter, ladder);
 			d_ladder_key_load_d(dictionary, compute_occupancy, ladder);
@@ -106,6 +108,8 @@ void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *config
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "occupancy_k=%f\n", ladder->occupancy_k));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "save_calibration_raw=%d\n", ladder->save_calibration_raw));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "save_calibration_pdf=%d\n", ladder->save_calibration_pdf));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "read_temperature=%d\n", ladder->read_temperature));
+			stream->m_write_string(stream, d_S(d_string_buffer_size, "read_atomic=%d\n", ladder->read_atomic));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "remote=%s\n", ladder->remote));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "multimeter=%s\n", ladder->multimeter));
 			stream->m_write_string(stream, d_S(d_string_buffer_size, "compute_occupancy=%d\n", ladder->compute_occupancy));
@@ -242,56 +246,104 @@ void p_ladder_read_data(struct s_ladder *ladder) { d_FP;
 	}
 }
 
+int p_ladder_read_lock(void) {
+	int result = -1, descriptor;
+	if ((descriptor = open(d_common_lock_file, O_CREAT|O_RDWR, 0666)) >= 0) {
+		if (flock(descriptor, LOCK_EX|LOCK_NB) >= 0)
+			result = descriptor;
+		else
+			close(descriptor);
+	}
+	return result;
+}
+
+void p_ladder_read_unlock(int descriptor) {
+	flock(descriptor, LOCK_UN);
+	close(descriptor);
+}
+
+void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
+	d_object_lock(ladder->lock);
+	if ((ladder->deviced) && (ladder->device)) {
+		if (ladder->command != e_ladder_command_stop) {
+			if ((!ladder->read_atomic) || (v_atomic_lock >= 0) || ((v_atomic_lock = p_ladder_read_lock()) >= 0))
+				if ((ladder->device->m_event(ladder->device, &(ladder->last_event), timeout)))
+					if (ladder->last_event.filled) {
+						ladder->evented = d_true;
+						ladder->readed_events++;
+						ladder->last_readed_kind = ladder->last_event.kind;
+						if (ladder->command == e_ladder_command_calibration) {
+							if (ladder->last_readed_kind != 0xa3) {
+								p_ladder_read_calibrate(ladder);
+								if (ladder->to_skip > 0)
+									ladder->to_skip--;
+							}
+						} else
+							p_ladder_read_data(ladder);
+					}
+		} else if (!ladder->stopped) {
+			ladder->device->m_stop(ladder->device, timeout);
+			if (v_atomic_lock >= 0)
+				p_ladder_read_unlock(v_atomic_lock);
+			ladder->stopped = d_true;
+		}
+	}
+	d_object_unlock(ladder->lock);
+}
+
 void f_ladder_temperature(struct s_ladder *ladder, struct o_trbs *searcher) { d_FP;
 	int sensors, current_sensor, temperature_sensors, index, initialized = d_false, tries = d_common_temperature_tries;
 	memset(ladder->sensors[0], 0, sizeof(char)*d_string_buffer_size);
 	memset(ladder->sensors[1], 0, sizeof(char)*d_string_buffer_size);
 	ladder->calibration.temperature[0] = 0;
 	ladder->calibration.temperature[1] = 0;
-	d_object_lock(searcher->search_semaphore);
-	if ((acquireAdapter() == 0) && (resetAdapter() == 0))
-		initialized = d_true;
-	d_object_unlock(searcher->search_semaphore);
-	if (initialized) {
-		if ((v_sensors = makeDeviceList(v_temperature)) > 0) {
-			for (sensors = 0, temperature_sensors = 0; sensors < v_sensors; sensors++) {
-				setupDevice(&(v_temperature[sensors]));
-				doConversion(&(v_temperature[sensors]));
-				if (temperature_sensors < 2) {
-					for (index = 0; index < SERIAL_SIZE; index++)
-						snprintf(ladder->sensors[temperature_sensors]+(strlen("00")*index), d_string_buffer_size-(strlen("00")*index),
-								"%02x", (unsigned char)v_temperature[sensors].SN[index]);
-					temperature_sensors++;
+	if (ladder->read_temperature) {
+		d_object_lock(searcher->search_semaphore);
+		if ((acquireAdapter() == 0) && (resetAdapter() == 0))
+			initialized = d_true;
+		d_object_unlock(searcher->search_semaphore);
+		if (initialized) {
+			if ((v_sensors = makeDeviceList(v_temperature)) > 0) {
+				for (sensors = 0, temperature_sensors = 0; sensors < v_sensors; sensors++) {
+					setupDevice(&(v_temperature[sensors]));
+					doConversion(&(v_temperature[sensors]));
+					if (temperature_sensors < 2) {
+						for (index = 0; index < SERIAL_SIZE; index++)
+							snprintf(ladder->sensors[temperature_sensors]+(strlen("00")*index),
+									d_string_buffer_size-(strlen("00")*index), "%02x",
+									(unsigned char)v_temperature[sensors].SN[index]);
+						temperature_sensors++;
+					}
 				}
-			}
-			current_sensor = 0;
-			while ((current_sensor < temperature_sensors) && (tries > 0)) {
-				usleep(d_common_timeout_temperature);
-				for (sensors = 0, current_sensor = 0; sensors < v_sensors; sensors++) {
-					if ((v_temperature[sensors].SN[0] == 0x10) || (v_temperature[sensors].SN[0] == 0x22) ||
-							(v_temperature[sensors].SN[0] == 0x28))
-						if (current_sensor < 2) {
-							if (readDevice(&(v_temperature[sensors]), &(ladder->calibration.temperature[current_sensor])) < 0)
-								break;
-							current_sensor++;
-						}
+				current_sensor = 0;
+				while ((current_sensor < temperature_sensors) && (tries > 0)) {
+					usleep(d_common_timeout_temperature);
+					for (sensors = 0, current_sensor = 0; sensors < v_sensors; sensors++) {
+						if ((v_temperature[sensors].SN[0] == 0x10) || (v_temperature[sensors].SN[0] == 0x22) ||
+								(v_temperature[sensors].SN[0] == 0x28))
+							if (current_sensor < 2) {
+								if (readDevice(&(v_temperature[sensors]),
+											&(ladder->calibration.temperature[current_sensor])) < 0)
+									break;
+								current_sensor++;
+							}
+					}
+					tries--;
 				}
-				tries--;
+				if (tries)
+					f_ladder_log(ladder, "temperature sensors have been readed: [%s]-> %.02fC; [%s]-> %.02fC", ladder->sensors[0],
+							ladder->calibration.temperature[0], ladder->sensors[1], ladder->calibration.temperature[1]);
 			}
-			if (tries)
-				f_ladder_log(ladder, "temperature sensors have been readed: [%s]-> %.02fC; [%s]-> %.02fC", ladder->sensors[0],
-						ladder->calibration.temperature[0], ladder->sensors[1], ladder->calibration.temperature[1]);
+			releaseAdapter();
 		}
-		releaseAdapter();
 	}
-	f_ladder_current(ladder, d_common_timeout_device);
 }
 
 void f_ladder_current(struct s_ladder *ladder, time_t timeout) { d_FP;
 	unsigned char buffer[d_string_buffer_size];
 	struct termios tty;
 	int device;
-	if (d_strlen(ladder->multimeter) > 0) {
+	if (d_strlen(ladder->multimeter) > 0)
 		if (f_rs232_open(ladder->multimeter, &device, &tty)) {
 			f_rs232_write(device, NULL, 0);
 			if ((f_rs232_read(device, buffer, d_string_buffer_size, timeout)) > 0) {
@@ -300,33 +352,6 @@ void f_ladder_current(struct s_ladder *ladder, time_t timeout) { d_FP;
 			}
 			f_rs232_close(device, tty);
 		}
-	}
-}
-
-void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
-	d_object_lock(ladder->lock);
-	if ((ladder->deviced) && (ladder->device)) {
-		if (ladder->command != e_ladder_command_stop) {
-			if ((ladder->device->m_event(ladder->device, &(ladder->last_event), timeout)))
-				if (ladder->last_event.filled) {
-					ladder->evented = d_true;
-					ladder->readed_events++;
-					ladder->last_readed_kind = ladder->last_event.kind;
-					if (ladder->command == e_ladder_command_calibration) {
-						if (ladder->last_readed_kind != 0xa3) {
-							p_ladder_read_calibrate(ladder);
-							if (ladder->to_skip > 0)
-								ladder->to_skip--;
-						}
-					} else
-						p_ladder_read_data(ladder);
-				}
-		} else if (!ladder->stopped) {
-			ladder->device->m_stop(ladder->device, timeout);
-			ladder->stopped = d_true;
-		}
-	}
-	d_object_unlock(ladder->lock);
 }
 
 void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
@@ -779,6 +804,7 @@ int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, 
 					finished = d_true;
 				}
 			} else if ((ladder->action[ladder->action_pointer].command == e_ladder_command_temperature) ||
+					(ladder->action[ladder->action_pointer].command == e_ladder_command_current) ||
 					((elpased = time(NULL)-ladder->action[ladder->action_pointer].starting) >=
 					 ladder->action[ladder->action_pointer].duration))
 				finished = d_true;
@@ -809,10 +835,13 @@ int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, 
 				f_jobs_show(ladder, interface);
 			ladder->action[ladder->action_pointer].starting = time(NULL);
 			if ((ladder->action[ladder->action_pointer].command == e_ladder_command_sleep) ||
-					(ladder->action[ladder->action_pointer].command == e_ladder_command_temperature)) {
+					(ladder->action[ladder->action_pointer].command == e_ladder_command_temperature) ||
+					(ladder->action[ladder->action_pointer].command == e_ladder_command_current)) {
 				ladder->command = e_ladder_command_stop;
 				if (ladder->action[ladder->action_pointer].command == e_ladder_command_temperature)
 					f_ladder_temperature(ladder, environment->searcher);
+				else if (ladder->action[ladder->action_pointer].command == e_ladder_command_current)
+					f_ladder_current(ladder, d_common_timeout_device);
 			} else {
 				if (ladder->action[ladder->action_pointer].write)
 					gtk_toggle_button_set_active(interface->switches[e_interface_switch_public], d_true);
@@ -914,27 +943,36 @@ void f_ladder_load_actions(struct s_ladder *ladder, struct o_stream *stream) {
 									ladder->action[current_action].hold_delay = atof(singleton->content);
 									break;
 								case e_ladder_automator_trigger:
-									if (d_strcmp(singleton->content, "T") == 0)
+									if ((d_strcmp(singleton->content, "TRUE") == 0) ||
+											(d_strcmp(singleton->content, "T") == 0))
 										ladder->action[current_action].trigger = d_true;
 									break;
 								case e_ladder_automator_write:
-									if (d_strcmp(singleton->content, "T") == 0)
+									if ((d_strcmp(singleton->content, "TRUE") == 0) ||
+											(d_strcmp(singleton->content, "T") == 0))
 										ladder->action[current_action].write = d_true;
 									break;
 								case e_ladder_automator_command:
-									if (d_strcmp(singleton->content, "C") == 0)
+									if ((d_strcmp(singleton->content, "CAL") == 0) ||
+											(d_strcmp(singleton->content, "C") == 0))
 										ladder->action[current_action].command = e_ladder_command_calibration;
-									else if (d_strcmp(singleton->content, "D") == 0)
+									else if ((d_strcmp(singleton->content, "DAT") == 0) ||
+											(d_strcmp(singleton->content, "D") == 0))
 										ladder->action[current_action].command = e_ladder_command_data;
-									else if (d_strcmp(singleton->content, "T") == 0)
+									else if ((d_strcmp(singleton->content, "TEMP") == 0) ||
+											(d_strcmp(singleton->content, "T") == 0))
 										ladder->action[current_action].command = e_ladder_command_temperature;
+									else if (d_strcmp(singleton->content, "CURR") == 0)
+										ladder->action[current_action].command = e_ladder_command_current;
 									else
 										ladder->action[current_action].command = e_ladder_command_sleep;
 									break;
 								case e_ladder_automator_mode:
-									if (d_strcmp(singleton->content, "N") == 0)
+									if ((d_strcmp(singleton->content, "NORMAL") == 0) ||
+											(d_strcmp(singleton->content, "N") == 0))
 										ladder->action[current_action].mode = e_trb_mode_normal;
-									else if (d_strcmp(singleton->content, "G") == 0)
+									else if ((d_strcmp(singleton->content, "GAIN") == 0) &&
+											(d_strcmp(singleton->content, "G") == 0))
 										ladder->action[current_action].mode = e_trb_mode_calibration;
 									else
 										ladder->action[current_action].mode = e_trb_mode_calibration_debug_digital;

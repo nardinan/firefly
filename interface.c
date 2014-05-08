@@ -247,8 +247,10 @@ void p_interface_new_parameters(struct s_interface *result, GtkBuilder *paramete
 	}
 	d_assert(result->parameters_configuration->save_raw = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_save_raw")));
 	d_assert(result->parameters_configuration->save_pdf = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_save_pdf")));
+	d_assert(result->parameters_configuration->read_temperature = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_read_temperature")));
+	d_assert(result->parameters_configuration->read_atomic = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_read_atomic")));
 	d_assert(result->parameters_configuration->compute_occupancy = GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_occupancy")));
-	d_assert(result->parameters_configuration->compute_gain_calibration = 
+	d_assert(result->parameters_configuration->compute_gain_calibration =
 			GTK_TOGGLE_BUTTON(gtk_builder_get_object(parameters_interface, "v_gain_calibration")));
 	d_assert(result->parameters_configuration->directory = GTK_FILE_CHOOSER_BUTTON(gtk_builder_get_object(parameters_interface, "v_workspace")));
 	for (index = 0; location_entries[index].code; index++)

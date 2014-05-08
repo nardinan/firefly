@@ -2,6 +2,13 @@
 <interface>
   <requires lib="gtk+" version="2.18"/>
   <!-- interface-naming-policy project-wide -->
+  <object class="GtkAdjustment" id="v_gain_calibration_bucket_adjustement">
+    <property name="lower">128</property>
+    <property name="upper">512</property>
+    <property name="value">128</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkAdjustment" id="v_gain_calibration_dac_bottom_adjustement">
     <property name="upper">65535</property>
     <property name="value">128</property>
@@ -35,12 +42,12 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
-  <object class="GtkAdjustment" id="v_occupancy_k_adjustement">
+  <object class="GtkAdjustment" id="v_occupancy_percent_adjustment">
     <property name="upper">100</property>
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
-  <object class="GtkAdjustment" id="v_occupancy_percent_adjustment">
+  <object class="GtkAdjustment" id="v_occupancy_k_adjustement">
     <property name="upper">100</property>
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
@@ -50,40 +57,6 @@
     <property name="upper">100</property>
     <property name="value">10</property>
     <property name="step_increment">1</property>
-  </object>
-  <object class="GtkAdjustment" id="v_sigma_cut_adjustement">
-    <property name="upper">1024</property>
-    <property name="step_increment">0.01</property>
-    <property name="page_increment">1</property>
-  </object>
-  <object class="GtkAdjustment" id="v_sigma_k_adjustment">
-    <property name="upper">1024</property>
-    <property name="step_increment">0.01</property>
-    <property name="page_increment">1</property>
-  </object>
-  <object class="GtkAdjustment" id="v_sigma_raw_cut_adjustment">
-    <property name="upper">1024</property>
-    <property name="step_increment">0.01</property>
-    <property name="page_increment">1</property>
-  </object>
-  <object class="GtkAdjustment" id="v_sigma_raw_noise_cut_bottom_adjustement">
-    <property name="lower">-65536</property>
-    <property name="upper">65536</property>
-    <property name="step_increment">0.01</property>
-    <property name="page_increment">1</property>
-  </object>
-  <object class="GtkAdjustment" id="v_sigma_raw_noise_cut_top_adjustement">
-    <property name="lower">-65536</property>
-    <property name="upper">65536</property>
-    <property name="step_increment">0.01</property>
-    <property name="page_increment">1</property>
-  </object>
-  <object class="GtkAdjustment" id="v_gain_calibration_bucket_adjustement">
-    <property name="lower">128</property>
-    <property name="upper">512</property>
-    <property name="value">128</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
   </object>
   <object class="GtkWindow" id="v_preferences_window">
     <property name="can_focus">False</property>
@@ -113,7 +86,7 @@
                       <object class="GtkTable" id="v_system_grid">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="n_rows">9</property>
+                        <property name="n_rows">10</property>
                         <property name="n_columns">2</property>
                         <child>
                           <placeholder/>
@@ -221,8 +194,8 @@
                             <property name="label" translatable="yes">SSH remote repository</property>
                           </object>
                           <packing>
-                            <property name="top_attach">5</property>
-                            <property name="bottom_attach">6</property>
+                            <property name="top_attach">6</property>
+                            <property name="bottom_attach">7</property>
                           </packing>
                         </child>
                         <child>
@@ -239,8 +212,8 @@
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">2</property>
-                            <property name="top_attach">5</property>
-                            <property name="bottom_attach">6</property>
+                            <property name="top_attach">6</property>
+                            <property name="bottom_attach">7</property>
                           </packing>
                         </child>
                         <child>
@@ -252,8 +225,8 @@
                             <property name="label" translatable="yes">Multimeter TTY</property>
                           </object>
                           <packing>
-                            <property name="top_attach">6</property>
-                            <property name="bottom_attach">7</property>
+                            <property name="top_attach">7</property>
+                            <property name="bottom_attach">8</property>
                           </packing>
                         </child>
                         <child>
@@ -270,8 +243,8 @@
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">2</property>
-                            <property name="top_attach">6</property>
-                            <property name="bottom_attach">7</property>
+                            <property name="top_attach">7</property>
+                            <property name="bottom_attach">8</property>
                           </packing>
                         </child>
                         <child>
@@ -287,8 +260,8 @@
                           </object>
                           <packing>
                             <property name="right_attach">2</property>
-                            <property name="top_attach">7</property>
-                            <property name="bottom_attach">8</property>
+                            <property name="top_attach">8</property>
+                            <property name="bottom_attach">9</property>
                           </packing>
                         </child>
                         <child>
@@ -300,8 +273,8 @@
                             <property name="label" translatable="yes">Best performance</property>
                           </object>
                           <packing>
-                            <property name="top_attach">8</property>
-                            <property name="bottom_attach">9</property>
+                            <property name="top_attach">9</property>
+                            <property name="bottom_attach">10</property>
                           </packing>
                         </child>
                         <child>
@@ -315,8 +288,38 @@
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">2</property>
-                            <property name="top_attach">8</property>
-                            <property name="bottom_attach">9</property>
+                            <property name="top_attach">9</property>
+                            <property name="bottom_attach">10</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="v_read_temperature">
+                            <property name="label" translatable="yes">Read temperature sensors</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="draw_indicator">True</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="right_attach">2</property>
+                            <property name="top_attach">4</property>
+                            <property name="bottom_attach">5</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="v_read_atomic">
+                            <property name="label" translatable="yes">Atomic data acquisition</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="draw_indicator">True</property>
+                          </object>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="right_attach">2</property>
+                            <property name="top_attach">5</property>
+                            <property name="bottom_attach">6</property>
                           </packing>
                         </child>
                       </object>
@@ -1049,6 +1052,15 @@
                                 <child>
                                   <placeholder/>
                                 </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -1129,6 +1141,16 @@
       </object>
     </child>
   </object>
+  <object class="GtkAdjustment" id="v_sigma_cut_adjustement">
+    <property name="upper">1024</property>
+    <property name="step_increment">0.01</property>
+    <property name="page_increment">1</property>
+  </object>
+  <object class="GtkAdjustment" id="v_sigma_k_adjustment">
+    <property name="upper">1024</property>
+    <property name="step_increment">0.01</property>
+    <property name="page_increment">1</property>
+  </object>
   <object class="GtkAdjustment" id="v_sigma_noise_cut_bottom_adjustement">
     <property name="lower">-65536</property>
     <property name="upper">65536</property>
@@ -1136,6 +1158,23 @@
     <property name="page_increment">1</property>
   </object>
   <object class="GtkAdjustment" id="v_sigma_noise_cut_top_adjustement">
+    <property name="lower">-65536</property>
+    <property name="upper">65536</property>
+    <property name="step_increment">0.01</property>
+    <property name="page_increment">1</property>
+  </object>
+  <object class="GtkAdjustment" id="v_sigma_raw_cut_adjustment">
+    <property name="upper">1024</property>
+    <property name="step_increment">0.01</property>
+    <property name="page_increment">1</property>
+  </object>
+  <object class="GtkAdjustment" id="v_sigma_raw_noise_cut_bottom_adjustement">
+    <property name="lower">-65536</property>
+    <property name="upper">65536</property>
+    <property name="step_increment">0.01</property>
+    <property name="page_increment">1</property>
+  </object>
+  <object class="GtkAdjustment" id="v_sigma_raw_noise_cut_top_adjustement">
     <property name="lower">-65536</property>
     <property name="upper">65536</property>
     <property name="step_increment">0.01</property>
