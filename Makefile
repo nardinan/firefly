@@ -1,4 +1,5 @@
 objects = chart.o interface.o compression.o ladder.o analyzer.o environment.o loop.o firefly.o dev-functions.o ow-functions.o rs232_device.o
+objects_temperature = dev-functions.o ow-functions.o firefly_temperature.o
 objects_compressor = compression.o firefly_compress.o
 objects_analyzer = compression.o root_analyzer.o firefly_dat_export.o
 objects_calibration_export = compression.o root_analyzer.o firefly_cal_export.o
@@ -12,6 +13,7 @@ lflags = -Wall
 liblink = -L../serenity -L/usr/lib64 -lm `libusb-config --libs` `pkg-config --libs gtk+-2.0` `pkg-config --libs fftw3` -L/usr/lib -lpthread -lserenity_ground -lserenity_structures -lserenity_crypto -lserenity_infn
 liblink_analyzer = $(liblink) `root-config --libs`
 exec = firefly.bin
+exec_temperature = tools/firefly_temperature.bin
 exec_compressor = tools/firefly_compress.bin
 exec_analyzer = tools/firefly_dat_export.bin
 exec_calibration_export = tools/firefly_cal_export.bin
@@ -21,11 +23,15 @@ exec_ttree = tools/firefly_ttree.bin
 all: $(objects)
 	$(cc) $(lflags) $(objects) -o $(exec) $(liblink)
 	(if [ ! -f /root/.firefly.cfg ]; then cp firefly.cfg /root/.firefly.cfg; fi;) || true
+	make temperature
 	make compressor
 	make data_export
 	make calibration_export
 	make cn_export
 	make ttree
+
+temperature: $(objects_temperature)
+	$(cc) $(lflags) $(objects_temperature) -o $(exec_temperature) $(liblink)
 
 compressor: $(objects_compressor)
 	$(cc) $(lflags) $(objects_compressor) -o $(exec_compressor) $(liblink) 
@@ -75,6 +81,9 @@ dev-functions.o: phys.ksu.edu/dev-functions.c phys.ksu.edu/dev-functions.h phys.
 firefly.o: firefly.c loop.h
 	$(cc) $(cflags) firefly.c
 
+firefly_temperature.o: tools/firefly_temperature.c phys.ksu.edu/dev-functions.h phys.ksu.edu/ow-functions.h
+	$(cc) $(cflags) tools/firefly_temperature.c
+
 firefly_compress.o: tools/firefly_compress.c compression.h
 	$(cc) $(cflags) tools/firefly_compress.c
 
@@ -104,6 +113,7 @@ clean:
 	rm -f AutoDict_vector*
 	rm -f *.log
 	rm -f $(exec)
+	rm -f $(exec_temperature)
 	rm -f $(exec_compressor)
 	rm -f $(exec_analyzer)
 	rm -f $(exec_ttree)
