@@ -900,7 +900,7 @@ void f_ladder_load_actions(struct s_ladder *ladder, struct o_stream *stream) {
 	};
 	d_try {
 		memset(ladder->action, 0, (d_ladder_actions*sizeof(struct s_ladder_action)));
-		while ((readed_buffer = stream->m_read_line(stream, buffer, d_string_buffer_size))) {
+		while ((readed_buffer = stream->m_read_line(stream, buffer, d_string_buffer_size)))
 			if ((d_strlen(readed_buffer->content) > 0) && (readed_buffer->content[0] != '#')) {
 				if (d_strcmp(readed_buffer->content, d_ladder_action_reset) == 0) {
 					if ((++current_action) >= d_ladder_actions)
@@ -955,7 +955,7 @@ void f_ladder_load_actions(struct s_ladder *ladder, struct o_stream *stream) {
 									if ((d_strcmp(singleton->content, "CAL") == 0) ||
 											(d_strcmp(singleton->content, "C") == 0))
 										ladder->action[current_action].command = e_ladder_command_calibration;
-									else if ((d_strcmp(singleton->content, "DAT") == 0) ||
+									else if ((d_strcmp(singleton->content, "DATA") == 0) ||
 											(d_strcmp(singleton->content, "D") == 0))
 										ladder->action[current_action].command = e_ladder_command_data;
 									else if ((d_strcmp(singleton->content, "TEMP") == 0) ||
@@ -992,7 +992,6 @@ void f_ladder_load_actions(struct s_ladder *ladder, struct o_stream *stream) {
 					d_release(elements);
 				}
 			}
-		}
 	} d_catch(exception) {
 		d_exception_dump(stderr, exception);
 		d_raise;
