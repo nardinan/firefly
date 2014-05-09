@@ -5,13 +5,13 @@
 #define CONVERT_TIME 1
 
 typedef struct {
-    unsigned char SN[8];
-    unsigned int configError:  1;
-    unsigned int convertError: 1;
-    unsigned int alarmError:   1;
-    time_t convertTime;
-    int channels;
-    long successes, tries;
+	unsigned char SN[8];
+	unsigned int configError:  1;
+	unsigned int convertError: 1;
+	unsigned int alarmError:   1;
+	time_t convertTime;
+	int channels;
+	long successes, tries;
 } owDevice;
 
 void setupDevice (owDevice *dev);
