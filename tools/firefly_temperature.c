@@ -6,7 +6,7 @@
 #include "../phys.ksu.edu/dev-functions.h"
 #define d_buffer_size 512
 #define d_sensor_tries 15
-#define d_sensor_timeout 800
+#define d_sensor_timeout 1000
 owDevice sensors[MAX_DEVICES], used_sensors[MAX_DEVICES];
 int elements = 0;
 void f_initialize(FILE *out_stream) {
