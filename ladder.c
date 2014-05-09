@@ -961,9 +961,11 @@ void f_ladder_load_actions(struct s_ladder *ladder, struct o_stream *stream) {
 									else if ((d_strcmp(singleton->content, "TEMP") == 0) ||
 											(d_strcmp(singleton->content, "T") == 0))
 										ladder->action[current_action].command = e_ladder_command_temperature;
-									else if (d_strcmp(singleton->content, "CURR") == 0)
+									else if ((d_strcmp(singleton->content, "CURR") == 0) ||
+											(d_strcmp(singleton->content, "A") == 0))
 										ladder->action[current_action].command = e_ladder_command_current;
-									else if (d_strcmp(singleton->content, "BASH") == 0)
+									else if ((d_strcmp(singleton->content, "BASH") == 0) ||
+											(d_strcmp(singleton->content, "B") == 0))
 										ladder->action[current_action].command = e_ladder_command_bash;
 									else
 										ladder->action[current_action].command = e_ladder_command_sleep;
