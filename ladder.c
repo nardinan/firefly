@@ -797,6 +797,7 @@ int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, 
 				}
 			} else if ((ladder->action[ladder->action_pointer].command == e_ladder_command_temperature) ||
 					(ladder->action[ladder->action_pointer].command == e_ladder_command_current) ||
+					(ladder->action[ladder->action_pointer].command == e_ladder_command_bash) ||
 					((elpased = time(NULL)-ladder->action[ladder->action_pointer].starting) >=
 					 ladder->action[ladder->action_pointer].duration))
 				finished = d_true;
@@ -828,12 +829,17 @@ int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, 
 			ladder->action[ladder->action_pointer].starting = time(NULL);
 			if ((ladder->action[ladder->action_pointer].command == e_ladder_command_sleep) ||
 					(ladder->action[ladder->action_pointer].command == e_ladder_command_temperature) ||
-					(ladder->action[ladder->action_pointer].command == e_ladder_command_current)) {
+					(ladder->action[ladder->action_pointer].command == e_ladder_command_current) ||
+					(ladder->action[ladder->action_pointer].command == e_ladder_command_bash)) {
 				ladder->command = e_ladder_command_stop;
 				if (ladder->action[ladder->action_pointer].command == e_ladder_command_temperature)
 					f_ladder_temperature(ladder, environment->searcher);
 				else if (ladder->action[ladder->action_pointer].command == e_ladder_command_current)
 					f_ladder_current(ladder, d_common_timeout_device);
+				else if (ladder->action[ladder->action_pointer].command == e_ladder_command_bash) {
+					if (strlen(ladder->action[ladder->action_pointer].bash) > 0)
+						system(ladder->action[ladder->action_pointer].bash);
+				}
 			} else {
 				if (ladder->action[ladder->action_pointer].write)
 					gtk_toggle_button_set_active(interface->switches[e_interface_switch_public], d_true);
@@ -884,6 +890,7 @@ void f_ladder_load_actions(struct s_ladder *ladder, struct o_stream *stream) {
 		"trigger",
 		"hold_delay",
 		"command",
+		"bash",
 		"mode",
 		"duration",
 		"write",
@@ -956,6 +963,8 @@ void f_ladder_load_actions(struct s_ladder *ladder, struct o_stream *stream) {
 										ladder->action[current_action].command = e_ladder_command_temperature;
 									else if (d_strcmp(singleton->content, "CURR") == 0)
 										ladder->action[current_action].command = e_ladder_command_current;
+									else if (d_strcmp(singleton->content, "BASH") == 0)
+										ladder->action[current_action].command = e_ladder_command_bash;
 									else
 										ladder->action[current_action].command = e_ladder_command_sleep;
 									break;
@@ -968,6 +977,10 @@ void f_ladder_load_actions(struct s_ladder *ladder, struct o_stream *stream) {
 										ladder->action[current_action].mode = e_trb_mode_calibration;
 									else
 										ladder->action[current_action].mode = e_trb_mode_calibration_debug_digital;
+									break;
+								case e_ladder_automator_bash:
+									strncpy(ladder->action[current_action].bash, singleton->content,
+											d_ladder_action_command_size);
 									break;
 								default:
 									d_log(e_log_level_ever, "wrong key: %s", key->content);

@@ -40,6 +40,7 @@
 #define d_ladder_trigger_external 0x11
 #define d_ladder_value_size 8
 #define d_ladder_action_label_size 8
+#define d_ladder_action_command_size 1024
 #define d_ladder_extension_size 3
 #define d_ladder_actions 32
 #define d_ladder_action_reset "[NEW]"
@@ -77,7 +78,8 @@ typedef enum e_ladder_commands {
         e_ladder_command_automatic,
 	e_ladder_command_sleep,
 	e_ladder_command_temperature,
-	e_ladder_command_current
+	e_ladder_command_current,
+	e_ladder_command_bash
 } e_ladder_commands;
 typedef enum e_ladder_calibration_steps {
 	e_ladder_calibration_step_pedestal = 0,
@@ -91,6 +93,7 @@ typedef enum e_ladder_automators {
 	e_ladder_automator_trigger,
 	e_ladder_automator_hold_delay,
 	e_ladder_automator_command,
+	e_ladder_automator_bash,
 	e_ladder_automator_mode,
 	e_ladder_automator_duration,
 	e_ladder_automator_write,
@@ -102,7 +105,7 @@ typedef struct s_ladder_histogram_value {
 	int value, occurrence, filled;
 } s_ladder_histogram_value;
 typedef struct s_ladder_action {
-	char label[d_ladder_action_label_size], destination[d_ladder_action_label_size];
+	char label[d_ladder_action_label_size], destination[d_ladder_action_label_size], bash[d_ladder_action_command_size];
 	unsigned short dac;
 	unsigned char channel, trigger, write, initialized;
 	float hold_delay;
