@@ -203,7 +203,7 @@ int f_step_progress(struct s_environment *environment, time_t current_time) { d_
 				gtk_progress_bar_set_text(environment->interface->progress_bar, "IDLE");
 			break;
 		case e_ladder_command_data:
-			if ((environment->ladder->read_atomic) && (v_atomic_lock == -1))
+			if ((environment->ladder->read_atomic) && (v_atomic_read_lock == -1))
 				gtk_progress_bar_set_text(environment->interface->progress_bar, "Waiting for lock ...");
 			else
 				gtk_progress_bar_set_text(environment->interface->progress_bar, "DATA (manual)");
@@ -215,7 +215,7 @@ int f_step_progress(struct s_environment *environment, time_t current_time) { d_
 			break;
 		case e_ladder_command_calibration:
 			d_ladder_safe_assign(environment->ladder->calibration.lock, current_step, environment->ladder->calibration.step);
-			if ((environment->ladder->read_atomic) && (v_atomic_lock == -1))
+			if ((environment->ladder->read_atomic) && (v_atomic_read_lock == -1))
 				gtk_progress_bar_set_text(environment->interface->progress_bar, "Waiting for lock ...");
 			else
 				switch (current_step) {

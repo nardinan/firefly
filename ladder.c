@@ -19,7 +19,7 @@
 #include "analyzer.h"
 #include "environment.h"
 owDevice v_temperature[MAX_DEVICES];
-int v_sensors = 0, v_atomic_lock = -1;
+int v_sensors = 0, v_atomic_read_lock = -1, v_atomic_name_lock = -1;
 void f_ladder_log(struct s_ladder *ladder, const char *format, ...) {
 	va_list arguments;
 	char time_buffer[d_string_buffer_size];
@@ -246,27 +246,14 @@ void p_ladder_read_data(struct s_ladder *ladder) { d_FP;
 	}
 }
 
-int p_ladder_read_lock(void) {
-	int result = -1, descriptor;
-	if ((descriptor = open(d_common_lock_file, O_CREAT|O_RDWR, 0666)) >= 0) {
-		if (flock(descriptor, LOCK_EX|LOCK_NB) >= 0)
-			result = descriptor;
-		else
-			close(descriptor);
-	}
-	return result;
-}
 
-void p_ladder_read_unlock(int descriptor) {
-	flock(descriptor, LOCK_UN);
-	close(descriptor);
-}
 
 void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 	d_object_lock(ladder->lock);
 	if ((ladder->deviced) && (ladder->device)) {
 		if (ladder->command != e_ladder_command_stop) {
-			if ((!ladder->read_atomic) || (v_atomic_lock >= 0) || ((v_atomic_lock = p_ladder_read_lock()) >= 0))
+			if ((!ladder->read_atomic) || (v_atomic_read_lock >= 0) ||
+					((v_atomic_read_lock = p_stream_lock_file(d_common_lock_read_file)) >= 0))
 				if ((ladder->device->m_event(ladder->device, &(ladder->last_event), timeout)))
 					if (ladder->last_event.filled) {
 						ladder->evented = d_true;
@@ -283,10 +270,8 @@ void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 					}
 		} else if (!ladder->stopped) {
 			ladder->device->m_stop(ladder->device, timeout);
-			if (v_atomic_lock >= 0) {
-				p_ladder_read_unlock(v_atomic_lock);
-				v_atomic_lock = -1;
-			}
+			if (v_atomic_read_lock >= 0)
+				p_stream_unlock_file(&v_atomic_read_lock);
 			ladder->stopped = d_true;
 		}
 	}
@@ -618,6 +603,10 @@ void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *inte
 	else
 		snprintf(buffer_name, d_string_buffer_size, "%s_%s", ladder->name, location_entries[ladder->location_pointer].code);
 	memset(ladder->shadow_calibration, 0, d_string_buffer_size);
+	while (v_atomic_name_lock < 0) {
+		v_atomic_name_lock = p_stream_lock_file(d_common_lock_name_file);
+		usleep(d_common_timeout);
+	}
 	for (index = 0, founded = d_false; (!founded); index++) {
 		snprintf(buffer_output, d_string_buffer_size, "%s/%s/%s/%s_%03d%s", ladder->directory, ladder->name, d_ladder_directory_draft, clean_name,
 				index, d_common_ext_calibration);
@@ -637,6 +626,7 @@ void p_ladder_configure_output(struct s_ladder *ladder, struct s_interface *inte
 			pclose(stream);
 		}
 	}
+	p_stream_unlock_file(&v_atomic_name_lock);
 	if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_public]))
 		memcpy(ladder->output, ladder->shadow_output, d_string_buffer_size);
 	else

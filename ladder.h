@@ -158,7 +158,7 @@ typedef struct s_ladder {
 } s_ladder;
 struct s_environment;
 extern owDevice v_temperature[MAX_DEVICES];
-extern int v_sensors, v_atomic_lock;
+extern int v_sensors, v_atomic_read_lock, v_atomic_name_lock;
 extern void f_ladder_log(struct s_ladder *ladder, const char *format, ...);
 extern void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *configuration);
 extern void p_ladder_new_configuration_save(struct s_ladder *ladder, const char *confgiuration);
@@ -166,8 +166,6 @@ extern struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *de
 extern int p_ladder_read_integrity(struct o_trb_event *event, unsigned char *last_readed_code);
 extern void p_ladder_read_calibrate(struct s_ladder *ladder);
 extern void p_ladder_read_data(struct s_ladder *ladder);
-extern int p_ladder_read_lock(void);
-extern void p_ladder_read_unlock(int descriptor);
 extern void f_ladder_read(struct s_ladder *ladder, time_t timeout);
 extern void f_ladder_temperature(struct s_ladder *ladder, struct o_trbs *searcher);
 extern void p_ladder_current_analyze(struct s_ladder *ladder, const char *incoming);
