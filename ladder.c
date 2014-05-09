@@ -283,8 +283,10 @@ void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 					}
 		} else if (!ladder->stopped) {
 			ladder->device->m_stop(ladder->device, timeout);
-			if (v_atomic_lock >= 0)
+			if (v_atomic_lock >= 0) {
 				p_ladder_read_unlock(v_atomic_lock);
+				v_atomic_lock = -1;
+			}
 			ladder->stopped = d_true;
 		}
 	}
