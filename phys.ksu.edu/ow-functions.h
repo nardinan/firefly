@@ -38,7 +38,7 @@
 #define bulkWrite(b,l) usb_bulk_write (usbHandle, 0x02, b, l,   USB_TIMEOUT)
 #define stateRead(b)   usb_bulk_read  (usbHandle, 0x81, b, 32,  USB_TIMEOUT)
 
-int acquireAdapter (void);
+int acquireAdapter (int device_number);
 int releaseAdapter (void);
 int getResult (unsigned char *state, unsigned char mask);
 int resetAdapter (void);

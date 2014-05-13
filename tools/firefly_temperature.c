@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
@@ -9,10 +10,10 @@
 #define d_sensor_timeout 1000
 owDevice sensors[MAX_DEVICES], used_sensors[MAX_DEVICES];
 int elements = 0;
-void f_initialize(FILE *out_stream) {
+void f_initialize(int device_number, FILE *out_stream) {
 	char sensor_serial[d_buffer_size];
 	int sensor, devices, index;
-	if ((acquireAdapter() == 0) && (resetAdapter() == 0)) {
+	if ((acquireAdapter(device_number) == 0) && (resetAdapter() == 0)) {
 		if ((devices = makeDeviceList(sensors)) > 0) {
 			fputs("\"date\"", out_stream);
 			for (sensor = 0, elements = 0; sensor < devices; sensor++) {
@@ -47,7 +48,7 @@ void f_readout(FILE *out_stream) {
 				usleep(d_sensor_timeout);
 			}
 			if (tries < d_sensor_tries)
-				fprintf(out_stream, ",%.03f", temperature);
+				fprintf(out_stream, ",%.01f", temperature);
 			else
 				fputs(",0.00", out_stream);
 		}
@@ -56,8 +57,11 @@ void f_readout(FILE *out_stream) {
 }
 
 int main (int argc, char *argv[]) {
+	int device_number = 0;
+	if (argc > 1)
+		device_number = atoi(argv[1]);
 	usb_init();
-	f_initialize(stdout);
+	f_initialize(device_number, stdout);
 	f_readout(stdout);
 	fflush(stdout);
 	return 0;

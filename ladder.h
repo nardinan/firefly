@@ -160,7 +160,7 @@ typedef struct s_ladder {
 	} data;
 } s_ladder;
 struct s_environment;
-extern owDevice v_temperature[MAX_DEVICES];
+extern owDevice v_temperature[MAX_DEVICES], v_real_temperature[d_common_temperature_sensors];
 extern int v_sensors, v_atomic_read_lock, v_atomic_name_lock;
 extern void f_ladder_log(struct s_ladder *ladder, const char *format, ...);
 extern void p_ladder_new_configuration_load(struct s_ladder *ladder, const char *configuration);

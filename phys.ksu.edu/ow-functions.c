@@ -7,7 +7,7 @@ struct usb_dev_handle *usbHandle;
 unsigned char *adapterSettings = NULL;
 
 // Acquires DS2490 adapter, setting the alternate interface to interface.
-int acquireAdapter (void) {
+int acquireAdapter (int device_number) {
 	struct usb_bus *usbBus;
 	struct usb_device *usbDev;
 	unsigned int vendor, product;
@@ -36,6 +36,10 @@ int acquireAdapter (void) {
 			vendor = usbDev->descriptor.idVendor;
 			product = usbDev->descriptor.idProduct;
 			if (vendor == 0x04FA && product == 0x2490) {
+				if (device_number > 0) {
+					device_number--;
+					continue;
+				}
 
 				// Attempt to open, configure adapter
 				usbHandle = usb_open (usbDev);

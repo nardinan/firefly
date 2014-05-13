@@ -1,10 +1,10 @@
 # this job reads informations from temperature sensors
 # every minute for 20 times
-label=SLEEP
-command=S
-duration=60
-[NEW]
 label=TEMP
-command=T
-destination=SLEEP
+command=TEMP
+[NEW]
+label=SLEEP
+command=SLEEP
+duration=60
+destination=TEMP
 counter=20

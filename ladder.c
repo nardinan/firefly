@@ -18,7 +18,7 @@
 #include "ladder.h"
 #include "analyzer.h"
 #include "environment.h"
-owDevice v_temperature[MAX_DEVICES];
+owDevice v_temperature[MAX_DEVICES], v_real_temperature[d_common_temperature_sensors];
 int v_sensors = 0, v_atomic_read_lock = -1, v_atomic_name_lock = -1;
 void f_ladder_log(struct s_ladder *ladder, const char *format, ...) {
 	va_list arguments;
@@ -279,14 +279,13 @@ void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 }
 
 void f_ladder_temperature(struct s_ladder *ladder, struct o_trbs *searcher) { d_FP;
-	int sensors, current_sensor, temperature_sensors, index, initialized = d_false, tries = d_common_temperature_tries;
+	int sensors, temperature_sensors, index, initialized = d_false, tries;
 	memset(ladder->sensors[0], 0, sizeof(char)*d_string_buffer_size);
 	memset(ladder->sensors[1], 0, sizeof(char)*d_string_buffer_size);
-	ladder->calibration.temperature[0] = 0;
-	ladder->calibration.temperature[1] = 0;
+	ladder->calibration.temperature[0] = ladder->calibration.temperature[1] = 0;
 	if (ladder->read_temperature) {
 		d_object_lock(searcher->search_semaphore);
-		if ((acquireAdapter() == 0) && (resetAdapter() == 0))
+		if ((acquireAdapter(d_common_temperature_adapter) == 0) && (resetAdapter() == 0))
 			initialized = d_true;
 		d_object_unlock(searcher->search_semaphore);
 		if (initialized) {
@@ -294,30 +293,26 @@ void f_ladder_temperature(struct s_ladder *ladder, struct o_trbs *searcher) { d_
 				for (sensors = 0, temperature_sensors = 0; sensors < v_sensors; sensors++) {
 					setupDevice(&(v_temperature[sensors]));
 					doConversion(&(v_temperature[sensors]));
-					if (temperature_sensors < 2) {
-						for (index = 0; index < SERIAL_SIZE; index++)
-							snprintf(ladder->sensors[temperature_sensors]+(strlen("00")*index),
-									d_string_buffer_size-(strlen("00")*index), "%02x",
-									(unsigned char)v_temperature[sensors].SN[index]);
-						temperature_sensors++;
+					if ((v_temperature[sensors].SN[0] == 0x10) || (v_temperature[sensors].SN[0] == 0x22) || 
+							(v_temperature[sensors].SN[0] == 0x28)) {
+						if (temperature_sensors < d_common_temperature_sensors) {
+							for (index = 0; index < SERIAL_SIZE; index++)
+								snprintf(ladder->sensors[temperature_sensors]+(strlen("00")*index),
+										d_string_buffer_size-(strlen("00")*index), "%02x",
+										(unsigned char)v_temperature[sensors].SN[index]);
+							memcpy(&(v_real_temperature[temperature_sensors]), &(v_temperature[sensors]), sizeof(owDevice));
+							temperature_sensors++;
+						} else
+							break;
 					}
 				}
-				current_sensor = 0;
-				while ((current_sensor < temperature_sensors) && (tries > 0)) {
-					usleep(d_common_timeout_temperature);
-					for (sensors = 0, current_sensor = 0; sensors < v_sensors; sensors++) {
-						if ((v_temperature[sensors].SN[0] == 0x10) || (v_temperature[sensors].SN[0] == 0x22) ||
-								(v_temperature[sensors].SN[0] == 0x28))
-							if (current_sensor < 2) {
-								if (readDevice(&(v_temperature[sensors]),
-											&(ladder->calibration.temperature[current_sensor])) < 0)
-									break;
-								current_sensor++;
-							}
+				for (sensors = 0; sensors < temperature_sensors; sensors++)
+					for (tries = 0; tries < d_common_temperature_tries; tries++) {
+						if (readDevice(&(v_real_temperature[sensors]), &(ladder->calibration.temperature[sensors])) < 0)
+							break;
+						usleep(d_common_timeout_temperature);
 					}
-					tries--;
-				}
-				if (tries)
+				if (sensors == temperature_sensors)
 					f_ladder_log(ladder, "temperature sensors have been readed: [%s]-> %.02fC; [%s]-> %.02fC", ladder->sensors[0],
 							ladder->calibration.temperature[0], ladder->sensors[1], ladder->calibration.temperature[1]);
 			}
