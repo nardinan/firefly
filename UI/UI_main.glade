@@ -122,7 +122,7 @@
     <property name="short_label">Preferences</property>
   </object>
   <object class="GtkWindow" id="v_main_window">
-    <property name="title" translatable="yes">firefly - miniTRB data reader - 1.08</property>
+    <property name="title" translatable="yes">firefly - miniTRB data reader - 1.09</property>
     <child>
       <object class="GtkVBox" id="v_main_grid">
         <property name="visible">True</property>
