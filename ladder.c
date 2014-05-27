@@ -421,7 +421,7 @@ void p_ladder_analyze_finished(struct s_ladder *ladder, struct s_interface *inte
 }
 
 void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
-	int index;
+	int index, step;
 	d_object_lock(ladder->calibration.lock);
 	if (ladder->calibration.computed) {
 		f_interface_clean_calibration(charts);
@@ -436,6 +436,10 @@ void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) {
 			f_chart_append_signal(charts[e_interface_alignment_gain], 0, index, ladder->calibration.gain_calibration[index]);
 			f_chart_append_histogram(charts[e_interface_alignment_histogram_gain], 0, ladder->calibration.gain_calibration[index]);
 		}
+		for (index = 0; index < d_trb_event_channels_on_va; index++)
+			for (step = 0; step < ladder->calibration.next_gain_calibration_step; step++)
+				f_chart_append_signal(charts[e_interface_alignment_gain_vas], 0, (index*d_common_gain_calibration_steps)+step, 
+						ladder->calibration.gain_calibration_vas[step][index]);
 		charts[e_interface_alignment_sigma_raw]->kind[0] = e_chart_kind_histogram;
 		ladder->calibration.step = e_ladder_calibration_step_pedestal;
 		ladder->calibration.next = 0;

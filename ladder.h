@@ -142,8 +142,9 @@ typedef struct s_ladder {
 		struct o_trb_event events[d_common_calibration_events], occupancy_events[d_common_occupancy_events],
 				   gain_calibration_events[d_common_gain_calibration_steps][d_common_gain_calibration_events];
 		float pedestal[d_trb_event_channels], sigma_raw[d_trb_event_channels], sigma[d_trb_event_channels], occupancy[d_trb_event_channels],
-			gain_calibration_mean[d_common_gain_calibration_steps][d_trb_event_channels], gain_calibration[d_trb_event_channels], temperature[2],
-			gain_calibration_step;
+			gain_calibration_mean[d_common_gain_calibration_steps][d_trb_event_channels],
+			gain_calibration_vas[d_common_gain_calibration_steps][d_trb_event_vas], gain_calibration[d_trb_event_channels], gain_calibration_step,
+			temperature[2];
 		int computed, calibrated, reconfigure, flags[d_trb_event_channels];
 	} calibration;
 	struct {

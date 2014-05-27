@@ -135,6 +135,7 @@ typedef enum e_interface_alignments {
 	e_interface_alignment_sigma_raw,
 	e_interface_alignment_sigma,
 	e_interface_alignment_gain,
+	e_interface_alignment_gain_vas,
 	e_interface_alignment_histogram_pedestal,
 	e_interface_alignment_histogram_sigma_raw,
 	e_interface_alignment_histogram_sigma,

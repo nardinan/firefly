@@ -116,6 +116,7 @@ const char *interface_labels[] = {
 	"v_calibration_sigma_raw_alignment",
 	"v_calibration_sigma_alignment",
 	"v_calibration_gain_alignment",
+	"v_calibration_gain_vas_alignment",
 	"v_calibration_histogram_pedestal_alignment",
 	"v_calibration_histogram_sigma_raw_alignment",
 	"v_calibration_histogram_sigma_alignment",
@@ -143,6 +144,7 @@ const char *interface_labels[] = {
 	"styles/sigma_raw.keys",
 	"styles/sigma.keys",
 	"styles/gain.keys",
+	"styles/gain_vas.keys",
 	"styles/histogram_pedestal.keys",
 	"styles/histogram_sigma_raw.keys",
 	"styles/histogram_sigma.keys",
@@ -168,7 +170,8 @@ const char *interface_labels[] = {
 	"pedestal",
 	"sigma_raw",
 	"sigma",
-	"gain",
+	"gain_slope",
+	"gain_vas",
 	"histogram_pedestal",
 	"histogram_sigma_raw",
 	"histogram_sigma",
@@ -468,6 +471,7 @@ void f_interface_clean_calibration(struct s_chart **charts) {
 	f_chart_flush(charts[e_interface_alignment_sigma_raw]);
 	f_chart_flush(charts[e_interface_alignment_sigma]);
 	f_chart_flush(charts[e_interface_alignment_gain]);
+	f_chart_flush(charts[e_interface_alignment_gain_vas]);
 	f_chart_flush(charts[e_interface_alignment_histogram_pedestal]);
 	f_chart_flush(charts[e_interface_alignment_histogram_sigma_raw]);
 	f_chart_flush(charts[e_interface_alignment_histogram_sigma]);

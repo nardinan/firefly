@@ -1,15 +1,13 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <interface>
   <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy project-wide -->
   <object class="GtkImage" id="image1">
     <property name="visible">True</property>
-    <property name="can_focus">False</property>
     <property name="stock">gtk-media-next</property>
   </object>
   <object class="GtkImage" id="image2">
     <property name="visible">True</property>
-    <property name="can_focus">False</property>
     <property name="stock">gtk-color-picker</property>
   </object>
   <object class="GtkListStore" id="v_assembly_store">
@@ -21,9 +19,9 @@
     </columns>
   </object>
   <object class="GtkAdjustment" id="v_automatic_time_model">
+    <property name="value">60</property>
     <property name="lower">30</property>
     <property name="upper">3600</property>
-    <property name="value">60</property>
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
@@ -56,26 +54,23 @@
     <property name="page_increment">1</property>
   </object>
   <object class="GtkAdjustment" id="v_delay_model">
-    <property name="upper">12</property>
     <property name="value">6.5999999999999996</property>
+    <property name="upper">12</property>
     <property name="step_increment">0.10000000000000001</property>
     <property name="page_increment">1</property>
   </object>
   <object class="GtkImage" id="v_image_led">
     <property name="visible">True</property>
-    <property name="can_focus">False</property>
     <property name="stock">gtk-media-record</property>
     <property name="icon-size">2</property>
   </object>
   <object class="GtkImage" id="v_image_preferences">
     <property name="visible">True</property>
-    <property name="can_focus">False</property>
     <property name="stock">gtk-execute</property>
     <property name="icon-size">2</property>
   </object>
   <object class="GtkImage" id="v_image_rsync">
     <property name="visible">True</property>
-    <property name="can_focus">False</property>
     <property name="stock">gtk-connect</property>
     <property name="icon-size">2</property>
   </object>
@@ -127,31 +122,26 @@
     <property name="short_label">Preferences</property>
   </object>
   <object class="GtkWindow" id="v_main_window">
-    <property name="can_focus">False</property>
     <property name="title" translatable="yes">firefly - miniTRB data reader - 1.08</property>
     <child>
       <object class="GtkVBox" id="v_main_grid">
         <property name="visible">True</property>
-        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
         <child>
           <object class="GtkMenuBar" id="v_menu_bar">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
             <child>
               <object class="GtkMenuItem" id="v_edit">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Extra panels</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
                   <object class="GtkMenu" id="v_edit_menu">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <child>
                       <object class="GtkImageMenuItem" id="v_edit_preferences">
                         <property name="label">Preferences</property>
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="image">v_image_preferences</property>
                         <property name="use_stock">False</property>
                       </object>
@@ -163,17 +153,14 @@
             <child>
               <object class="GtkMenuItem" id="v_test">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Kind of test</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
                   <object class="GtkMenu" id="v_test_menu">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <child>
                       <object class="GtkRadioMenuItem" id="v_test_z">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Unofficial test</property>
                         <property name="active">True</property>
                       </object>
@@ -181,7 +168,6 @@
                     <child>
                       <object class="GtkRadioMenuItem" id="v_test_a">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Test "a"</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_z</property>
@@ -190,7 +176,6 @@
                     <child>
                       <object class="GtkRadioMenuItem" id="v_test_b">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Test "b"</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_z</property>
@@ -199,7 +184,6 @@
                     <child>
                       <object class="GtkRadioMenuItem" id="v_test_c">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Test "c"</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_z</property>
@@ -208,7 +192,6 @@
                     <child>
                       <object class="GtkRadioMenuItem" id="v_test_d">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Test "d"</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_z</property>
@@ -217,7 +200,6 @@
                     <child>
                       <object class="GtkRadioMenuItem" id="v_test_e">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Test "e"</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_z</property>
@@ -226,7 +208,6 @@
                     <child>
                       <object class="GtkRadioMenuItem" id="v_test_f">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Test "f"</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_z</property>
@@ -235,7 +216,6 @@
                     <child>
                       <object class="GtkRadioMenuItem" id="v_test_g">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Test "g"</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_z</property>
@@ -248,18 +228,15 @@
             <child>
               <object class="GtkMenuItem" id="v_utils">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Utilities</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
                   <object class="GtkMenu" id="v_utils_menu">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <child>
                       <object class="GtkImageMenuItem" id="v_utils_led">
                         <property name="label" translatable="yes">on/off LED</property>
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="image">v_image_led</property>
                         <property name="use_stock">False</property>
                       </object>
@@ -268,7 +245,6 @@
                       <object class="GtkImageMenuItem" id="v_utils_rsync">
                         <property name="label" translatable="yes">remote RSync</property>
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="image">v_image_rsync</property>
                         <property name="use_stock">False</property>
                       </object>
@@ -277,7 +253,6 @@
                       <object class="GtkImageMenuItem" id="v_utils_automator">
                         <property name="label" translatable="yes">automator</property>
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="image">image1</property>
                         <property name="use_stock">False</property>
                       </object>
@@ -286,7 +261,6 @@
                       <object class="GtkImageMenuItem" id="v_utils_temperature">
                         <property name="label" translatable="yes">read temperature</property>
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="image">image2</property>
                         <property name="use_stock">False</property>
                       </object>
@@ -298,39 +272,31 @@
           </object>
           <packing>
             <property name="expand">False</property>
-            <property name="fill">True</property>
             <property name="position">0</property>
           </packing>
         </child>
         <child>
           <object class="GtkHBox" id="v_interface_grid">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
             <child>
               <object class="GtkVBox" id="v_configuration_interface_grid">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkHBox" id="v_connected_device_grid">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <property name="border_width">3</property>
                     <child>
                       <object class="GtkLabel" id="v_connected_device_label">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">?</property>
                       </object>
                       <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
                         <property name="position">0</property>
                       </packing>
                     </child>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
                     <property name="position">0</property>
                   </packing>
                 </child>
@@ -350,18 +316,15 @@
                 <child>
                   <object class="GtkVBox" id="v_configuration_main_grid">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <child>
                       <object class="GtkTable" id="v_configuration_grid">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="n_rows">6</property>
                         <property name="n_columns">2</property>
                         <property name="column_spacing">5</property>
                         <child>
                           <object class="GtkLabel" id="v_kind_label">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="xpad">10</property>
                             <property name="label" translatable="yes">Kind</property>
                           </object>
@@ -372,7 +335,6 @@
                         <child>
                           <object class="GtkComboBox" id="v_kind">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="model">v_kind_store</property>
                             <property name="active">0</property>
                             <child>
@@ -390,7 +352,6 @@
                         <child>
                           <object class="GtkLabel" id="v_ladder_serial_label">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="label" translatable="yes">Serial number</property>
                           </object>
                           <packing>
@@ -401,7 +362,6 @@
                         <child>
                           <object class="GtkLabel" id="v_assembly_label">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="label" translatable="yes">Assembly Line</property>
                           </object>
                           <packing>
@@ -412,7 +372,6 @@
                         <child>
                           <object class="GtkComboBox" id="v_assembly">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="model">v_assembly_store</property>
                             <child>
                               <object class="GtkCellRendererText" id="v_assembly_render"/>
@@ -431,7 +390,6 @@
                         <child>
                           <object class="GtkLabel" id="v_quality_label">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="label" translatable="yes">Quality ID</property>
                           </object>
                           <packing>
@@ -442,7 +400,6 @@
                         <child>
                           <object class="GtkComboBox" id="v_quality">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="model">v_quality_store</property>
                             <child>
                               <object class="GtkCellRendererText" id="v_quality_render"/>
@@ -462,9 +419,7 @@
                           <object class="GtkSpinButton" id="v_ladder_serial">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="invisible_char">●</property>
-                            <property name="primary_icon_activatable">False</property>
-                            <property name="secondary_icon_activatable">False</property>
+                            <property name="invisible_char">&#x25CF;</property>
                             <property name="primary_icon_sensitive">True</property>
                             <property name="secondary_icon_sensitive">True</property>
                             <property name="adjustment">v_ladder_serial_model</property>
@@ -511,7 +466,6 @@
                         <child>
                           <object class="GtkLabel" id="v_ladder_position">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="label" translatable="yes">Position</property>
                           </object>
                           <packing>
@@ -521,27 +475,21 @@
                         </child>
                       </object>
                       <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
                         <property name="position">0</property>
                       </packing>
                     </child>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
                     <property name="position">2</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkFrame" id="v_mode_frame">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <property name="label_xalign">0.5</property>
                     <child>
                       <object class="GtkAlignment" id="v_mode_alignment">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="top_padding">3</property>
                         <property name="bottom_padding">3</property>
                         <property name="left_padding">3</property>
@@ -549,7 +497,7 @@
                         <child>
                           <object class="GtkVBox" id="v_mode_grid">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
+                            <property name="orientation">vertical</property>
                             <child>
                               <object class="GtkRadioButton" id="v_mode_normal">
                                 <property name="label" translatable="yes">Normal</property>
@@ -561,7 +509,6 @@
                               </object>
                               <packing>
                                 <property name="expand">False</property>
-                                <property name="fill">True</property>
                                 <property name="position">0</property>
                               </packing>
                             </child>
@@ -576,7 +523,6 @@
                               </object>
                               <packing>
                                 <property name="expand">False</property>
-                                <property name="fill">True</property>
                                 <property name="position">1</property>
                               </packing>
                             </child>
@@ -591,34 +537,28 @@
                               </object>
                               <packing>
                                 <property name="expand">False</property>
-                                <property name="fill">True</property>
                                 <property name="position">2</property>
                               </packing>
                             </child>
                             <child>
                               <object class="GtkHSeparator" id="v_mode_separator">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
-                                <property name="fill">True</property>
                                 <property name="position">3</property>
                               </packing>
                             </child>
                             <child>
                               <object class="GtkTable" id="v_mode_values_grid">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="n_rows">2</property>
                                 <property name="n_columns">2</property>
                                 <child>
                                   <object class="GtkSpinButton" id="v_dac">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="invisible_char">●</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="invisible_char">&#x25CF;</property>
                                     <property name="primary_icon_sensitive">True</property>
                                     <property name="secondary_icon_sensitive">True</property>
                                     <property name="adjustment">v_dac_model</property>
@@ -632,9 +572,7 @@
                                   <object class="GtkSpinButton" id="v_channel">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="invisible_char">●</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="invisible_char">&#x25CF;</property>
                                     <property name="primary_icon_sensitive">True</property>
                                     <property name="secondary_icon_sensitive">True</property>
                                     <property name="adjustment">v_channel_model</property>
@@ -649,14 +587,12 @@
                                 <child>
                                   <object class="GtkLabel" id="v_dac_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">DAC (byte)</property>
                                   </object>
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="v_channel_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">Channel</property>
                                   </object>
                                   <packing>
@@ -666,8 +602,6 @@
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
                                 <property name="position">4</property>
                               </packing>
                             </child>
@@ -678,7 +612,6 @@
                     <child type="label">
                       <object class="GtkLabel" id="v_mode_label">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">&lt;b&gt;mode&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                         <property name="justify">center</property>
@@ -686,8 +619,6 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
                     <property name="padding">3</property>
                     <property name="position">3</property>
                   </packing>
@@ -695,12 +626,10 @@
                 <child>
                   <object class="GtkFrame" id="v_trigger_frame">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <property name="label_xalign">0.5</property>
                     <child>
                       <object class="GtkAlignment" id="v_trigger_alignment">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="top_padding">3</property>
                         <property name="bottom_padding">3</property>
                         <property name="left_padding">3</property>
@@ -708,7 +637,7 @@
                         <child>
                           <object class="GtkVBox" id="v_trigger_grid">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
+                            <property name="orientation">vertical</property>
                             <child>
                               <object class="GtkToggleButton" id="v_internal">
                                 <property name="label" translatable="yes">Internal (50Hz)</property>
@@ -718,24 +647,18 @@
                                 <property name="active">True</property>
                               </object>
                               <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
                                 <property name="position">0</property>
                               </packing>
                             </child>
                             <child>
                               <object class="GtkHBox" id="v_trigger_delay_grid">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <child>
                                   <object class="GtkLabel" id="v_delay_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">Hold Delay (uS)</property>
                                   </object>
                                   <packing>
-                                    <property name="expand">True</property>
-                                    <property name="fill">True</property>
                                     <property name="position">0</property>
                                   </packing>
                                 </child>
@@ -743,24 +666,18 @@
                                   <object class="GtkSpinButton" id="v_delay">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="invisible_char">●</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="invisible_char">&#x25CF;</property>
                                     <property name="primary_icon_sensitive">True</property>
                                     <property name="secondary_icon_sensitive">True</property>
                                     <property name="adjustment">v_delay_model</property>
                                     <property name="digits">1</property>
                                   </object>
                                   <packing>
-                                    <property name="expand">True</property>
-                                    <property name="fill">True</property>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
                                 <property name="position">1</property>
                               </packing>
                             </child>
@@ -771,27 +688,22 @@
                     <child type="label">
                       <object class="GtkLabel" id="v_trigger_label">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">&lt;b&gt;trigger&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </object>
                     </child>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
                     <property name="position">4</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkFrame" id="v_parameters_frame">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <property name="label_xalign">0.5</property>
                     <child>
                       <object class="GtkAlignment" id="v_parameters_alignment">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="top_padding">3</property>
                         <property name="bottom_padding">3</property>
                         <property name="left_padding">3</property>
@@ -799,7 +711,7 @@
                         <child>
                           <object class="GtkVBox" id="v_parameters_grid">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
+                            <property name="orientation">vertical</property>
                             <child>
                               <object class="GtkToggleButton" id="v_calibration">
                                 <property name="label" translatable="yes">Do calibration</property>
@@ -808,21 +720,17 @@
                                 <property name="receives_default">True</property>
                               </object>
                               <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
                                 <property name="position">0</property>
                               </packing>
                             </child>
                             <child>
                               <object class="GtkTable" id="v_calibration_grid">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="n_columns">2</property>
                                 <property name="homogeneous">True</property>
                                 <child>
                                   <object class="GtkLabel" id="v_calibration_file_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="xalign">0.94999998807907104</property>
                                     <property name="xpad">5</property>
                                     <property name="label" translatable="yes">Choose a .cal file</property>
@@ -831,7 +739,6 @@
                                 <child>
                                   <object class="GtkFileChooserButton" id="v_calibration_file">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="title" translatable="yes">Select a calibration file</property>
                                   </object>
                                   <packing>
@@ -841,8 +748,6 @@
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
                                 <property name="position">1</property>
                               </packing>
                             </child>
@@ -853,38 +758,30 @@
                     <child type="label">
                       <object class="GtkLabel" id="v_parameters_label">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">&lt;b&gt;calibration&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </object>
                     </child>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
                     <property name="position">5</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkProgressBar" id="v_action_bar">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
                     <property name="position">6</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkFrame" id="v_stats_panel">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <property name="label_xalign">0.5</property>
                     <child>
                       <object class="GtkAlignment" id="v_stats_alignment">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="top_padding">3</property>
                         <property name="bottom_padding">3</property>
                         <property name="left_padding">3</property>
@@ -892,17 +789,15 @@
                         <child>
                           <object class="GtkTable" id="v_stats_grid">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="n_rows">7</property>
                             <property name="n_columns">2</property>
                             <child>
                               <object class="GtkLabel" id="v_events_label">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="xpad">5</property>
                                 <property name="label" translatable="yes">events</property>
                                 <attributes>
-                                  <attribute name="scale" value="0.80000000000000004"/>
+                                  <attribute name="scale" value="0.800000"/>
                                 </attributes>
                               </object>
                               <packing>
@@ -912,11 +807,10 @@
                             <child>
                               <object class="GtkLabel" id="v_size_label">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="xpad">5</property>
                                 <property name="label" translatable="yes">size</property>
                                 <attributes>
-                                  <attribute name="scale" value="0.80000000000000004"/>
+                                  <attribute name="scale" value="0.800000"/>
                                 </attributes>
                               </object>
                               <packing>
@@ -928,11 +822,10 @@
                             <child>
                               <object class="GtkLabel" id="v_current_time_label">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="xpad">5</property>
                                 <property name="label" translatable="yes">current time</property>
                                 <attributes>
-                                  <attribute name="scale" value="0.80000000000000004"/>
+                                  <attribute name="scale" value="0.800000"/>
                                 </attributes>
                               </object>
                               <packing>
@@ -944,11 +837,10 @@
                             <child>
                               <object class="GtkLabel" id="v_start_time_label">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="xpad">5</property>
                                 <property name="label" translatable="yes">starting time</property>
                                 <attributes>
-                                  <attribute name="scale" value="0.80000000000000004"/>
+                                  <attribute name="scale" value="0.800000"/>
                                 </attributes>
                               </object>
                               <packing>
@@ -960,11 +852,10 @@
                             <child>
                               <object class="GtkLabel" id="v_output_label">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="xpad">5</property>
                                 <property name="label" translatable="yes">output</property>
                                 <attributes>
-                                  <attribute name="scale" value="0.80000000000000004"/>
+                                  <attribute name="scale" value="0.800000"/>
                                 </attributes>
                               </object>
                               <packing>
@@ -976,12 +867,11 @@
                             <child>
                               <object class="GtkLabel" id="v_events">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="xalign">0</property>
                                 <property name="label" translatable="yes">?</property>
                                 <property name="use_markup">True</property>
                                 <attributes>
-                                  <attribute name="scale" value="0.80000000000000004"/>
+                                  <attribute name="scale" value="0.800000"/>
                                 </attributes>
                               </object>
                               <packing>
@@ -992,11 +882,10 @@
                             <child>
                               <object class="GtkLabel" id="v_size">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="xalign">0</property>
                                 <property name="label" translatable="yes">?</property>
                                 <attributes>
-                                  <attribute name="scale" value="0.80000000000000004"/>
+                                  <attribute name="scale" value="0.800000"/>
                                 </attributes>
                               </object>
                               <packing>
@@ -1009,11 +898,10 @@
                             <child>
                               <object class="GtkLabel" id="v_start_time">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="xalign">0</property>
                                 <property name="label" translatable="yes">?</property>
                                 <attributes>
-                                  <attribute name="scale" value="0.80000000000000004"/>
+                                  <attribute name="scale" value="0.800000"/>
                                 </attributes>
                               </object>
                               <packing>
@@ -1026,11 +914,10 @@
                             <child>
                               <object class="GtkLabel" id="v_current_time">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="xalign">0</property>
                                 <property name="label" translatable="yes">?</property>
                                 <attributes>
-                                  <attribute name="scale" value="0.80000000000000004"/>
+                                  <attribute name="scale" value="0.800000"/>
                                 </attributes>
                               </object>
                               <packing>
@@ -1043,11 +930,10 @@
                             <child>
                               <object class="GtkLabel" id="v_output">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="xalign">0</property>
                                 <property name="label" translatable="yes">?</property>
                                 <attributes>
-                                  <attribute name="scale" value="0.80000000000000004"/>
+                                  <attribute name="scale" value="0.800000"/>
                                 </attributes>
                               </object>
                               <packing>
@@ -1060,11 +946,10 @@
                             <child>
                               <object class="GtkLabel" id="v_temp1_label">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="xpad">5</property>
                                 <property name="label" translatable="yes">temp sensor</property>
                                 <attributes>
-                                  <attribute name="scale" value="0.80000000000000004"/>
+                                  <attribute name="scale" value="0.800000"/>
                                 </attributes>
                               </object>
                               <packing>
@@ -1076,11 +961,10 @@
                             <child>
                               <object class="GtkLabel" id="v_temp2_label">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="xpad">5</property>
                                 <property name="label" translatable="yes">temp sensor</property>
                                 <attributes>
-                                  <attribute name="scale" value="0.80000000000000004"/>
+                                  <attribute name="scale" value="0.800000"/>
                                 </attributes>
                               </object>
                               <packing>
@@ -1092,11 +976,10 @@
                             <child>
                               <object class="GtkLabel" id="v_temp1">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="xalign">0</property>
                                 <property name="label" translatable="yes">?</property>
                                 <attributes>
-                                  <attribute name="scale" value="0.80000000000000004"/>
+                                  <attribute name="scale" value="0.800000"/>
                                 </attributes>
                               </object>
                               <packing>
@@ -1109,11 +992,10 @@
                             <child>
                               <object class="GtkLabel" id="v_temp2">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="xalign">0</property>
                                 <property name="label" translatable="yes">?</property>
                                 <attributes>
-                                  <attribute name="scale" value="0.80000000000000004"/>
+                                  <attribute name="scale" value="0.800000"/>
                                 </attributes>
                               </object>
                               <packing>
@@ -1130,22 +1012,18 @@
                     <child type="label">
                       <object class="GtkLabel" id="v_stats_label">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">&lt;b&gt;statistics&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </object>
                     </child>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
                     <property name="position">7</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkAspectFrame" id="v_bottom">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <property name="label_xalign">0</property>
                     <property name="shadow_type">none</property>
                     <child>
@@ -1153,8 +1031,6 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
                     <property name="position">8</property>
                   </packing>
                 </child>
@@ -1167,8 +1043,6 @@
                     <property name="receives_default">True</property>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
                     <property name="position">9</property>
                   </packing>
                 </child>
@@ -1186,11 +1060,10 @@
                 <child>
                   <object class="GtkVBox" id="v_charts_main_interface">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
+                    <property name="orientation">vertical</property>
                     <child>
                       <object class="GtkComboBox" id="v_charts_list">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="model">v_charts_store</property>
                         <child>
                           <object class="GtkCellRendererText" id="v_charts_render"/>
@@ -1208,14 +1081,12 @@
                     <child>
                       <object class="GtkFrame" id="v_charts_main_master_interface">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label_xalign">0</property>
                         <property name="label_yalign">0.51999998092651367</property>
                         <property name="shadow_type">none</property>
                         <child>
                           <object class="GtkAlignment" id="v_charts_main_master_alignment">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="top_padding">3</property>
                             <property name="bottom_padding">3</property>
                             <property name="left_padding">3</property>
@@ -1228,15 +1099,12 @@
                         <child type="label">
                           <object class="GtkLabel" id="v_charts_main_master_label">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="label" translatable="yes">&lt;b&gt;Master&lt;/b&gt;</property>
                             <property name="use_markup">True</property>
                           </object>
                         </child>
                       </object>
                       <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
                         <property name="position">1</property>
                       </packing>
                     </child>
@@ -1245,7 +1113,6 @@
                 <child type="tab">
                   <object class="GtkLabel" id="v_charts_main">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <property name="yalign">0.43999999761581421</property>
                     <property name="label" translatable="yes">Main</property>
                   </object>
@@ -1256,26 +1123,21 @@
                 <child>
                   <object class="GtkFrame" id="v_calibration_plots_frame">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <property name="label_xalign">0.5</property>
                     <property name="shadow_type">none</property>
                     <child>
                       <object class="GtkVBox" id="v_calibration_avg_box">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
+                        <property name="orientation">vertical</property>
                         <child>
                           <object class="GtkHBox" id="v_calibration_bucket_box">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <child>
                               <object class="GtkLabel" id="v_calibration_bucket_label">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label" translatable="yes">Bucket size</property>
                               </object>
                               <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
                                 <property name="position">0</property>
                               </packing>
                             </child>
@@ -1283,15 +1145,12 @@
                               <object class="GtkSpinButton" id="v_calibration_bucket">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
-                                <property name="invisible_char">●</property>
-                                <property name="primary_icon_activatable">False</property>
-                                <property name="secondary_icon_activatable">False</property>
+                                <property name="invisible_char">&#x25CF;</property>
                                 <property name="primary_icon_sensitive">True</property>
                                 <property name="secondary_icon_sensitive">True</property>
                                 <property name="adjustment">v_bucket_calibration_model</property>
                               </object>
                               <packing>
-                                <property name="expand">True</property>
                                 <property name="fill">False</property>
                                 <property name="position">1</property>
                               </packing>
@@ -1306,7 +1165,6 @@
                         <child>
                           <object class="GtkAlignment" id="v_calibration_plots_alignment">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="top_padding">3</property>
                             <property name="bottom_padding">3</property>
                             <property name="left_padding">3</property>
@@ -1314,20 +1172,17 @@
                             <child>
                               <object class="GtkTable" id="v_calibration_box">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="n_rows">2</property>
                                 <property name="n_columns">2</property>
                                 <property name="homogeneous">True</property>
                                 <child>
                                   <object class="GtkFrame" id="v_calibration_sigma_raw">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label_xalign">0.5</property>
                                     <property name="shadow_type">in</property>
                                     <child>
                                       <object class="GtkAlignment" id="v_calibration_sigma_raw_alignment">
                                         <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
                                         <property name="top_padding">3</property>
                                         <property name="bottom_padding">3</property>
                                         <property name="left_padding">3</property>
@@ -1340,7 +1195,6 @@
                                     <child type="label">
                                       <object class="GtkLabel" id="v_calibration_sigma_raw_label">
                                         <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
                                         <property name="label" translatable="yes">&lt;i&gt;Sigma raw&lt;/i&gt;</property>
                                         <property name="use_markup">True</property>
                                       </object>
@@ -1354,13 +1208,11 @@
                                 <child>
                                   <object class="GtkFrame" id="v_calibration_sigma">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label_xalign">0.5</property>
                                     <property name="shadow_type">in</property>
                                     <child>
                                       <object class="GtkAlignment" id="v_calibration_sigma_alignment">
                                         <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
                                         <property name="top_padding">3</property>
                                         <property name="bottom_padding">3</property>
                                         <property name="left_padding">3</property>
@@ -1373,7 +1225,6 @@
                                     <child type="label">
                                       <object class="GtkLabel" id="v_calibration_sigma_label">
                                         <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
                                         <property name="label" translatable="yes">&lt;i&gt;Sigma&lt;/i&gt;</property>
                                         <property name="use_markup">True</property>
                                       </object>
@@ -1387,13 +1238,11 @@
                                 <child>
                                   <object class="GtkFrame" id="v_calibration_pedestal">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label_xalign">0.5</property>
                                     <property name="shadow_type">in</property>
                                     <child>
                                       <object class="GtkAlignment" id="v_calibration_pedestal_alignment">
                                         <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
                                         <property name="top_padding">3</property>
                                         <property name="bottom_padding">3</property>
                                         <property name="left_padding">3</property>
@@ -1406,7 +1255,6 @@
                                     <child type="label">
                                       <object class="GtkLabel" id="v_calibration_pedestal_label">
                                         <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
                                         <property name="label" translatable="yes">&lt;i&gt;Pedestal&lt;/i&gt;</property>
                                         <property name="use_markup">True</property>
                                       </object>
@@ -1414,46 +1262,12 @@
                                   </object>
                                 </child>
                                 <child>
-                                  <object class="GtkFrame" id="v_calibration_gain">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <property name="label_xalign">0.5</property>
-                                    <property name="shadow_type">in</property>
-                                    <child>
-                                      <object class="GtkAlignment" id="v_calibration_gain_alignment">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="top_padding">3</property>
-                                        <property name="bottom_padding">3</property>
-                                        <property name="left_padding">3</property>
-                                        <property name="right_padding">3</property>
-                                        <child>
-                                          <placeholder/>
-                                        </child>
-                                      </object>
-                                    </child>
-                                    <child type="label">
-                                      <object class="GtkLabel" id="v_calibration_gain_label">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="label" translatable="yes">&lt;i&gt;Gain&lt;/i&gt;</property>
-                                        <property name="use_markup">True</property>
-                                      </object>
-                                    </child>
-                                  </object>
-                                  <packing>
-                                    <property name="left_attach">1</property>
-                                    <property name="right_attach">2</property>
-                                    <property name="top_attach">1</property>
-                                    <property name="bottom_attach">2</property>
-                                  </packing>
+                                  <placeholder/>
                                 </child>
                               </object>
                             </child>
                           </object>
                           <packing>
-                            <property name="expand">True</property>
-                            <property name="fill">True</property>
                             <property name="position">1</property>
                           </packing>
                         </child>
@@ -1462,7 +1276,6 @@
                     <child type="label">
                       <object class="GtkLabel" id="v_calibration_plot_label">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">&lt;b&gt;action&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </object>
@@ -1475,7 +1288,6 @@
                 <child type="tab">
                   <object class="GtkLabel" id="v_charts_calibration">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Calibration AVG</property>
                   </object>
                   <packing>
@@ -1484,15 +1296,117 @@
                   </packing>
                 </child>
                 <child>
+                  <object class="GtkFrame" id="v_charts_calibration_gain_frame">
+                    <property name="visible">True</property>
+                    <property name="label_xalign">0.5</property>
+                    <property name="shadow_type">none</property>
+                    <child>
+                      <object class="GtkAlignment" id="v_charts_calibration_gain_alignment">
+                        <property name="visible">True</property>
+                        <property name="top_padding">3</property>
+                        <property name="bottom_padding">3</property>
+                        <property name="left_padding">3</property>
+                        <property name="right_padding">3</property>
+                        <child>
+                          <object class="GtkTable" id="v_charts_calibration_gain_box">
+                            <property name="visible">True</property>
+                            <property name="n_rows">2</property>
+                            <property name="n_columns">2</property>
+                            <property name="homogeneous">True</property>
+                            <child>
+                              <object class="GtkFrame" id="v_calibration_gain">
+                                <property name="visible">True</property>
+                                <property name="label_xalign">0.5</property>
+                                <property name="shadow_type">in</property>
+                                <child>
+                                  <object class="GtkAlignment" id="v_calibration_gain_alignment">
+                                    <property name="visible">True</property>
+                                    <property name="top_padding">3</property>
+                                    <property name="bottom_padding">3</property>
+                                    <property name="left_padding">3</property>
+                                    <property name="right_padding">3</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child type="label">
+                                  <object class="GtkLabel" id="v_calibration_gain_label">
+                                    <property name="visible">True</property>
+                                    <property name="label" translatable="yes">&lt;i&gt;Slope&lt;/i&gt;</property>
+                                    <property name="use_markup">True</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkFrame" id="v_calibration_gain_vas">
+                                <property name="visible">True</property>
+                                <property name="label_xalign">0.5</property>
+                                <property name="shadow_type">in</property>
+                                <child>
+                                  <object class="GtkAlignment" id="v_calibration_gain_vas_alignment">
+                                    <property name="visible">True</property>
+                                    <property name="top_padding">3</property>
+                                    <property name="bottom_padding">3</property>
+                                    <property name="left_padding">3</property>
+                                    <property name="right_padding">3</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child type="label">
+                                  <object class="GtkLabel" id="v_calibration_gain_vas_label">
+                                    <property name="visible">True</property>
+                                    <property name="label" translatable="yes">&lt;i&gt;VA details&lt;/i&gt;</property>
+                                    <property name="use_markup">True</property>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">1</property>
+                                <property name="bottom_attach">2</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child type="label">
+                      <object class="GtkLabel" id="v_charts_calibration_gain_label">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">&lt;b&gt;Gain&lt;/b&gt;</property>
+                        <property name="use_markup">True</property>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+                <child type="tab">
+                  <object class="GtkLabel" id="v_charts_calibration_gain">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Gain</property>
+                  </object>
+                  <packing>
+                    <property name="position">6</property>
+                    <property name="tab_fill">False</property>
+                  </packing>
+                </child>
+                <child>
                   <object class="GtkFrame" id="v_calibration_histogram_frame">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <property name="label_xalign">0.5</property>
                     <property name="shadow_type">none</property>
                     <child>
                       <object class="GtkAlignment" id="v_calibration_histogram_alignment">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="top_padding">3</property>
                         <property name="bottom_padding">3</property>
                         <property name="left_padding">3</property>
@@ -1500,20 +1414,17 @@
                         <child>
                           <object class="GtkTable" id="v_calibration_histogram_box">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="n_rows">2</property>
                             <property name="n_columns">2</property>
                             <property name="homogeneous">True</property>
                             <child>
                               <object class="GtkFrame" id="v_calibration_histogram_sigma_raw">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_calibration_histogram_sigma_raw_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -1526,7 +1437,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_calibration_histogram_sigma_raw_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;Sigma raw&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -1540,13 +1450,11 @@
                             <child>
                               <object class="GtkFrame" id="v_calibration_histogram_sigma">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_calibration_histogram_sigma_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -1559,7 +1467,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_calibration_histogram_sigma_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;Sigma&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -1573,13 +1480,11 @@
                             <child>
                               <object class="GtkFrame" id="v_calibration_histogram_pedestal">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_calibration_histogram_pedestal_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -1592,7 +1497,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_calibration_histogram_pedestal_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;Pedestal&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -1602,13 +1506,11 @@
                             <child>
                               <object class="GtkFrame" id="v_calibration_histogram_gain">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_calibration_histogram_gain_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -1621,7 +1523,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_calibration_histogram_gain_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;Gain&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -1641,51 +1542,44 @@
                     <child type="label">
                       <object class="GtkLabel" id="v_calibration_histogram_label">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">&lt;b&gt;calibration histogram&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </object>
                     </child>
                   </object>
                   <packing>
-                    <property name="position">2</property>
+                    <property name="position">3</property>
                   </packing>
                 </child>
                 <child type="tab">
                   <object class="GtkLabel" id="v_charts_calibration_histogram">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Calibration histograms</property>
                   </object>
                   <packing>
-                    <property name="position">2</property>
+                    <property name="position">3</property>
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkFrame" id="v_data_plots_frame">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <property name="label_xalign">0.5</property>
                     <property name="shadow_type">none</property>
                     <child>
                       <object class="GtkVBox" id="v_data_avg_box">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
+                        <property name="orientation">vertical</property>
                         <child>
                           <object class="GtkHBox" id="v_data_bucket_box">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="homogeneous">True</property>
                             <child>
                               <object class="GtkLabel" id="v_data_bucket_label">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label" translatable="yes">Bucket size</property>
                               </object>
                               <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
                                 <property name="position">0</property>
                               </packing>
                             </child>
@@ -1693,15 +1587,12 @@
                               <object class="GtkSpinButton" id="v_data_bucket">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
-                                <property name="invisible_char">●</property>
-                                <property name="primary_icon_activatable">False</property>
-                                <property name="secondary_icon_activatable">False</property>
+                                <property name="invisible_char">&#x25CF;</property>
                                 <property name="primary_icon_sensitive">True</property>
                                 <property name="secondary_icon_sensitive">True</property>
                                 <property name="adjustment">v_bucket_data_model</property>
                               </object>
                               <packing>
-                                <property name="expand">True</property>
                                 <property name="fill">False</property>
                                 <property name="position">1</property>
                               </packing>
@@ -1709,27 +1600,23 @@
                           </object>
                           <packing>
                             <property name="expand">False</property>
-                            <property name="fill">True</property>
                             <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
                           <object class="GtkTable" id="v_data_box">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="n_rows">2</property>
                             <property name="n_columns">2</property>
                             <property name="homogeneous">True</property>
                             <child>
                               <object class="GtkFrame" id="v_data_adc">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_data_adc_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -1742,7 +1629,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_data_adc_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;ADC&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -1752,13 +1638,11 @@
                             <child>
                               <object class="GtkFrame" id="v_data_adc_pedestal">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_data_adc_pedestal_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -1771,7 +1655,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_data_adc_pedestal_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;ADC-Pedestal&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -1785,13 +1668,11 @@
                             <child>
                               <object class="GtkFrame" id="v_data_adc_pedestal_cn">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_data_adc_pedestal_cn_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -1804,7 +1685,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_data_adc_pedestal_cn_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;Signal&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -1818,13 +1698,11 @@
                             <child>
                               <object class="GtkFrame" id="v_data_signal">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_data_signal_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -1837,7 +1715,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_data_signal_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;Signal&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -1852,8 +1729,6 @@
                             </child>
                           </object>
                           <packing>
-                            <property name="expand">True</property>
-                            <property name="fill">True</property>
                             <property name="position">1</property>
                           </packing>
                         </child>
@@ -1862,38 +1737,34 @@
                     <child type="label">
                       <object class="GtkLabel" id="v_data_plots_label">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">&lt;b&gt;data AVG&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </object>
                     </child>
                   </object>
                   <packing>
-                    <property name="position">3</property>
+                    <property name="position">4</property>
                   </packing>
                 </child>
                 <child type="tab">
                   <object class="GtkLabel" id="v_charts_data">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <property name="yalign">0.4699999988079071</property>
                     <property name="label" translatable="yes">Data AVG</property>
                   </object>
                   <packing>
-                    <property name="position">3</property>
+                    <property name="position">4</property>
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkFrame" id="v_data_histogram_frame">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <property name="label_xalign">0.5</property>
                     <property name="shadow_type">none</property>
                     <child>
                       <object class="GtkAlignment" id="v_data_histogram_alignment">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="top_padding">3</property>
                         <property name="bottom_padding">3</property>
                         <property name="left_padding">3</property>
@@ -1901,23 +1772,17 @@
                         <child>
                           <object class="GtkTable" id="v_data_histogram_box">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="n_rows">2</property>
                             <property name="n_columns">2</property>
                             <property name="homogeneous">True</property>
                             <child>
-                              <placeholder/>
-                            </child>
-                            <child>
                               <object class="GtkFrame" id="v_data_histogram_signal">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_data_histogram_signal_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -1930,7 +1795,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_data_histogram_signal_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;Signal histogram&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -1944,13 +1808,11 @@
                             <child>
                               <object class="GtkFrame" id="v_data_envelope_signal">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_data_envelope_signal_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -1963,7 +1825,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_data_signal_signal_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;Signal envelope&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -1977,13 +1838,11 @@
                             <child>
                               <object class="GtkFrame" id="v_data_occupancy">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_data_occupancy_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -1996,12 +1855,14 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_data_occupancy_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;Occupancy&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
                                 </child>
                               </object>
+                            </child>
+                            <child>
+                              <placeholder/>
                             </child>
                           </object>
                         </child>
@@ -2010,37 +1871,33 @@
                     <child type="label">
                       <object class="GtkLabel" id="v_data_histogram_label">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">&lt;b&gt;data AVG&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </object>
                     </child>
                   </object>
                   <packing>
-                    <property name="position">4</property>
+                    <property name="position">5</property>
                   </packing>
                 </child>
                 <child type="tab">
                   <object class="GtkLabel" id="v_charts_data_histograms">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Signal</property>
                   </object>
                   <packing>
-                    <property name="position">4</property>
+                    <property name="position">5</property>
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkFrame" id="v_cn_plots_frame">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <property name="label_xalign">0.5</property>
                     <property name="shadow_type">none</property>
                     <child>
                       <object class="GtkAlignment" id="v_cn_plots_alignment">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="top_padding">3</property>
                         <property name="bottom_padding">3</property>
                         <property name="left_padding">3</property>
@@ -2048,19 +1905,16 @@
                         <child>
                           <object class="GtkTable" id="v_cn_box">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="n_rows">2</property>
                             <property name="n_columns">3</property>
                             <child>
                               <object class="GtkFrame" id="v_cn_1">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_data_cn_1_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -2073,7 +1927,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_data_cn_1_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;VA 1&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -2083,13 +1936,11 @@
                             <child>
                               <object class="GtkFrame" id="v_cn_2">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_data_cn_2_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -2102,7 +1953,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_data_cn_2_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;VA 2&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -2116,13 +1966,11 @@
                             <child>
                               <object class="GtkFrame" id="v_cn_3">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_data_cn_3_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -2135,7 +1983,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_data_cn_3_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;VA 3&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -2149,13 +1996,11 @@
                             <child>
                               <object class="GtkFrame" id="v_cn_4">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_data_cn_4_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -2168,7 +2013,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_data_cn_4_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;VA 4&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -2184,13 +2028,11 @@
                             <child>
                               <object class="GtkFrame" id="v_cn_5">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_data_cn_5_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -2203,7 +2045,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_data_cn_5_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;VA 5&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -2219,13 +2060,11 @@
                             <child>
                               <object class="GtkFrame" id="v_cn_6">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_data_cn_6_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -2238,7 +2077,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_data_cn_6_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;VA 6&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -2256,38 +2094,33 @@
                     <child type="label">
                       <object class="GtkLabel" id="v_cn_plots_label">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">&lt;b&gt;common noise&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </object>
                     </child>
                   </object>
                   <packing>
-                    <property name="position">5</property>
+                    <property name="position">6</property>
                   </packing>
                 </child>
                 <child type="tab">
-                  <object class="GtkLabel" id="v_charts_cn">
+                  <object class="GtkLabel" id="v_charts_tff">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="yalign">0.43000000715255737</property>
-                    <property name="label" translatable="yes">CN</property>
+                    <property name="label" translatable="yes">Fourier Transform</property>
                   </object>
                   <packing>
-                    <property name="position">5</property>
+                    <property name="position">6</property>
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkFrame" id="v_fft_frame">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
                     <property name="label_xalign">0.5</property>
                     <property name="shadow_type">none</property>
                     <child>
                       <object class="GtkAlignment" id="v_fft_alignment">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="top_padding">3</property>
                         <property name="bottom_padding">3</property>
                         <property name="left_padding">3</property>
@@ -2295,20 +2128,17 @@
                         <child>
                           <object class="GtkTable" id="v_fft_box">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                             <property name="n_rows">2</property>
                             <property name="n_columns">2</property>
                             <property name="homogeneous">True</property>
                             <child>
                               <object class="GtkFrame" id="v_fft_adc_2">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_fft_adc_2_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -2321,7 +2151,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_fft_adc_2_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;ADC #2&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -2335,13 +2164,11 @@
                             <child>
                               <object class="GtkFrame" id="v_fft_signal_adc_1">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_fft_signal_adc_1_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -2354,7 +2181,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_fft_signal_adc_1_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;Signal ADC #1&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -2368,13 +2194,11 @@
                             <child>
                               <object class="GtkFrame" id="v_fft_adc_1">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_fft_adc_1_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -2387,7 +2211,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_fft_adc_1_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;ADC #1&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -2397,13 +2220,11 @@
                             <child>
                               <object class="GtkFrame" id="v_fft_signal_adc_2">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <property name="label_xalign">0.5</property>
                                 <property name="shadow_type">in</property>
                                 <child>
                                   <object class="GtkAlignment" id="v_fft_signal_adc_2_alignment">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="top_padding">3</property>
                                     <property name="bottom_padding">3</property>
                                     <property name="left_padding">3</property>
@@ -2416,7 +2237,6 @@
                                 <child type="label">
                                   <object class="GtkLabel" id="v_fft_signal_adc_2_label">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">&lt;i&gt;Signal ADC #2&lt;/i&gt;</property>
                                     <property name="use_markup">True</property>
                                   </object>
@@ -2436,85 +2256,69 @@
                     <child type="label">
                       <object class="GtkLabel" id="v_tff_label">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
                         <property name="label" translatable="yes">&lt;b&gt;data AVG&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </object>
                     </child>
                   </object>
                   <packing>
-                    <property name="position">6</property>
+                    <property name="position">7</property>
                   </packing>
                 </child>
                 <child type="tab">
-                  <object class="GtkLabel" id="v_charts_tff">
+                  <object class="GtkLabel" id="v_charts_cn">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Fourier Transform</property>
+                    <property name="yalign">0.43000000715255737</property>
+                    <property name="label" translatable="yes">CN</property>
                   </object>
                   <packing>
-                    <property name="position">5</property>
+                    <property name="position">6</property>
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
               </object>
               <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
                 <property name="position">1</property>
               </packing>
             </child>
           </object>
           <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
             <property name="position">1</property>
           </packing>
         </child>
         <child>
           <object class="GtkStatusbar" id="v_status">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
             <property name="spacing">3</property>
             <child>
               <object class="GtkLabel" id="v_jobs_label">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
                 <property name="xalign">0</property>
               </object>
               <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
                 <property name="position">0</property>
               </packing>
             </child>
             <child>
               <object class="GtkLabel" id="v_status_label">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
                 <property name="xalign">1</property>
               </object>
               <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
                 <property name="position">1</property>
               </packing>
             </child>
             <child>
               <object class="GtkLabel" id="v_status_lock">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
               </object>
               <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
                 <property name="position">3</property>
               </packing>
             </child>
           </object>
           <packing>
             <property name="expand">False</property>
-            <property name="fill">True</property>
             <property name="position">2</property>
           </packing>
         </child>
