@@ -308,7 +308,7 @@ void f_ladder_temperature(struct s_ladder *ladder, struct o_trbs *searcher) { d_
 				}
 				for (sensors = 0; sensors < temperature_sensors; sensors++)
 					for (tries = 0; tries < d_common_temperature_tries; tries++) {
-						if (readDevice(&(v_real_temperature[sensors]), &(ladder->calibration.temperature[sensors])) < 0)
+						if (readDevice(&(v_real_temperature[sensors]), &(ladder->calibration.temperature[sensors])) >= 0)
 							break;
 						usleep(d_common_timeout_temperature);
 					}
