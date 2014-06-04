@@ -463,6 +463,10 @@ void p_callback_informations_action(GtkWidget *widget, struct s_environment *env
 			gtk_entry_get_text(GTK_ENTRY(environment->interface->informations_configuration->entries[e_interface_informations_entry_voltage])));
 	snprintf(environment->ladder->current, d_string_buffer_size, "%s",
 			gtk_entry_get_text(GTK_ENTRY(environment->interface->informations_configuration->entries[e_interface_informations_entry_current])));
+	snprintf(environment->ladder->current, d_string_buffer_size, "%s",
+			gtk_entry_get_text(GTK_ENTRY(environment->interface->informations_configuration->entries[e_interface_informations_entry_current_6v])));
+	snprintf(environment->ladder->current, d_string_buffer_size, "%s",
+			gtk_entry_get_text(GTK_ENTRY(environment->interface->informations_configuration->entries[e_interface_informations_entry_current_3v])));
 	snprintf(environment->ladder->note, d_string_buffer_size, "%s",
 			gtk_entry_get_text(GTK_ENTRY(environment->interface->informations_configuration->entries[e_interface_informations_entry_note])));
 	p_ladder_save_calibrate(environment->ladder);
@@ -484,6 +488,8 @@ void f_informations_show(struct s_ladder *ladder, struct s_interface *interface)
 	gtk_entry_set_text(GTK_ENTRY(interface->informations_configuration->entries[e_interface_informations_entry_voltage]), "");
 	gtk_entry_set_text(GTK_ENTRY(interface->informations_configuration->entries[e_interface_informations_entry_current]),
 			(d_strlen(ladder->current) > 0)?ladder->current:"");
+	gtk_entry_set_text(GTK_ENTRY(interface->informations_configuration->entries[e_interface_informations_entry_current_6v]), "");
+	gtk_entry_set_text(GTK_ENTRY(interface->informations_configuration->entries[e_interface_informations_entry_current_3v]), "");
 	gtk_entry_set_text(GTK_ENTRY(interface->informations_configuration->entries[e_interface_informations_entry_note]), "");
 	gtk_widget_show_all(GTK_WIDGET(interface->informations_configuration->window));
 	gtk_window_set_position(interface->informations_configuration->window, GTK_WIN_POS_CENTER_ON_PARENT);

@@ -293,7 +293,7 @@ void f_ladder_temperature(struct s_ladder *ladder, struct o_trbs *searcher) { d_
 				for (sensors = 0, temperature_sensors = 0; sensors < v_sensors; sensors++) {
 					setupDevice(&(v_temperature[sensors]));
 					doConversion(&(v_temperature[sensors]));
-					if ((v_temperature[sensors].SN[0] == 0x10) || (v_temperature[sensors].SN[0] == 0x22) || 
+					if ((v_temperature[sensors].SN[0] == 0x10) || (v_temperature[sensors].SN[0] == 0x22) ||
 							(v_temperature[sensors].SN[0] == 0x28)) {
 						if (temperature_sensors < d_common_temperature_sensors) {
 							for (index = 0; index < SERIAL_SIZE; index++)
@@ -349,13 +349,14 @@ void p_ladder_save_calibrate(struct s_ladder *ladder) { d_FP;
 			string = f_string_new(string, d_string_buffer_size, "temp_SN=%s\ntemp_SN=%s\n", ladder->sensors[0], ladder->sensors[1]);
 			stream->m_write_string(stream, string);
 			strftime(buffer, d_string_buffer_size, d_common_interface_time_format, localtime(&(ladder->starting_time)));
-			string = f_string_new(string, d_string_buffer_size, "name=%s\nlocation=%s\nbias_volt=%sV\nleak_curr=%suA\nstarting_time=%s\n"
-					"temp_right=%.03f\ntemp_left=%.03f\nhold_delay=%.03f\n", ladder->name, location_entries[ladder->location_pointer].name,
-					ladder->voltage, ladder->current, buffer, ladder->calibration.temperature[0], ladder->calibration.temperature[1],
+			string = f_string_new(string, d_string_buffer_size, "name=%s\nlocation=%s\nbias_volt=%sV\nleak_curr=%suA\n6v_curr=%smA\n3v_curr=%smA\n"
+					"starting_time=%s\ntemp_right=%.03f\ntemp_left=%.03f\nhold_delay=%.03f\n", ladder->name,
+					location_entries[ladder->location_pointer].name, ladder->voltage, ladder->current, ladder->current_on_6v,
+					ladder->current_on_3v, buffer, ladder->calibration.temperature[0], ladder->calibration.temperature[1],
 					ladder->last_hold_delay);
 			stream->m_write_string(stream, string);
-			string = f_string_new(string, d_string_buffer_size, "sigmaraw_cut=%.03f\nsigmaraw_noise_cut=%.03f-%.03f\n"
-					"sigma_cut=%.03f\nsigma_noise_cut=%.03f-%.03f\nsigma_k=%.03f\noccupancy_k=%.03f\n", ladder->sigma_raw_cut,
+			string = f_string_new(string, d_string_buffer_size, "sigmaraw_cut=%.03f\nsigmaraw_noise_cut=%.03f-%.03f\nsigma_cut=%.03f\n"
+					"sigma_noise_cut=%.03f-%.03f\nsigma_k=%.03f\noccupancy_k=%.03f\n", ladder->sigma_raw_cut,
 					ladder->sigma_raw_noise_cut_bottom, ladder->sigma_raw_noise_cut_top, ladder->sigma_cut, ladder->sigma_noise_cut_bottom,
 					ladder->sigma_noise_cut_top, ladder->sigma_k, ladder->occupancy_k);
 			stream->m_write_string(stream, string);
@@ -438,7 +439,7 @@ void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) {
 		}
 		for (index = 0; index < d_trb_event_channels_on_va; index++)
 			for (step = 0; step < ladder->calibration.next_gain_calibration_step; step++)
-				f_chart_append_signal(charts[e_interface_alignment_gain_vas], 0, (index*d_common_gain_calibration_steps)+step, 
+				f_chart_append_signal(charts[e_interface_alignment_gain_vas], 0, (index*d_common_gain_calibration_steps)+step,
 						ladder->calibration.gain_calibration_vas[step][index]);
 		charts[e_interface_alignment_sigma_raw]->kind[0] = e_chart_kind_histogram;
 		ladder->calibration.step = e_ladder_calibration_step_pedestal;
@@ -649,6 +650,8 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 	memset(ladder->data.occupancy, 0, (sizeof(int)*d_trb_event_channels));
 	memset(ladder->current, 0, (sizeof(char)*d_string_buffer_size));
 	memset(ladder->voltage, 0, (sizeof(char)*d_string_buffer_size));
+	memset(ladder->current_on_6v, 0, (sizeof(char)*d_string_buffer_size));
+	memset(ladder->current_on_3v, 0, (sizeof(char)*d_string_buffer_size));
 	d_object_unlock(ladder->data.lock);
 	if (gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_action])) {
 		f_interface_clean_data(interface->charts);

@@ -120,6 +120,8 @@ typedef enum e_interface_files {
 typedef enum e_interface_informations_entries {
 	e_interface_informations_entry_voltage = 0,
 	e_interface_informations_entry_current,
+	e_interface_informations_entry_current_6v,
+	e_interface_informations_entry_current_3v,
 	e_interface_informations_entry_note,
 	e_interface_informations_entry_NULL
 } e_interface_informations_entries;

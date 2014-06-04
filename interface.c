@@ -102,6 +102,8 @@ const char *interface_labels[] = {
 }, *interface_informations_entries[] = {
 	"v_voltage",
 	"v_current",
+	"v_current6v",
+	"v_current3v",
 	"v_note",
 	NULL
 }, *interface_alignments[] = {

@@ -117,8 +117,9 @@ typedef struct s_ladder_action {
 typedef struct s_ladder {
 	char output[d_string_buffer_size], shadow_output[d_string_buffer_size], shadow_calibration[d_string_buffer_size], directory[d_string_buffer_size],
 	     ladder_directory[d_string_buffer_size], name[d_string_buffer_size], voltage[d_string_buffer_size], current[d_string_buffer_size],
-	     note[d_string_buffer_size], sensors[2][d_string_buffer_size], remote[d_string_buffer_size], multimeter[d_string_buffer_size],
-	     power_supply[d_string_buffer_size], log[d_string_buffer_size], official_log[d_string_buffer_size];
+	     current_on_6v[d_string_buffer_size], current_on_3v[d_string_buffer_size],note[d_string_buffer_size], sensors[2][d_string_buffer_size],
+	     remote[d_string_buffer_size], multimeter[d_string_buffer_size], power_supply[d_string_buffer_size], log[d_string_buffer_size],
+	     official_log[d_string_buffer_size];
 	struct o_object *lock, *parameters_lock;
 	struct o_trb *device;
 	struct o_trb_event last_event;
