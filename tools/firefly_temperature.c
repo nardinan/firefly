@@ -6,14 +6,14 @@
 #include "../phys.ksu.edu/ow-functions.h"
 #include "../phys.ksu.edu/dev-functions.h"
 #define d_buffer_size 512
-#define d_sensor_tries 15
-#define d_sensor_timeout 1000
+#define d_sensor_tries 25
+#define d_sensor_timeout 10000
 owDevice sensors[MAX_DEVICES], used_sensors[MAX_DEVICES];
 int elements = 0;
 void f_initialize(int device_number, FILE *out_stream) {
 	char sensor_serial[d_buffer_size];
 	int sensor, devices, index;
-	if ((acquireAdapter(device_number) == 0) && (resetAdapter() == 0)) {
+	if ((acquireAdapter(device_number) == 0) && (resetAdapter() == 0))
 		if ((devices = makeDeviceList(sensors)) > 0) {
 			fputs("\"date\"", out_stream);
 			for (sensor = 0, elements = 0; sensor < devices; sensor++) {
@@ -30,7 +30,6 @@ void f_initialize(int device_number, FILE *out_stream) {
 			}
 			fputs("\n", out_stream);
 		}
-	}
 }
 
 void f_readout(FILE *out_stream) {
