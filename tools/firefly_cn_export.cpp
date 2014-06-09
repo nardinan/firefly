@@ -58,14 +58,14 @@ void f_export_histograms(struct o_string *output, struct s_common_noise_charts *
 
 int main (int argc, char *argv[]) {
 	struct s_common_noise_charts charts;
-	struct o_string *common_noise = NULL, *output = NULL;
+	struct o_string *common_noise = NULL, *output = NULL;;
 	struct s_exception *exception = NULL;
 	int arguments = 0, index;
 	float buckets = 180.0, half;
 	char buffer[d_string_buffer_size];
 	d_try {
 		d_compress_argument(arguments, "-c", common_noise, d_string_pure, "No CN file specified (-c)");
-		d_compress_argument(arguments, "-o", output, d_string_pure, "No output file specified (-o)");
+		d_compress_argument(arguments, "-o", output, d_string_pure, "No output (PDF) file specified (-o)");
 		d_compress_argument(arguments, "-buckets", buckets, atof, "Number of buckets (-buckets)");
 		if ((common_noise) && (output)) {
 			half = (buckets/2.0);

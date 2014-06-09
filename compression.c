@@ -99,16 +99,16 @@ void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_r
 			}
 			if (!is_information)
 				if ((elements = readed_buffer->m_split(readed_buffer, ','))) {
-					if (elements->filled >= 7) { 
-						/* 
-						 * <ID = 0> 
-						 * <VA = 1> 
+					if (elements->filled >= 7) {
+						/*
+						 * <ID = 0>
+						 * <VA = 1>
 						 * <ID in VA = 2>
-						 * <Pedestal = 3> 
-						 * <Sigma raw = 4> 
-						 * <Sigma = 5> 
-						 * <Flag = 6> 
-						 * <Gain Calibration = 7> 
+						 * <Pedestal = 3>
+						 * <Sigma raw = 4>
+						 * <Sigma = 5>
+						 * <Flag = 6>
+						 * <Gain Calibration = 7>
 						 */
 						channel = d_array_cast(atoi, elements, singleton, 0, d_trb_event_channels);
 						if ((channel >= 0) && (channel < d_trb_event_channels)) {

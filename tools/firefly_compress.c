@@ -1,4 +1,77 @@
 #include "../compression.h"
+void p_merge_compression(struct o_stream *merge_A, struct o_stream *merge_B, struct o_stream *output_stream) {
+	struct s_singleton_event_header event_header_A, event_header_B;
+	struct s_singleton_cluster_details *clusters_A, *clusters_B = NULL;
+	int again = d_true, clusters_in_A, clusters_in_B, index, merged = 0;
+	if ((clusters_A = f_decompress_event(merge_A, &event_header_A)) && (clusters_B = f_decompress_event(merge_B, &event_header_B))) {
+		while (again) {
+			again = d_false;
+			if (event_header_A.number == event_header_B.number) {
+				clusters_in_A = event_header_A.clusters;
+				clusters_in_B = event_header_B.clusters;
+				event_header_A.bytes_to_next += event_header_B.bytes_to_next;
+				event_header_A.clusters += event_header_B.clusters;
+				output_stream->m_write(output_stream, sizeof(struct s_singleton_event_header), &event_header_A);
+				for (index = 0; index < clusters_in_A; index++)
+					output_stream->m_write(output_stream, sizeof(struct s_singleton_cluster_header)+
+							(sizeof(float)*(clusters_A[index].header.strips+1))+sizeof(unsigned int), &(clusters_A[index]));
+				for (index = 0; index < clusters_in_B; index++) {
+					clusters_B[index].first_strip += d_trb_event_channels;
+					output_stream->m_write(output_stream, sizeof(struct s_singleton_cluster_header)+
+							(sizeof(float)*(clusters_B[index].header.strips+1))+sizeof(unsigned int), &(clusters_B[index]));
+				}
+				d_free(clusters_A);
+				d_free(clusters_B);
+				fprintf(stdout, "\r%80s", "");
+				fprintf(stdout, "\r[merged events: %d (last %d == %d, total %d clusters)]", ++merged, event_header_A.number,
+						event_header_B.number, (clusters_in_A+clusters_in_B));
+				fflush(stdout);
+				if ((clusters_A = f_decompress_event(merge_A, &event_header_A)) && (clusters_B = f_decompress_event(merge_B, &event_header_B)))
+					again = d_true;
+			} else if (event_header_A.number > event_header_B.number) {
+				d_free(clusters_B);
+				if ((clusters_B = f_decompress_event(merge_B, &event_header_B)))
+					again = d_true;
+			} else {
+				d_free(clusters_A);
+				if ((clusters_A = f_decompress_event(merge_A, &event_header_A)))
+					again = d_true;
+			}
+		}
+		fputc('\n', stdout);
+	}
+	if (clusters_A)
+		d_free(clusters_A);
+	if (clusters_B)
+		d_free(clusters_B);
+}
+
+void f_merge_compression(struct o_stream *merge_A, struct o_stream *merge_B, struct o_string *output) {
+	struct s_exception *exception = NULL;
+	struct s_singleton_file_header merge_A_header, merge_B_header;
+	struct o_stream *output_stream;
+	d_try {
+		output_stream = f_stream_new_file(NULL, output, "wb", 0777);
+		if ((merge_A->m_read_raw(merge_A, (unsigned char *)&(merge_A_header), sizeof(struct s_singleton_file_header))) &&
+				(merge_B->m_read_raw(merge_B, (unsigned char *)&(merge_B_header), sizeof(struct s_singleton_file_header)))) {
+			if ((merge_A_header.endian_check == (unsigned short)d_compress_endian) &&
+					(merge_B_header.endian_check == (unsigned short)d_compress_endian)) {
+				if ((merge_A_header.high_treshold == merge_B_header.high_treshold) &&
+						(merge_A_header.low_treshold == merge_B_header.low_treshold)) {
+					output_stream->m_write(output_stream, sizeof(struct s_singleton_file_header), &merge_A_header);
+					p_merge_compression(merge_A, merge_B, output_stream);
+				} else
+					d_log(e_log_level_ever, "Different threshold (-T,-t)");
+			} else
+				d_log(e_log_level_ever, "Wrong file format. Maybe this isn't a compressed data file ...\n");
+		}
+		d_release(output_stream);
+	} d_catch(exception) {
+		d_exception_dump(stderr, exception);
+		d_raise;
+	} d_endtry;
+}
+
 void f_check_compression(struct o_string *data) {
 	struct o_stream *stream;
 	struct s_singleton_file_header file_header;
@@ -28,13 +101,15 @@ void f_check_compression(struct o_string *data) {
 }
 
 int main (int argc, char *argv[]) {
-	struct o_string *calibration = NULL, *data = NULL, *output = NULL, *output_cn = NULL;
-	struct o_stream *stream;
+	struct o_string *calibration = NULL, *data = NULL, *output = NULL, *output_cn = NULL, *merge_A = NULL, *merge_B = NULL;
+	struct o_stream *stream, *stream_merge_A, *stream_merge_B;
 	struct s_exception *exception = NULL;
 	int arguments = 0, flags[d_trb_event_channels], backup;
 	float high_treshold = 8.0f, low_treshold = 3.0f, pedestal[d_trb_event_channels], sigma_raw[d_trb_event_channels], sigma[d_trb_event_channels],
 	      gain[d_trb_event_channels];
 	d_try {
+		d_compress_argument(arguments, "-mA", merge_A, d_string_pure, "No merge file A specified (-mA)");
+		d_compress_argument(arguments, "-mB", merge_B, d_string_pure, "No merge file B specified (-mB)");
 		d_compress_argument(arguments, "-c", calibration, d_string_pure, "No calibration file specified (-c)");
 		d_compress_argument(arguments, "-d", data, d_string_pure, "No data file specified (-d)");
 		d_compress_argument(arguments, "-o", output, d_string_pure, "No output file specified (-o)");
@@ -56,11 +131,18 @@ int main (int argc, char *argv[]) {
 			min_strip = max_strip;
 			max_strip = backup;
 		}
-		if ((calibration) && (data) && (output)) {
+		if ((merge_A) && (merge_B) && (output)) {
+			stream_merge_A = f_stream_new_file(NULL, merge_A, "r", 0777);
+			stream_merge_B = f_stream_new_file(NULL, merge_B, "r", 0777);
+			f_merge_compression(stream_merge_A, stream_merge_B, output);
+			d_release(stream_merge_B);
+			d_release(stream_merge_A);
+		} else if ((calibration) && (data) && (output)) {
 			stream = f_stream_new_file(NULL, calibration, "r", 0777);
 			f_read_calibration(stream, pedestal, sigma_raw, sigma, flags, gain, NULL);
 			f_compress_data(data, output, output_cn, high_treshold, low_treshold, 10.0, pedestal, sigma, flags);
 			f_check_compression(output);
+			d_release(stream);
 		} else
 			d_log(e_log_level_ever, "Missing arguments", NULL);
 		if (output_cn)
