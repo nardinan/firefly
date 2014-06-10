@@ -463,9 +463,9 @@ void p_callback_informations_action(GtkWidget *widget, struct s_environment *env
 			gtk_entry_get_text(GTK_ENTRY(environment->interface->informations_configuration->entries[e_interface_informations_entry_voltage])));
 	snprintf(environment->ladder->current, d_string_buffer_size, "%s",
 			gtk_entry_get_text(GTK_ENTRY(environment->interface->informations_configuration->entries[e_interface_informations_entry_current])));
-	snprintf(environment->ladder->current, d_string_buffer_size, "%s",
+	snprintf(environment->ladder->current_on_6v, d_string_buffer_size, "%s",
 			gtk_entry_get_text(GTK_ENTRY(environment->interface->informations_configuration->entries[e_interface_informations_entry_current_6v])));
-	snprintf(environment->ladder->current, d_string_buffer_size, "%s",
+	snprintf(environment->ladder->current_on_3v, d_string_buffer_size, "%s",
 			gtk_entry_get_text(GTK_ENTRY(environment->interface->informations_configuration->entries[e_interface_informations_entry_current_3v])));
 	snprintf(environment->ladder->note, d_string_buffer_size, "%s",
 			gtk_entry_get_text(GTK_ENTRY(environment->interface->informations_configuration->entries[e_interface_informations_entry_note])));
