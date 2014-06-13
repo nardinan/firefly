@@ -786,9 +786,6 @@ int f_ladder_rsync(struct s_ladder *ladder) { d_FP;
 
 void p_ladder_action_execution(size_t elements, char columns[elements][d_string_buffer_size], struct s_interface *interface,
 		struct s_environment *environment) { d_FP;
-	int index;
-	for (index = 0; index < (elements-1); index++)
-		printf("%s\n", columns[index]);
 	if ((d_strcmp(columns[0], "CFG") == 0) && (elements >= 7)) { /* 0CFG: 1HOLDDELAY: 2TRIG: 3MODE: 4DAC: 5CHANNEL: 6DAT/CAL: 7WRITE */
 		gtk_spin_button_set_value(interface->spins[e_interface_spin_delay], atof(columns[1]));
 		gtk_spin_button_set_value(interface->spins[e_interface_spin_dac], atoi(columns[4]));
@@ -837,14 +834,21 @@ void f_ladder_action(struct s_ladder *ladder, struct s_interface *interface, str
 	int size;
 	char buffer[d_string_buffer_size];
 	if ((ladder->local_socket != d_communication_socket_null) ||
-			((ladder->local_socket = f_communication_setup(e_communication_kind_client)) != d_communication_socket_null)) {
-		if ((size = f_communication_read(ladder->local_socket, buffer, d_string_buffer_size, 0, 15)) > 0) {
+		((ladder->local_socket = f_communication_setup(e_communication_kind_client)) != d_communication_socket_null)) {
+		if (((size = f_communication_write(ladder->local_socket, d_communication_check_token)) > 0) &&
+			((size = f_communication_read(ladder->local_socket, buffer, d_string_buffer_size, 0, 15)) > 0)) {
 			p_ladder_action_analyze(buffer, interface, environment);
 			if (d_strcmp(d_communication_question_token, buffer) == 0) {
-				if (ladder->command == e_ladder_command_stop)
-					f_communication_write(ladder->local_socket, "IDLE");
-				else
-					f_communication_write(ladder->local_socket, "RUNNING");
+				if ((ladder->deviced) && (ladder->device)) {
+					if (ladder->command == e_ladder_command_stop)
+						size = f_communication_write(ladder->local_socket, "IDLE");
+					else
+						size = f_communication_write(ladder->local_socket, "RUNNING");
+				} else
+					size = f_communication_write(ladder->local_socket, "DISCONNECTED");
+			} else if (d_strcmp(d_communication_name_token, buffer) == 0) {
+				if (d_strlen(ladder->name) > 0)
+					f_communication_write(ladder->local_socket, ladder->name);
 			} else if (d_strcmp(d_communication_close_token, buffer) == 0)
 				size = -1;
 		}

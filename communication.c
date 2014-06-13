@@ -21,12 +21,19 @@ void p_communication_nonblocking(int descriptor) {
 	ioctl(descriptor, FIONBIO, &flags);
 }
 
+void p_communication_nonSIGPIPE(int descriptor) {
+	int flags = 1;
+	setsockopt(descriptor, SOL_SOCKET, SO_NOSIGPIPE, (void *)&flags, sizeof(int));
+}
+
 int f_communication_setup(enum e_communication_kind kind) { d_FP;
 	struct sockaddr_un socket_address;
 	int socket_stream, result = d_communication_socket_null;
+	if (kind == e_communication_kind_server)
+		unlink(d_communication_link);
 	if ((socket_stream = socket(PF_LOCAL, SOCK_STREAM, 0))) {
 		socket_address.sun_family = AF_LOCAL;
-		snprintf(socket_address.sun_path, d_communication_path_size, "%s.%s", d_communication_prefix, d_communication_postfix);
+		strncpy(socket_address.sun_path, d_communication_link, d_communication_path_size);
 		switch (kind) {
 			case e_communication_kind_server:
 				if (bind(socket_stream, (struct sockaddr *)&socket_address, SUN_LEN(&socket_address)) == 0) {
@@ -66,7 +73,7 @@ int f_communication_read(int descriptor, char *supplied, size_t size, time_t sec
 	return result;
 }
 
-int f_communication_write(int descriptor, char *buffer) { d_FP;
+int f_communication_write(int descriptor, const char *buffer) { d_FP;
 	int result = 0;
 	unsigned int length = d_strlen(buffer)+1;
 	if ((result = write(descriptor, &length, sizeof(unsigned int))) != -1)

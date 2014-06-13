@@ -22,13 +22,14 @@
 #include <sys/un.h>
 #include <sys/ioctl.h>
 #include "environment.h"
-#define d_communication_prefix "firefly_com"
-#define d_communication_postfix "sock"
+#define d_communication_link "firefly_com.sock"
 #define d_communication_queue_size 10
 #define d_communication_path_size 104
 #define d_communication_socket_null -1
 #define d_communication_close_token "QUIT"
 #define d_communication_question_token "WHAT"
+#define d_communication_name_token "NAME"
+#define d_communication_check_token "AYA"
 #define d_communication_divisor ':'
 #define d_communication_columns 10
 typedef enum e_communication_kind {
@@ -36,8 +37,9 @@ typedef enum e_communication_kind {
 	e_communication_kind_client
 } e_communication_kind;
 extern void p_communication_nonblocking(int descriptor);
+extern void p_communication_nonSIGPIPE(int descriptor);
 extern int f_communication_setup(enum e_communication_kind kind);
 extern int f_communication_read(int descriptor, char *supplied, size_t size, time_t sec, time_t usec);
-extern int f_communication_write(int descriptor, char *buffer);
+extern int f_communication_write(int descriptor, const char *buffer);
 #endif
 
