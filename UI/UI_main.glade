@@ -2,10 +2,6 @@
 <interface>
   <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy project-wide -->
-  <object class="GtkAction" id="v_preferences_action">
-    <property name="label">Preferences</property>
-    <property name="short_label">Preferences</property>
-  </object>
   <object class="GtkImage" id="image1">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -65,6 +61,10 @@
     <property name="step_increment">0.10000000000000001</property>
     <property name="page_increment">1</property>
   </object>
+  <object class="GtkAction" id="v_preferences_action">
+    <property name="label">Preferences</property>
+    <property name="short_label">Preferences</property>
+  </object>
   <object class="GtkImage" id="v_image_led">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -117,6 +117,14 @@
         <col id="1" translatable="yes">BE</col>
       </row>
     </data>
+  </object>
+  <object class="GtkListStore" id="v_quality_store">
+    <columns>
+      <!-- column-name quality -->
+      <column type="gchararray"/>
+      <!-- column-name code -->
+      <column type="gchararray"/>
+    </columns>
   </object>
   <object class="GtkWindow" id="v_main_window">
     <property name="can_focus">False</property>
@@ -262,15 +270,6 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="image">v_image_rsync</property>
-                        <property name="use_stock">False</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkImageMenuItem" id="v_utils_automator">
-                        <property name="label" translatable="yes">automator</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="image">image1</property>
                         <property name="use_stock">False</property>
                       </object>
                     </child>
@@ -2552,16 +2551,7 @@
             <property name="can_focus">False</property>
             <property name="spacing">3</property>
             <child>
-              <object class="GtkLabel" id="v_jobs_label">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="xalign">0</property>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
+              <placeholder/>
             </child>
             <child>
               <object class="GtkLabel" id="v_status_label">
@@ -2595,13 +2585,5 @@
         </child>
       </object>
     </child>
-  </object>
-  <object class="GtkListStore" id="v_quality_store">
-    <columns>
-      <!-- column-name quality -->
-      <column type="gchararray"/>
-      <!-- column-name code -->
-      <column type="gchararray"/>
-    </columns>
   </object>
 </interface>

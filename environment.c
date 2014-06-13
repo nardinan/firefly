@@ -26,7 +26,6 @@ void p_environment_new_main_hook(struct s_environment *result) {
 	g_signal_connect(G_OBJECT(result->interface->preferences), "activate", G_CALLBACK(p_callback_parameters_show), result);
 	g_signal_connect(G_OBJECT(result->interface->led), "activate", G_CALLBACK(p_callback_led), result);
 	g_signal_connect(G_OBJECT(result->interface->rsync), "activate", G_CALLBACK(p_callback_rsync), result);
-	g_signal_connect(G_OBJECT(result->interface->automator), "activate", G_CALLBACK(p_callback_automator), result);
 	g_signal_connect(G_OBJECT(result->interface->temperature), "activate", G_CALLBACK(p_callback_temperature), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_normal]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_calibration]), "toggled", G_CALLBACK(p_callback_refresh), result);
@@ -70,14 +69,9 @@ void p_environment_new_informations_hook(struct s_environment *result) {
 	g_signal_connect(G_OBJECT(result->interface->informations_configuration->action), "clicked", G_CALLBACK(p_callback_informations_action), result);
 }
 
-void p_environment_new_jobs_hook(struct s_environment *result) {
-	g_signal_connect(G_OBJECT(result->interface->jobs_configuration->window), "delete-event", G_CALLBACK(p_callback_hide_on_exit), result);
-	g_signal_connect(G_OBJECT(result->interface->jobs_configuration->action), "clicked", G_CALLBACK(p_callback_jobs_action), result);
-}
-
 struct s_environment *f_environment_new(struct s_environment *supplied, const char *builder_main_path, const char *builder_scale_path,
-		const char *builder_parameters_path, const char *builder_informations_path, const char *builder_jobs_path) { d_FP;
-	GtkBuilder *main_builder, *scale_builder, *parameters_builder, *informations_builder, *jobs_builder;
+		const char *builder_parameters_path, const char *builder_informations_path) { d_FP;
+	GtkBuilder *main_builder, *scale_builder, *parameters_builder, *informations_builder;
 	struct s_environment *result = supplied;
 	if (!result)
 		if (!(result = (struct s_environment *) d_calloc(sizeof(struct s_environment), 1)))
@@ -88,20 +82,17 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	d_assert(scale_builder = gtk_builder_new());
 	d_assert(parameters_builder = gtk_builder_new());
 	d_assert(informations_builder = gtk_builder_new());
-	d_assert(jobs_builder = gtk_builder_new());
 	d_assert(gtk_builder_add_from_file(main_builder, builder_main_path, NULL));
 	d_assert(gtk_builder_add_from_file(scale_builder, builder_scale_path, NULL));
 	d_assert(gtk_builder_add_from_file(parameters_builder, builder_parameters_path, NULL));
 	d_assert(gtk_builder_add_from_file(informations_builder, builder_informations_path, NULL));
-	d_assert(gtk_builder_add_from_file(jobs_builder, builder_jobs_path, NULL));
 	d_assert(result->ladder = f_ladder_new(NULL, NULL));
-	d_assert(result->interface = f_interface_new(NULL, main_builder, scale_builder, parameters_builder, informations_builder, jobs_builder));
+	d_assert(result->interface = f_interface_new(NULL, main_builder, scale_builder, parameters_builder, informations_builder));
 	f_interface_update_configuration(result->interface, result->ladder->deviced);
 	p_environment_new_main_hook(result);
 	p_environment_new_scale_hook(result);
 	p_environment_new_parameters_hook(result);
 	p_environment_new_informations_hook(result);
-	p_environment_new_jobs_hook(result);
 	d_assert(result->searcher = f_trbs_new(NULL));
 	result->searcher->m_trb_setup(result->searcher, p_callback_incoming_trb, (void *)result);
 	result->searcher->m_dev_setup(result->searcher, p_callback_incoming_device, (void *)result);
@@ -428,37 +419,17 @@ void p_callback_rsync(GtkWidget *widget, struct s_environment *environment) {
 		}
 }
 
-void p_callback_automator(GtkWidget *widget, struct s_environment *environment) {
-	GtkWidget *dialog_window;
-	struct s_exception *exception = NULL;
-	struct o_string *path;
-	struct o_stream *stream;
-	d_try {
-		if ((dialog_window = gtk_file_chooser_dialog_new("Open automator file", environment->interface->window, GTK_FILE_CHOOSER_ACTION_OPEN,
-						GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT, NULL))) {
-			if (gtk_dialog_run(GTK_DIALOG(dialog_window)) == GTK_RESPONSE_ACCEPT) {
-				if ((path = d_string(d_string_buffer_size, gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog_window))))) {
-					if ((stream = f_stream_new_file(NULL, path, "r", 0777))) {
-						f_ladder_load_actions(environment->ladder, stream);
-						d_release(stream);
-					}
-					d_release(path);
-				} else
-					d_die(d_error_malloc);
-			}
-			gtk_widget_destroy(dialog_window);
-		}
-	} d_catch(exception) {
-		d_exception_dump(stderr, exception);
-		d_raise;
-	} d_endtry;
-}
-
 void p_callback_temperature(GtkWidget *widget, struct s_environment *environment) {
 	f_ladder_temperature(environment->ladder, environment->searcher);
 }
 
-void p_callback_informations_action(GtkWidget *widget, struct s_environment *environment) {
+void p_callback_informations_action_fill(struct s_environment *environment, const char *voltage, const char *current_6v, const char *current_3v) {
+	gtk_entry_set_text(GTK_ENTRY(environment->interface->informations_configuration->entries[e_interface_informations_entry_voltage]), voltage);
+	gtk_entry_set_text(GTK_ENTRY(environment->interface->informations_configuration->entries[e_interface_informations_entry_current_6v]), current_6v);
+	gtk_entry_set_text(GTK_ENTRY(environment->interface->informations_configuration->entries[e_interface_informations_entry_current_3v]), current_3v);
+}
+
+void p_callback_informations_action(struct s_environment *environment) {
 	snprintf(environment->ladder->voltage, d_string_buffer_size, "%s",
 			gtk_entry_get_text(GTK_ENTRY(environment->interface->informations_configuration->entries[e_interface_informations_entry_voltage])));
 	snprintf(environment->ladder->current, d_string_buffer_size, "%s",
@@ -473,17 +444,6 @@ void p_callback_informations_action(GtkWidget *widget, struct s_environment *env
 	p_callback_hide_on_exit(GTK_WIDGET(environment->interface->informations_configuration->window), environment);
 }
 
-void p_callback_jobs_action(GtkWidget *widget, struct s_environment *environment) {
-	int index = 0;
-	gtk_toggle_button_set_active(environment->interface->toggles[e_interface_toggle_action], d_false);
-	environment->ladder->action_pointer = 0;
-	for (index = 0; index < d_ladder_actions; index++) {
-		environment->ladder->action[index].initialized = d_false;
-		environment->ladder->action[index].starting = 0;
-	}
-	p_callback_hide_on_exit(GTK_WIDGET(environment->interface->jobs_configuration->window), environment);
-}
-
 void f_informations_show(struct s_ladder *ladder, struct s_interface *interface) {
 	gtk_entry_set_text(GTK_ENTRY(interface->informations_configuration->entries[e_interface_informations_entry_voltage]), "");
 	gtk_entry_set_text(GTK_ENTRY(interface->informations_configuration->entries[e_interface_informations_entry_current]),
@@ -494,11 +454,5 @@ void f_informations_show(struct s_ladder *ladder, struct s_interface *interface)
 	gtk_widget_show_all(GTK_WIDGET(interface->informations_configuration->window));
 	gtk_window_set_position(interface->informations_configuration->window, GTK_WIN_POS_CENTER_ON_PARENT);
 	gtk_window_set_keep_above(interface->informations_configuration->window, TRUE);
-}
-
-void f_jobs_show(struct s_ladder *ladder, struct s_interface *interface) {
-	gtk_widget_show_all(GTK_WIDGET(interface->jobs_configuration->window));
-	gtk_window_set_position(interface->jobs_configuration->window, GTK_WIN_POS_CENTER_ON_PARENT);
-	gtk_window_set_keep_above(interface->jobs_configuration->window, TRUE);
 }
 

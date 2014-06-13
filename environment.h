@@ -39,7 +39,7 @@ typedef struct s_environment_parameters {
 	void *attachment;
 } s_environment_parameters;
 extern struct s_environment *f_environment_new(struct s_environment *supplied, const char *buider_main_path, const char *buider_scale_path,
-		const char *builder_parameters_path, const char *builder_informations_path, const char *builder_jobs_path);
+		const char *builder_parameters_path, const char *builder_informations_path);
 extern int p_callback_incoming_trb(struct o_trb *device, void *v_environment);
 extern int p_callback_incoming_device(struct usb_device *device, struct usb_dev_handle *handler, void *v_environment);
 extern void p_callback_exit(GtkWidget *widget, struct s_environment *environment);
@@ -59,11 +59,9 @@ extern void p_callback_parameters_action(GtkWidget *widget, struct s_environment
 extern void p_callback_parameters_show(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_led(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_rsync(GtkWidget *widget, struct s_environment *environment);
-extern void p_callback_automator(GtkWidget *widget, struct s_environment *environment);
 extern void p_callback_temperature(GtkWidget *widget, struct s_environment *environment);
-extern void p_callback_informations_action(GtkWidget *widget, struct s_environment *environment);
-extern void p_callback_jobs_action(GtkWidget *widget, struct s_environment *environment);
+extern void p_callback_informations_action_fill(struct s_environment *environment, const char *voltage, const char *current_6v, const char *current_3v);
+extern void p_callback_informations_action(struct s_environment *environment);
 extern void f_informations_show(struct s_ladder *ladder, struct s_interface *interface);
-extern void f_jobs_show(struct s_ladder *ladder, struct s_interface *interface);
 #endif
 

@@ -28,6 +28,7 @@
 #include "phys.ksu.edu/dev-functions.h"
 #include "interface.h"
 #include "compression.h"
+#include "communication.h"
 #include "rs232_device.h"
 #define d_ladder_directory_test "test"
 #define d_ladder_directory_data "data"
@@ -39,11 +40,7 @@
 #define d_ladder_trigger_internal 0x22
 #define d_ladder_trigger_external 0x11
 #define d_ladder_value_size 8
-#define d_ladder_action_label_size 8
-#define d_ladder_action_command_size 1024
 #define d_ladder_extension_size 3
-#define d_ladder_actions 32
-#define d_ladder_action_reset "[NEW]"
 #define d_ladder_safe_assign(sep,res,val)\
 do{\
 	d_object_lock(sep);\
@@ -104,16 +101,6 @@ typedef enum e_ladder_automators {
 typedef struct s_ladder_histogram_value {
 	int value, occurrence, filled;
 } s_ladder_histogram_value;
-typedef struct s_ladder_action {
-	char label[d_ladder_action_label_size], destination[d_ladder_action_label_size], bash[d_ladder_action_command_size];
-	unsigned short dac;
-	unsigned char channel, trigger, write, initialized;
-	float hold_delay;
-	enum e_ladder_commands command;
-	enum e_trb_mode mode;
-	time_t duration, starting;
-	int counter, original_counter;
-} s_ladder_action;
 typedef struct s_ladder {
 	char output[d_string_buffer_size], shadow_output[d_string_buffer_size], shadow_calibration[d_string_buffer_size], directory[d_string_buffer_size],
 	     ladder_directory[d_string_buffer_size], name[d_string_buffer_size], voltage[d_string_buffer_size], current[d_string_buffer_size],
@@ -127,13 +114,12 @@ typedef struct s_ladder {
 	time_t starting_time, finish_time;
 	long long last_readed_time;
 	unsigned int last_readed_events, readed_events, damaged_events, event_size, listening_channel, location_pointer, skip, to_skip, percent_occupancy,
-		     action_pointer, occupancy_bucket, gain_calibration_bucket, gain_calibration_steps, gain_calibration_dac_bottom, gain_calibration_dac_top;
+		     occupancy_bucket, gain_calibration_bucket, gain_calibration_steps, gain_calibration_dac_bottom, gain_calibration_dac_top;
 	unsigned char last_readed_kind, last_readed_code;
 	int evented, deviced, stopped, update_interface, save_calibration_raw, save_calibration_pdf, read_temperature, read_atomic, compute_occupancy,
-		compute_gain_calibration;
+		compute_gain_calibration, local_socket;
 	float hertz, last_hold_delay, sigma_raw_cut, sigma_raw_noise_cut_bottom, sigma_raw_noise_cut_top, sigma_k, sigma_cut, sigma_noise_cut_bottom,
 	      sigma_noise_cut_top, occupancy_k, performance_k;
-	struct s_ladder_action action[d_ladder_actions];
 	pthread_t analyze_thread;
 	struct {
 		enum e_ladder_calibration_steps step;
@@ -189,7 +175,6 @@ extern void f_ladder_configure(struct s_ladder *ladder, struct s_interface *inte
 extern void f_ladder_led(struct s_ladder *ladder);
 extern int p_ladder_rsync_execution(void);
 extern int f_ladder_rsync(struct s_ladder *ladder);
-extern int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, struct s_environment *environment);
-extern void f_ladder_load_actions(struct s_ladder *ladder, struct o_stream *stream);
+extern void f_ladder_action(struct s_ladder *ladder, struct s_interface *interface, struct s_environment *environment);
 #endif
 

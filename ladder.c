@@ -141,6 +141,7 @@ struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) {
 		if (!(result = (struct s_ladder *) d_calloc(sizeof(struct s_ladder), 1)))
 			d_die(d_error_malloc);
 	result->stopped = d_true;
+	result->local_socket = d_communication_socket_null;
 	d_assert(result->lock = f_object_new_pure(NULL));
 	if (device) {
 		result->device = device;
@@ -783,220 +784,74 @@ int f_ladder_rsync(struct s_ladder *ladder) { d_FP;
 	return result;
 }
 
-int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, struct s_environment *environment) { d_FP;
-	time_t elpased;
-	int result = d_true, finished = d_false, deviced = d_false, index;
-	d_object_lock(ladder->lock);
-	if ((ladder->deviced) && (ladder->device))
-		deviced = d_true;
-	d_object_unlock(ladder->lock);
-	if ((deviced) && (ladder->action[ladder->action_pointer].initialized)) {
-		if (ladder->action[ladder->action_pointer].starting > 0) {
-			if (ladder->action[ladder->action_pointer].command == e_ladder_command_calibration) {
-				if (ladder->command == e_ladder_command_stop) {
-					p_callback_informations_action((GtkWidget *)interface->informations_configuration->window, environment);
-					finished = d_true;
-				}
-			} else if ((ladder->action[ladder->action_pointer].command == e_ladder_command_temperature) ||
-					(ladder->action[ladder->action_pointer].command == e_ladder_command_current) ||
-					(ladder->action[ladder->action_pointer].command == e_ladder_command_bash) ||
-					((elpased = time(NULL)-ladder->action[ladder->action_pointer].starting) >=
-					 ladder->action[ladder->action_pointer].duration))
-				finished = d_true;
-			if (finished) {
-				gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_action], d_false);
-				if ((d_strlen(ladder->action[ladder->action_pointer].destination) > 0) &&
-						((--ladder->action[ladder->action_pointer].counter) > 0)) {
-					ladder->action[ladder->action_pointer].starting = 0;
-					for (index = (ladder->action_pointer-1); index >= 0; index--) {
-						ladder->action[index].initialized = d_true;
-						ladder->action[index].starting = 0;
-						ladder->action[index].counter = ladder->action[index].original_counter;
-						if ((d_strlen(ladder->action[index].label) > 0) &&
-								(d_strcmp(ladder->action[index].label,
-									  ladder->action[ladder->action_pointer].destination) == 0)) {
-							ladder->action_pointer = index;
-							break;
-						}
-					}
-				} else {
-					ladder->action[ladder->action_pointer].initialized = d_false;
-					if ((++ladder->action_pointer) >= d_ladder_actions)
-						ladder->action_pointer = 0;
-				}
-			}
-		} else {
-			if (ladder->action_pointer == 0)
-				f_jobs_show(ladder, interface);
-			ladder->action[ladder->action_pointer].starting = time(NULL);
-			if ((ladder->action[ladder->action_pointer].command == e_ladder_command_sleep) ||
-					(ladder->action[ladder->action_pointer].command == e_ladder_command_temperature) ||
-					(ladder->action[ladder->action_pointer].command == e_ladder_command_current) ||
-					(ladder->action[ladder->action_pointer].command == e_ladder_command_bash)) {
-				ladder->command = e_ladder_command_stop;
-				if (ladder->action[ladder->action_pointer].command == e_ladder_command_temperature)
-					f_ladder_temperature(ladder, environment->searcher);
-				else if (ladder->action[ladder->action_pointer].command == e_ladder_command_current)
-					f_ladder_current(ladder, d_common_timeout_device);
-				else if (ladder->action[ladder->action_pointer].command == e_ladder_command_bash) {
-					if (strlen(ladder->action[ladder->action_pointer].bash) > 0)
-						system(ladder->action[ladder->action_pointer].bash);
-				}
-			} else {
-				if (ladder->action[ladder->action_pointer].write)
-					gtk_toggle_button_set_active(interface->switches[e_interface_switch_public], d_true);
-				else
-					gtk_toggle_button_set_active(interface->switches[e_interface_switch_public], d_false);
-				switch (ladder->action[ladder->action_pointer].mode) {
-					case e_trb_mode_normal:
-						gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_normal], d_true);
-						break;
-					case e_trb_mode_calibration:
-						gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_calibration], d_true);
-						break;
-					case e_trb_mode_calibration_debug_digital:
-						gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_calibration_debug], d_true);
-				}
-				gtk_spin_button_set_value(interface->spins[e_interface_spin_dac], ladder->action[ladder->action_pointer].dac);
-				gtk_spin_button_set_value(interface->spins[e_interface_spin_channel], ladder->action[ladder->action_pointer].channel);
-				if (ladder->action[ladder->action_pointer].trigger)
-					gtk_toggle_button_set_active(interface->switches[e_interface_switch_internal], d_true);
-				else
-					gtk_toggle_button_set_active(interface->switches[e_interface_switch_internal], d_false);
-				gtk_spin_button_set_value(interface->spins[e_interface_spin_delay], ladder->action[ladder->action_pointer].hold_delay);
-				if (ladder->action[ladder->action_pointer].command == e_ladder_command_calibration)
-					gtk_toggle_button_set_active(interface->switches[e_interface_switch_calibration], d_true);
-				else
-					gtk_toggle_button_set_active(interface->switches[e_interface_switch_calibration], d_false);
-				gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_action], d_true);
-			}
-		}
-	} else {
-		ladder->action_pointer = 0;
-		p_callback_hide_on_exit(GTK_WIDGET(environment->interface->jobs_configuration->window), environment);
-		result = d_false;
-	}
-	return result;
+void p_ladder_action_execution(size_t elements, char columns[elements][d_string_buffer_size], struct s_interface *interface,
+		struct s_environment *environment) { d_FP;
+	int index;
+	for (index = 0; index < (elements-1); index++)
+		printf("%s\n", columns[index]);
+	if ((d_strcmp(columns[0], "CFG") == 0) && (elements >= 7)) { /* 0CFG: 1HOLDDELAY: 2TRIG: 3MODE: 4DAC: 5CHANNEL: 6DAT/CAL: 7WRITE */
+		gtk_spin_button_set_value(interface->spins[e_interface_spin_delay], atof(columns[1]));
+		gtk_spin_button_set_value(interface->spins[e_interface_spin_dac], atoi(columns[4]));
+		gtk_spin_button_set_value(interface->spins[e_interface_spin_channel], atoi(columns[5]));
+		if (d_strcmp(columns[2], "INTERNAL") == 0)
+			gtk_toggle_button_set_active(interface->switches[e_interface_switch_internal], d_true);
+		else if (d_strcmp(columns[2], "EXTERNAL") == 0)
+			gtk_toggle_button_set_active(interface->switches[e_interface_switch_internal], d_false);
+		if (d_strcmp(columns[3], "NORMAL") == 0)
+			gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_normal], d_true);
+		else if (d_strcmp(columns[3], "GAIN") == 0)
+			gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_calibration], d_true);
+		else if (d_strcmp(columns[3], "TEST") == 0)
+			gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_calibration_debug], d_true);
+		if (d_strcmp(columns[6], "DATA") == 0)
+			gtk_toggle_button_set_active(interface->switches[e_interface_switch_calibration], d_false);
+		else if (d_strcmp(columns[6], "CALIBRATION") == 0)
+			gtk_toggle_button_set_active(interface->switches[e_interface_switch_calibration], d_true);
+		if (d_strcmp(columns[7], "WRITE") == 0)
+			gtk_toggle_button_set_active(interface->switches[e_interface_switch_public], d_true);
+		else
+			gtk_toggle_button_set_active(interface->switches[e_interface_switch_public], d_false);
+	} else if ((d_strcmp(columns[0], "FILL") == 0) && (elements >= 3))  { /* 0FILL: 1BIAS: 2CURR_6V: 3CURR_3V */
+		p_callback_informations_action_fill(environment, columns[1], columns[2], columns[3]);
+		p_callback_informations_action(environment);
+	} else if (d_strcmp(columns[0], "START") == 0)
+		gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_action], d_true);
+	else if (d_strcmp(columns[0], "STOP") == 0)
+		gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_action], d_false);
 }
 
-void f_ladder_load_actions(struct s_ladder *ladder, struct o_stream *stream) {
-	struct o_string *readed_buffer, *buffer = NULL, *key = NULL, *singleton;
-	struct o_array *elements;
-	struct s_exception *exception = NULL;
-	int index, current_action = 0;
-	enum e_ladder_automators current_key;
-	const char *buffers[] = {
-		"label",
-		"dac",
-		"channel",
-		"trigger",
-		"hold_delay",
-		"command",
-		"bash",
-		"mode",
-		"duration",
-		"write",
-		"destination",
-		"counter",
-		NULL
-	};
-	d_try {
-		memset(ladder->action, 0, (d_ladder_actions*sizeof(struct s_ladder_action)));
-		while ((readed_buffer = stream->m_read_line(stream, buffer, d_string_buffer_size)))
-			if ((d_strlen(readed_buffer->content) > 0) && (readed_buffer->content[0] != '#')) {
-				if (d_strcmp(readed_buffer->content, d_ladder_action_reset) == 0) {
-					if ((++current_action) >= d_ladder_actions)
-						break;
-				} else if ((elements = readed_buffer->m_split(readed_buffer, '='))) {
-					if (elements->filled == 2) {
-						ladder->action[current_action].initialized = d_true;
-						if ((key = (struct o_string *)elements->m_get(elements, 0)) &&
-								(singleton = (struct o_string *)elements->m_get(elements, 1))) {
-							current_key = e_ladder_automator_NULL;
-							for (index = 0; buffers[index]; index++)
-								if (d_strcmp(buffers[index], key->content) == 0) {
-									current_key = (enum e_ladder_automators)index;
-									break;
-								}
-							switch (current_key) {
-								case e_ladder_automator_name:
-									strncpy(ladder->action[current_action].label, singleton->content,
-											d_ladder_action_label_size);
-									break;
-								case e_ladder_automator_goto:
-									strncpy(ladder->action[current_action].destination, singleton->content,
-											d_ladder_action_label_size);
-									break;
-								case e_ladder_automator_dac:
-									ladder->action[current_action].dac = atoi(singleton->content);
-									break;
-								case e_ladder_automator_channel:
-									ladder->action[current_action].channel = atoi(singleton->content);
-									break;
-								case e_ladder_automator_duration:
-									ladder->action[current_action].duration = atoi(singleton->content);
-									break;
-								case e_ladder_automator_steps:
-									ladder->action[current_action].counter = atoi(singleton->content);
-									ladder->action[current_action].original_counter = atoi(singleton->content);
-									break;
-								case e_ladder_automator_hold_delay:
-									ladder->action[current_action].hold_delay = atof(singleton->content);
-									break;
-								case e_ladder_automator_trigger:
-									if ((d_strcmp(singleton->content, "TRUE") == 0) ||
-											(d_strcmp(singleton->content, "T") == 0))
-										ladder->action[current_action].trigger = d_true;
-									break;
-								case e_ladder_automator_write:
-									if ((d_strcmp(singleton->content, "TRUE") == 0) ||
-											(d_strcmp(singleton->content, "T") == 0))
-										ladder->action[current_action].write = d_true;
-									break;
-								case e_ladder_automator_command:
-									if ((d_strcmp(singleton->content, "CAL") == 0) ||
-											(d_strcmp(singleton->content, "C") == 0))
-										ladder->action[current_action].command = e_ladder_command_calibration;
-									else if ((d_strcmp(singleton->content, "DATA") == 0) ||
-											(d_strcmp(singleton->content, "D") == 0))
-										ladder->action[current_action].command = e_ladder_command_data;
-									else if ((d_strcmp(singleton->content, "TEMP") == 0) ||
-											(d_strcmp(singleton->content, "T") == 0))
-										ladder->action[current_action].command = e_ladder_command_temperature;
-									else if ((d_strcmp(singleton->content, "CURR") == 0) ||
-											(d_strcmp(singleton->content, "A") == 0))
-										ladder->action[current_action].command = e_ladder_command_current;
-									else if ((d_strcmp(singleton->content, "BASH") == 0) ||
-											(d_strcmp(singleton->content, "B") == 0))
-										ladder->action[current_action].command = e_ladder_command_bash;
-									else
-										ladder->action[current_action].command = e_ladder_command_sleep;
-									break;
-								case e_ladder_automator_mode:
-									if ((d_strcmp(singleton->content, "NORMAL") == 0) ||
-											(d_strcmp(singleton->content, "N") == 0))
-										ladder->action[current_action].mode = e_trb_mode_normal;
-									else if ((d_strcmp(singleton->content, "GAIN") == 0) &&
-											(d_strcmp(singleton->content, "G") == 0))
-										ladder->action[current_action].mode = e_trb_mode_calibration;
-									else
-										ladder->action[current_action].mode = e_trb_mode_calibration_debug_digital;
-									break;
-								case e_ladder_automator_bash:
-									strncpy(ladder->action[current_action].bash, singleton->content,
-											d_ladder_action_command_size);
-									break;
-								default:
-									d_log(e_log_level_ever, "wrong key: %s", key->content);
-							}
-						}
-					}
-					d_release(elements);
-				}
-			}
-	} d_catch(exception) {
-		d_exception_dump(stderr, exception);
-		d_raise;
-	} d_endtry;
+void p_ladder_action_analyze(char *command, struct s_interface *interface, struct s_environment *environment) {
+	char columns[d_communication_columns][d_string_buffer_size], *pointer = command, *next = command;
+	int index;
+	for (index = 0; (next) && (index < d_communication_columns); index++) {
+		if ((next = strchr(pointer, d_communication_divisor)))
+			*next = '\0';
+		strcpy(columns[index], pointer);
+		if (next)
+			pointer = next+1;
+	}
+	p_ladder_action_execution(index+1, columns, interface, environment);
+}
+
+void f_ladder_action(struct s_ladder *ladder, struct s_interface *interface, struct s_environment *environment) {
+	int size;
+	char buffer[d_string_buffer_size];
+	if ((ladder->local_socket != d_communication_socket_null) ||
+			((ladder->local_socket = f_communication_setup(e_communication_kind_client)) != d_communication_socket_null)) {
+		if ((size = f_communication_read(ladder->local_socket, buffer, d_string_buffer_size, 0, 15)) > 0) {
+			p_ladder_action_analyze(buffer, interface, environment);
+			if (d_strcmp(d_communication_question_token, buffer) == 0) {
+				if (ladder->command == e_ladder_command_stop)
+					f_communication_write(ladder->local_socket, "IDLE");
+				else
+					f_communication_write(ladder->local_socket, "RUNNING");
+			} else if (d_strcmp(d_communication_close_token, buffer) == 0)
+				size = -1;
+		}
+		if (size < 0) {
+			close(ladder->local_socket);
+			ladder->local_socket = d_communication_socket_null;
+		}
+	}
 }
 

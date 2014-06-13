@@ -25,7 +25,6 @@ const char *interface_labels[] = {
 	"v_temp1",
 	"v_temp2",
 	"v_status_label",
-	"v_jobs_label",
 	NULL
 }, *interface_switches[] = {
 	"v_public",
@@ -266,7 +265,7 @@ void p_interface_new_parameters(struct s_interface *result, GtkBuilder *paramete
 	d_assert(result->parameters_configuration->multimeter = GTK_ENTRY(gtk_builder_get_object(parameters_interface, "v_multimeter")));
 }
 
-void p_interface_new_informations(struct s_interface *result, GtkBuilder *informations_interface) {
+void p_interface_new_informations(struct s_interface *result, GtkBuilder *informations_interface) { d_FP;
 	int index;
 	if (!result->informations_configuration)
 		if (!(result->informations_configuration = (struct s_interface_informations *) d_calloc(sizeof(struct s_interface_informations), 1)))
@@ -279,17 +278,8 @@ void p_interface_new_informations(struct s_interface *result, GtkBuilder *inform
 						interface_informations_entries[index])));
 }
 
-void p_interface_new_jobs(struct s_interface *result, GtkBuilder *jobs_interface) {
-	if (!result->jobs_configuration)
-		if (!(result->jobs_configuration = (struct s_interface_jobs *) d_calloc(sizeof(struct s_interface_jobs), 1)))
-			d_die(d_error_malloc);
-	d_assert(result->jobs_configuration->interface = jobs_interface);
-	d_assert(result->jobs_configuration->window = GTK_WINDOW(gtk_builder_get_object(GTK_BUILDER(jobs_interface), "v_jobs_window")));
-	d_assert(result->jobs_configuration->action = GTK_BUTTON(gtk_builder_get_object(jobs_interface, "v_action")));
-}
-
 struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *main_interface, GtkBuilder *scale_interface,
-		GtkBuilder *parameters_interface, GtkBuilder *informations_interface, GtkBuilder *jobs_interface) { d_FP;
+		GtkBuilder *parameters_interface, GtkBuilder *informations_interface) { d_FP;
 	struct s_interface *result = supplied;
 	struct o_stream *stream;
 	struct o_string *path;
@@ -308,7 +298,6 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	d_assert(result->preferences = GTK_MENU_ITEM(gtk_builder_get_object(main_interface, "v_edit_preferences")));
 	d_assert(result->led = GTK_MENU_ITEM(gtk_builder_get_object(main_interface, "v_utils_led")));
 	d_assert(result->rsync = GTK_MENU_ITEM(gtk_builder_get_object(main_interface, "v_utils_rsync")));
-	d_assert(result->automator = GTK_MENU_ITEM(gtk_builder_get_object(main_interface, "v_utils_automator")));
 	d_assert(result->temperature = GTK_MENU_ITEM(gtk_builder_get_object(main_interface, "v_utils_temperature")));
 	for (index = 0; interface_switches[index]; index++)
 		d_assert(result->switches[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(main_interface, interface_switches[index])));
@@ -372,7 +361,6 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	p_interface_new_informations(result, informations_interface);
 	p_interface_new_scale(result, scale_interface);
 	p_interface_new_parameters(result, parameters_interface);
-	p_interface_new_jobs(result, jobs_interface);
 	f_interface_show(result, e_interface_alignment_adc);
 	return result;
 }

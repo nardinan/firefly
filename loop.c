@@ -172,52 +172,27 @@ int f_step_interface(struct s_environment *environment, time_t current_time) { d
 }
 
 int f_step_progress(struct s_environment *environment, time_t current_time) { d_FP;
-	int readed, automation;
+	int readed;
 	float fraction = 0.0, total_events;
 	time_t total_time, elpased_time;
-	char name[d_string_buffer_size], description[d_string_buffer_size];
+	char description[d_string_buffer_size];
 	enum e_ladder_calibration_steps current_step;
-	if ((automation = f_ladder_run_action(environment->ladder, environment->interface, environment))) {
-		if (d_strlen(environment->ladder->action[environment->ladder->action_pointer].label) > 0)
-			snprintf(name, d_string_buffer_size, "Automation[%d:%s (%ld secs)]", environment->ladder->action_pointer,
-					environment->ladder->action[environment->ladder->action_pointer].label,
-					environment->ladder->action[environment->ladder->action_pointer].duration);
-		else
-			snprintf(name, d_string_buffer_size, "Automation[%d (%ld secs)]", environment->ladder->action_pointer,
-					environment->ladder->action[environment->ladder->action_pointer].duration);
-		if (d_strlen(environment->ladder->action[environment->ladder->action_pointer].destination) > 0)
-			snprintf(description, d_string_buffer_size, "Running %s and then GOTO %s (again for %d/%d times)", name,
-					environment->ladder->action[environment->ladder->action_pointer].destination,
-					environment->ladder->action[environment->ladder->action_pointer].counter,
-					environment->ladder->action[environment->ladder->action_pointer].original_counter);
-		else
-			snprintf(description, d_string_buffer_size, "Running %s and then NEXT", name);
-		gtk_label_set_text(environment->interface->labels[e_interface_label_jobs], description);
-	} else
-		gtk_label_set_text(environment->interface->labels[e_interface_label_jobs], NULL);
+	f_ladder_action(environment->ladder, environment->interface, environment);
 	switch (environment->ladder->command) {
 		case e_ladder_command_stop:
-			if ((automation) && (environment->ladder->action[environment->ladder->action_pointer].command == e_ladder_command_sleep))
-				gtk_progress_bar_set_text(environment->interface->progress_bar, "SLEEPING");
-			else
-				gtk_progress_bar_set_text(environment->interface->progress_bar, "IDLE");
+			gtk_progress_bar_set_text(environment->interface->progress_bar, "IDLE");
 			break;
 		case e_ladder_command_data:
 			if ((environment->ladder->read_atomic) && (v_atomic_read_lock == -1))
 				gtk_progress_bar_set_text(environment->interface->progress_bar, "Waiting for lock ...");
 			else
 				gtk_progress_bar_set_text(environment->interface->progress_bar, "DATA (manual)");
-			if (automation) {
-				total_time = environment->ladder->action[environment->ladder->action_pointer].duration;
-				elpased_time = current_time-environment->ladder->action[environment->ladder->action_pointer].starting;
-				fraction = ((float)elpased_time/(float)total_time);
-			}
 			break;
 		case e_ladder_command_calibration:
-			d_ladder_safe_assign(environment->ladder->calibration.lock, current_step, environment->ladder->calibration.step);
 			if ((environment->ladder->read_atomic) && (v_atomic_read_lock == -1))
 				gtk_progress_bar_set_text(environment->interface->progress_bar, "Waiting for lock ...");
-			else
+			else {
+				d_ladder_safe_assign(environment->ladder->calibration.lock, current_step, environment->ladder->calibration.step);
 				switch (current_step) {
 					case e_ladder_calibration_step_pedestal:
 						gtk_progress_bar_set_text(environment->interface->progress_bar, "CALIBRATION (Pedestal & Sigma)");
@@ -236,6 +211,7 @@ int f_step_progress(struct s_environment *environment, time_t current_time) { d_
 						gtk_progress_bar_set_text(environment->interface->progress_bar, "CALIBRATION");
 						break;
 				}
+			}
 			readed = environment->ladder->readed_events-environment->ladder->skip;
 			if (readed >= 0) {
 				total_events = environment->ladder->calibration.size+environment->ladder->calibration.size_occupancy+
@@ -244,7 +220,7 @@ int f_step_progress(struct s_environment *environment, time_t current_time) { d_
 			}
 			break;
 		default:
-			gtk_progress_bar_set_text(environment->interface->progress_bar, "DATA (auto)");
+			gtk_progress_bar_set_text(environment->interface->progress_bar, "UNDEFINED ACTION");
 			total_time = environment->ladder->finish_time-environment->ladder->starting_time;
 			elpased_time = current_time-environment->ladder->starting_time;
 			fraction = ((float)elpased_time/(float)total_time);

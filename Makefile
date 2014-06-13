@@ -1,4 +1,6 @@
-objects = chart.o interface.o compression.o ladder.o analyzer.o environment.o loop.o firefly.o dev-functions.o ow-functions.o rs232_device.o
+objects = chart.o interface.o compression.o ladder.o analyzer.o environment.o loop.o dev-functions.o ow-functions.o rs232_device.o communication.o
+object_firefly = firefly.o
+object_controller = controller.o
 objects_temperature = dev-functions.o ow-functions.o firefly_temperature.o
 objects_compressor = compression.o firefly_compress.o
 objects_analyzer = compression.o root_analyzer.o firefly_dat_export.o
@@ -13,6 +15,7 @@ lflags = -Wall
 liblink = -L../serenity -L/usr/lib64 -lm `libusb-config --libs` `pkg-config --libs gtk+-2.0` `pkg-config --libs fftw3` -L/usr/lib -lpthread -lserenity_ground -lserenity_structures -lserenity_crypto -lserenity_infn
 liblink_analyzer = $(liblink) `root-config --libs`
 exec = firefly.bin
+exec_controller = controller.bin
 exec_temperature = tools/firefly_temperature.bin
 exec_compressor = tools/firefly_compress.bin
 exec_analyzer = tools/firefly_dat_export.bin
@@ -20,8 +23,9 @@ exec_calibration_export = tools/firefly_cal_export.bin
 exec_cn_export = tools/firefly_cn_export.bin
 exec_ttree = tools/firefly_ttree.bin
 
-all: $(objects)
-	$(cc) $(lflags) $(objects) -o $(exec) $(liblink)
+all: $(objects) $(object_firefly) $(object_controller)
+	$(cc) $(lflags) $(objects) $(object_firefly) -o $(exec) $(liblink)
+	$(cc) $(lflags) $(objects) $(object_controller) -o $(exec_controller) $(liblink)
 	(if [ ! -f /root/.firefly.cfg ]; then cp firefly.cfg /root/.firefly.cfg; fi;) || true
 	make temperature
 	make compressor
@@ -63,6 +67,9 @@ analyzer.o: analyzer.c analyzer.h ladder.h
 rs232_device.o: rs232_device.c rs232_device.h
 	$(cc) $(cflags) rs232_device.c
 
+communication.o: communication.c communication.h environment.h
+	$(cc) $(cflags) communication.c
+
 ladder.o: ladder.c ladder.h interface.h compression.h phys.ksu.edu/ow-functions.h phys.ksu.edu/dev-functions.h rs232_device.h
 	$(cc) $(cflags) ladder.c
 
@@ -80,6 +87,9 @@ dev-functions.o: phys.ksu.edu/dev-functions.c phys.ksu.edu/dev-functions.h phys.
 
 firefly.o: firefly.c loop.h
 	$(cc) $(cflags) firefly.c
+
+controller.o: controller.c ladder.h
+	$(cc) $(cflags) controller.c
 
 firefly_temperature.o: tools/firefly_temperature.c phys.ksu.edu/dev-functions.h phys.ksu.edu/ow-functions.h
 	$(cc) $(cflags) tools/firefly_temperature.c
@@ -110,8 +120,9 @@ clean:
 	rm -f *.o
 	rm -f *.fli
 	rm -f *.root
-	rm -f AutoDict_vector*
+	rm -f tools/AutoDict_vector*
 	rm -f *.log
+	rm -f *.lock
 	rm -f $(exec)
 	rm -f $(exec_temperature)
 	rm -f $(exec_compressor)
