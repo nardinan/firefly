@@ -1,4 +1,4 @@
-objects = chart.o interface.o compression.o ladder.o analyzer.o environment.o loop.o dev-functions.o ow-functions.o rs232_device.o communication.o
+objects = chart.o interface.o compression.o ladder.o analyzer.o environment.o loop.o dev-functions.o ow-functions.o niusb6501.o rs232_device.o communication.o
 object_firefly = firefly.o
 object_controller = controller.o
 objects_temperature = dev-functions.o ow-functions.o firefly_temperature.o
@@ -84,6 +84,9 @@ ow-functions.o: phys.ksu.edu/ow-functions.c phys.ksu.edu/ow-functions.h
 
 dev-functions.o: phys.ksu.edu/dev-functions.c phys.ksu.edu/dev-functions.h phys.ksu.edu/ow-functions.h
 	$(cc) $(cflags) phys.ksu.edu/dev-functions.c
+
+niusb6501.o: ai3.uni-bayreuth.de/niusb6501.c ai3.uni-bayreuth.de/niusb6501.h
+	$(cc) $(cflags) ai3.uni-bayreuth.de/niusb6501.c
 
 firefly.o: firefly.c loop.h
 	$(cc) $(cflags) firefly.c

@@ -18,8 +18,12 @@
 #ifndef firefly_controller_h
 #define firefly_controller_h
 #include "communication.h"
+#include "ai3.uni-bayreuth.de/niusb6501.h"
 #define d_controller_clients 10
-#define d_controller_status_timeout 5
+#define d_controller_status_timeout 3
+#define d_controller_loop_timeout 100000
+#define d_controller_backspace_output "\b \b"
+#define d_controller_version "0.01"
 typedef enum e_controller_status {
 	e_controller_status_running = 0,
 	e_controller_status_idle,
@@ -29,12 +33,18 @@ typedef enum e_controller_status {
 extern const char *v_controller_status[];
 typedef struct s_controller_client {
 	time_t last_status_request;
-	int socket;
+	int socket, acquired, programmed;
 	enum e_controller_status status;
 	char name[d_string_buffer_size];
 } s_controller_client;
+typedef struct s_controller_input {
+	char buffer[d_string_buffer_size];
+	int position, ready, silent;
+} s_controller_input;
+extern const char *v_controller_status[];
 extern struct s_controller_client clients[d_controller_clients];
 extern int connected;
+extern time_t last_status_request;
 extern void f_controller_search(int stream);
 extern void f_controller_close(int element);
 extern void f_controller_broadcast(const char *buffer);
