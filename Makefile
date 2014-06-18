@@ -127,6 +127,8 @@ clean:
 	rm -f *.log
 	rm -f *.lock
 	rm -f $(exec)
+	rm -f $(exec_controller)
+	rm -f firefly_com.sock
 	rm -f $(exec_temperature)
 	rm -f $(exec_compressor)
 	rm -f $(exec_analyzer)
