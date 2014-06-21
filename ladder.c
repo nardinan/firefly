@@ -786,7 +786,30 @@ int f_ladder_rsync(struct s_ladder *ladder) { d_FP;
 
 void p_ladder_action_execution(size_t elements, char columns[elements][d_string_buffer_size], struct s_interface *interface,
 		struct s_environment *environment) { d_FP;
-	if ((d_strcmp(columns[0], "CFG") == 0) && (elements >= 7)) { /* 0CFG: 1HOLDDELAY: 2TRIG: 3MODE: 4DAC: 5CHANNEL: 6DAT/CAL: 7WRITE */
+	if ((d_strcmp(columns[0], "TRIGGER") == 0) && (elements >= 2)) {
+		if (d_strcmp(columns[1], "INTERNAL") == 0)
+			gtk_toggle_button_set_active(interface->switches[e_interface_switch_internal], d_true);
+		else if (d_strcmp(columns[1], "EXTERNAL") == 0)
+			gtk_toggle_button_set_active(interface->switches[e_interface_switch_internal], d_false);
+	} else if ((d_strcmp(columns[0], "MODE") == 0) && (elements >= 2)) {
+		if (d_strcmp(columns[1], "NORMAL") == 0)
+			gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_normal], d_true);
+		else if (d_strcmp(columns[1], "GAIN") == 0)
+			gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_calibration], d_true);
+		else if (d_strcmp(columns[1], "TEST") == 0)
+			gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_calibration_debug], d_true);
+	} else if ((d_strcmp(columns[0], "DO") == 0) && (elements >= 2)) {
+		if (d_strcmp(columns[1], "DATA") == 0)
+			gtk_toggle_button_set_active(interface->switches[e_interface_switch_calibration], d_false);
+		else if (d_strcmp(columns[1], "CALIBRATION") == 0)
+			gtk_toggle_button_set_active(interface->switches[e_interface_switch_calibration], d_true);
+	} else if ((d_strcmp(columns[0], "DELAY") == 0) && (elements >= 2))
+		gtk_spin_button_set_value(interface->spins[e_interface_spin_delay], atof(columns[1]));
+	else if ((d_strcmp(columns[0], "DAC") == 0) && (elements >= 2))
+		gtk_spin_button_set_value(interface->spins[e_interface_spin_dac], atoi(columns[1]));
+	else if ((d_strcmp(columns[0], "CHANNEL") == 0) && (elements >= 2))
+		gtk_spin_button_set_value(interface->spins[e_interface_spin_channel], atoi(columns[1]));
+	else if ((d_strcmp(columns[0], "CFG") == 0) && (elements >= 7)) { /* 0CFG: 1HOLDDELAY: 2TRIG: 3MODE: 4DAC: 5CHANNEL: 6DAT/CAL: 7WRITE */
 		gtk_spin_button_set_value(interface->spins[e_interface_spin_delay], atof(columns[1]));
 		gtk_spin_button_set_value(interface->spins[e_interface_spin_dac], atoi(columns[4]));
 		gtk_spin_button_set_value(interface->spins[e_interface_spin_channel], atoi(columns[5]));

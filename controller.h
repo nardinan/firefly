@@ -24,13 +24,15 @@
 #define d_controller_loop_timeout 100000
 #define d_controller_backspace_output "\b \b"
 #define d_controller_version "0.01"
+#define d_controller_history_rows 256
+#define d_controller_combo_size 2
+#define d_controller_terminal "CMD> "
 typedef enum e_controller_status {
 	e_controller_status_running = 0,
 	e_controller_status_idle,
 	e_controller_status_no_minitrb,
 	e_controller_status_offline
 } e_controller_status;
-extern const char *v_controller_status[];
 typedef struct s_controller_client {
 	time_t last_status_request;
 	int socket, acquired, programmed;
@@ -38,13 +40,17 @@ typedef struct s_controller_client {
 	char name[d_string_buffer_size];
 } s_controller_client;
 typedef struct s_controller_input {
-	char buffer[d_string_buffer_size];
-	int position, ready, silent;
+	char buffer[d_string_buffer_size], combo[d_controller_combo_size];
+	int position, ready, silent, running_combo;
 } s_controller_input;
 extern const char *v_controller_status[];
 extern struct s_controller_client clients[d_controller_clients];
 extern int connected;
 extern time_t last_status_request;
+extern int f_controller_prepare_terminal(struct termios *old_termios);
+extern void f_controller_read_terminal(struct s_controller_input *current_input, time_t sec, time_t usec);
+extern int f_controller_disable_terminal(struct termios *old_termios);
+extern void f_controller_append_history(char history[d_controller_history_rows][d_string_buffer_size], const char *buffer, unsigned int *last);
 extern void f_controller_search(int stream);
 extern void f_controller_close(int element);
 extern void f_controller_broadcast(const char *buffer);

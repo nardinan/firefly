@@ -29,7 +29,7 @@ int f_controller_prepare_terminal(struct termios *old_termios) {
 	struct termios new_termios;
 	int result = d_false;
 	if (tcgetattr(STDIN_FILENO, old_termios) == 0) {
-		new_termios = *(old_termios);
+		memcpy(&new_termios, old_termios, sizeof(struct termios));
 		new_termios.c_lflag &= ~(ECHO|ICANON);
 		new_termios.c_cc[VMIN] = 1;
 		new_termios.c_cc[VTIME] = 0;
@@ -47,22 +47,35 @@ void f_controller_read_terminal(struct s_controller_input *current_input, time_t
 	FD_SET(STDIN_FILENO, &rdset);
 	if (select(STDIN_FILENO+1, &rdset, NULL, NULL, &timeout) > 0) {
 		if ((read(STDIN_FILENO, &incoming_character, sizeof(char))) > 0) {
-			switch(incoming_character) {
-				case 127:
-					if (current_input->position > 0) {
-						current_input->buffer[--(current_input->position)] = '\0';
-						if (!current_input->silent)
-							fprintf(stdout, d_controller_backspace_output);
-					}
-					break;
-				case 10:
+			if (current_input->running_combo) {
+				current_input->combo[current_input->position++] = incoming_character;
+				if (current_input->position == d_controller_combo_size)
 					current_input->ready = d_true;
-					fputc(incoming_character, stdout);
-					break;
-				default:
-					if (!current_input->silent)
+			} else {
+				switch(incoming_character) {
+					/* bad character (like tab and something like that) */
+					case '\t':
+						break;
+					case 127:
+						if (current_input->position > 0) {
+							current_input->buffer[--(current_input->position)] = '\0';
+							if (!current_input->silent)
+								fprintf(stdout, d_controller_backspace_output);
+						}
+						break;
+					case 27:
+						current_input->position = 0;
+						current_input->running_combo = d_true;
+						break;
+					case 10:
+						current_input->ready = d_true;
 						fputc(incoming_character, stdout);
-					current_input->buffer[current_input->position++] = incoming_character;
+						break;
+					default:
+						if (!current_input->silent)
+							fputc(incoming_character, stdout);
+						current_input->buffer[current_input->position++] = incoming_character;
+				}
 			}
 			fflush(stdout);
 		}
@@ -74,6 +87,16 @@ int f_controller_disable_terminal(struct termios *old_termios) {
 	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, old_termios) == 0)
 		result = d_true;
 	return result;
+}
+
+void f_controller_append_history(char history[d_controller_history_rows][d_string_buffer_size], const char *buffer, unsigned int *last) {
+	int index;
+	if (*last >= d_controller_history_rows) {
+		for (index = (*last)-1; index > 0; index--)
+			strncpy(history[index-1], history[index], d_string_buffer_size);
+		(*last)--;
+	}
+	strncpy(history[(*last)++], buffer, d_string_buffer_size);
 }
 
 void f_controller_search(int stream) {
@@ -166,7 +189,7 @@ void f_controller_execute(FILE *stream, char *command) {
 					if (clients[index].socket != d_communication_socket_null)
 						fprintf(stream, "\t%s connected (%s)\n", clients[index].name, v_controller_status[clients[index].status]);
 				}
-			} else if ((d_strcmp(current_token->content, "snd") == 0) || (d_strcmp(current_token->content, "send") == 0)) {
+			} else if ((d_strcmp(current_token->content, "sd") == 0) || (d_strcmp(current_token->content, "send") == 0)) {
 				if ((parameter_token = (struct o_string *)command_tokens->m_get(command_tokens, 1))) {
 					fprintf(stream, "[sended message: \"%s\"]\n", parameter_token->content);
 					f_controller_broadcast(parameter_token->content);
@@ -174,7 +197,7 @@ void f_controller_execute(FILE *stream, char *command) {
 						for (index = 0; index < d_controller_clients; index++) {
 							clients[index].programmed = d_false;
 							if ((clients[index].socket != d_communication_socket_null) &&
-								(clients[index].status == e_controller_status_idle))
+									(clients[index].status == e_controller_status_idle))
 								clients[index].programmed = d_true;
 						}
 				} else
@@ -206,7 +229,9 @@ int main (int argc, char *argv[]) {
 	struct s_controller_input input;
 	struct usb_device *device;
 	struct usb_dev_handle *handler = NULL;
-	int stream, index;
+	char history_buffer[d_controller_history_rows][d_string_buffer_size], clean_buffer[d_string_buffer_size];
+	unsigned int history_pointer = 0;
+	int stream, index, history_index = 0;
 	if (f_controller_prepare_terminal(&old_termios)) {
 		memset(&input, 0, sizeof(struct s_controller_input));
 		if ((stream = f_communication_setup(e_communication_kind_server)) != d_communication_socket_null) {
@@ -215,8 +240,9 @@ int main (int argc, char *argv[]) {
 				clients[index].socket = d_communication_socket_null;
 				clients[index].status = e_controller_status_offline;
 			}
+			clean_buffer[d_string_buffer_size-1] = '\0';
 			fprintf(stdout, "Firefly - multiple controller %s\n", d_controller_version);
-			fprintf(stdout, "CMD> ");
+			fprintf(stdout, d_controller_terminal);
 			fflush(stdout);
 			while (d_true) {
 				if (handler == NULL)
@@ -229,12 +255,35 @@ int main (int argc, char *argv[]) {
 				f_controller_status(d_false);
 				f_controller_read_terminal(&input, 0, d_controller_status_timeout);
 				if (input.ready) {
-					if ((d_strcmp(input.buffer, "quit") == 0) || (d_strcmp(input.buffer, "exit") == 0))
-						break;
-					else
-						f_controller_execute(stdout, input.buffer);
+					if (input.running_combo) {
+						switch (input.combo[1]) {
+							case 66:
+								if (history_index < history_pointer)
+									history_index++;
+								break;
+							case 65:
+								if (history_index > 0)
+									history_index--;
+						}
+					} else {
+						f_controller_append_history(history_buffer, input.buffer, &history_pointer);
+						history_index = history_pointer;
+						if ((d_strcmp(input.buffer, "quit") == 0) || (d_strcmp(input.buffer, "exit") == 0))
+							break;
+						else
+							f_controller_execute(stdout, input.buffer);
+						fprintf(stdout, d_controller_terminal);
+					}
+					if (history_index < history_pointer) {
+						memset(clean_buffer, ' ', d_strlen(input.buffer)+d_strlen(d_controller_terminal));
+						clean_buffer[d_strlen(input.buffer)+d_strlen(d_controller_terminal)] = '\0';
+					}
 					memset(&input, 0, sizeof(struct s_controller_input));
-					fprintf(stdout, "CMD> ");
+					if (history_index < history_pointer) {
+						strcpy(input.buffer, history_buffer[history_index]);
+						input.position = d_strlen(input.buffer);
+						fprintf(stdout, "\r%s\r%s%s", clean_buffer, d_controller_terminal, input.buffer);
+					}
 					fflush(stdout);
 				}
 				usleep(d_controller_loop_timeout);
