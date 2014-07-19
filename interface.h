@@ -110,6 +110,10 @@ typedef enum e_interface_test_toggles {
 	e_interface_test_toggle_a,
 	e_interface_test_toggle_b,
 	e_interface_test_toggle_c,
+	e_interface_test_toggle_d,
+	e_interface_test_toggle_e,
+	e_interface_test_toggle_f,
+	e_interface_test_toggle_g,
 	e_interface_test_toggle_NULL
 } e_interface_test_toggles;
 typedef enum e_interface_files {
