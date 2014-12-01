@@ -351,7 +351,7 @@ void p_chart_normalize_sort(struct s_chart *chart, unsigned int code) {
 	while (changed) {
 		changed = d_false;
 		for (index = 0; index < (chart->head[code]-1); index++)
-			if (chart->values[code][index].normalized.x < chart->values[code][index+1].normalized.x) {
+			if (chart->values[code][index].normalized.x > chart->values[code][index+1].normalized.x) {
 				p_chart_normalize_switch(chart, code, index, index+1);
 				changed = d_true;
 			}
