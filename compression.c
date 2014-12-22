@@ -99,7 +99,7 @@ void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_r
 			}
 			if (!is_information)
 				if ((elements = readed_buffer->m_split(readed_buffer, ','))) {
-					if (elements->filled >= 7) {
+					if (elements->filled >= 6) {
 						/*
 						 * <ID = 0>
 						 * <VA = 1>
@@ -115,7 +115,8 @@ void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_r
 							pedestal[channel] = d_array_cast(atof, elements, singleton, 3, 0.0);
 							sigma_raw[channel] = d_array_cast(atof, elements, singleton, 4, 0.0);
 							sigma[channel] = d_array_cast(atof, elements, singleton, 5, 0.0);
-							flag[channel] = d_array_cast(atoi, elements, singleton, 6, 0);
+							if (elements->filled >= 7)
+								flag[channel] = d_array_cast(atoi, elements, singleton, 6, 0);
 							if (elements->filled >= 8)
 								gain[channel] = d_array_cast(atof, elements, singleton, 7, 0);
 						}

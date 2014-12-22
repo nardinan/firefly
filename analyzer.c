@@ -46,7 +46,7 @@ void p_analyzer_thread_calibrate_channels(struct s_ladder *ladder, float sigma_k
 
 void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 	int next, next_occupancy, next_gain_calibration_step, size, size_occupancy, size_gain_calibration_step, size_gain_calibration, computed,
-	    done = d_false, index, channel, va;
+	    done = d_false, index, channel, va, gained, step, entry;
 	float cn[d_trb_event_vas], value, occupancy_bad_value = ((float)ladder->percent_occupancy/100.0), sum_x, sum_y, sum_x_squares, sum_products, dac;
 	d_ladder_safe_assign(ladder->calibration.lock, computed, ladder->calibration.computed);
 	if (!computed) {
@@ -57,6 +57,25 @@ void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 		d_ladder_safe_assign(ladder->calibration.lock, next_gain_calibration_step, ladder->calibration.next_gain_calibration_step);
 		d_ladder_safe_assign(ladder->calibration.lock, size_gain_calibration_step, ladder->calibration.size_gain_calibration_step);
 		d_ladder_safe_assign(ladder->calibration.lock, size_gain_calibration, ladder->calibration.size_gain_calibration);
+		d_ladder_safe_assign(ladder->gain_sw.lock, gained, ladder->gain_sw.gained);
+		if (gained) {
+			d_object_lock(ladder->gain_sw.lock);
+			d_object_lock(ladder->calibration.lock);
+			for (step = 0; step < ladder->gain_sw.size_gain_calibration_step; ++step)
+				for (channel = 0; channel < d_trb_event_channels_half; ++channel)
+					for (entry = 0; entry < ladder->gain_sw.size_gain_calibration; ++entry) {
+						ladder->calibration.gain_calibration_events[step][entry].values[channel] =
+							ladder->gain_sw.raw_entries[step].raw_channels[channel].entries_left[entry][30]; /* fixme */
+						ladder->calibration.gain_calibration_events[step][entry].values[channel+d_trb_event_channels_half] =
+							ladder->gain_sw.raw_entries[step].raw_channels[channel].entries_right[entry][30]; /* fixme */
+					}
+			ladder->calibration.next_gain_calibration_step = ladder->gain_sw.next_gain_calibration_step;
+			ladder->calibration.next_gain_calibration = ladder->gain_sw.next_gain_calibration;
+			ladder->calibration.size_gain_calibration = ladder->gain_sw.size_gain_calibration;
+			ladder->calibration.size_gain_calibration_step = ladder->gain_sw.size_gain_calibration_step;
+			d_object_unlock(ladder->calibration.lock);
+			d_object_unlock(ladder->gain_sw.lock);
+		}
 		if (next >= size) {
 			memset(ladder->calibration.flags, 0, (sizeof(int)*d_trb_event_channels));
 			d_object_lock(ladder->calibration.write_lock);
@@ -95,38 +114,38 @@ void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 					done = d_true;
 				}
 			}
-			if (size_gain_calibration_step > 0) {
-				done = d_false;
-				if (next_gain_calibration_step >= size_gain_calibration_step) {
-					for (index = 0; index < next_gain_calibration_step; index++) {
-						p_trb_event_pedestal(ladder->calibration.gain_calibration_events[index], size_gain_calibration,
-								ladder->calibration.gain_calibration_mean[index]);
-						for (va = 0, channel = 0; va < d_trb_event_vas; va++, channel += d_trb_event_channels_on_va)
-							ladder->calibration.gain_calibration_vas[index][va] = 
-								p_trb_event_mean_f(&(ladder->calibration.gain_calibration_mean[index][channel]),
+		}
+		if (size_gain_calibration_step > 0) {
+			done = d_false;
+			if (next_gain_calibration_step >= size_gain_calibration_step) {
+				for (index = 0; index < next_gain_calibration_step; index++) {
+					p_trb_event_pedestal(ladder->calibration.gain_calibration_events[index], size_gain_calibration,
+							ladder->calibration.gain_calibration_mean[index]);
+					for (va = 0, channel = 0; va < d_trb_event_vas; va++, channel += d_trb_event_channels_on_va)
+						ladder->calibration.gain_calibration_vas[index][va] =
+							p_trb_event_mean_f(&(ladder->calibration.gain_calibration_mean[index][channel]),
 									d_trb_event_channels_on_va);
-					}
-					for (channel = 0; channel < d_trb_event_channels; channel++) {
-						for (index = 0, sum_x = 0, sum_y = 0, sum_x_squares = 0, sum_products = 0, 
-								dac = ladder->gain_calibration_dac_bottom; index < size_gain_calibration_step; index++,
-								dac += ladder->calibration.gain_calibration_step) {
-							sum_x += dac;
-							sum_y += ladder->calibration.gain_calibration_mean[index][channel];
-							sum_x_squares += (dac*dac);
-							sum_products += (dac*ladder->calibration.gain_calibration_mean[index][channel]);
-						}
-						ladder->calibration.gain_calibration[channel] = (((size_gain_calibration_step*sum_products)-(sum_x*sum_y))/
-							((size_gain_calibration_step*sum_x_squares)-(sum_x*sum_x)));
-					}
-					done = d_true;
 				}
+				for (channel = 0; channel < d_trb_event_channels; channel++) {
+					for (index = 0, sum_x = 0, sum_y = 0, sum_x_squares = 0, sum_products = 0,
+							dac = ladder->gain_calibration_dac_bottom; index < size_gain_calibration_step; index++,
+							dac += ladder->calibration.gain_calibration_step) {
+						sum_x += dac;
+						sum_y += ladder->calibration.gain_calibration_mean[index][channel];
+						sum_x_squares += (dac*dac);
+						sum_products += (dac*ladder->calibration.gain_calibration_mean[index][channel]);
+					}
+					ladder->calibration.gain_calibration[channel] = (((size_gain_calibration_step*sum_products)-(sum_x*sum_y))/
+							((size_gain_calibration_step*sum_x_squares)-(sum_x*sum_x)));
+				}
+				done = d_true;
 			}
-
 		}
 		d_object_unlock(ladder->calibration.write_lock);
 		if (done) {
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.computed, d_true);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.calibrated, d_true);
+			d_ladder_safe_assign(ladder->gain_sw.lock, ladder->gain_sw.gained, d_false);
 		}
 	}
 }

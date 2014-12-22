@@ -81,6 +81,7 @@ const char *interface_labels[] = {
 }, *interface_toggles[] = {
 	"v_mode_normal",
 	"v_mode_calibration",
+	"v_mode_calibration_software",
 	"v_mode_calibration_debug",
 	"v_ladder_top",
 	"v_ladder_bottom",
@@ -213,6 +214,7 @@ struct s_interface_key_value location_entries[] = {
 	{"EL", "Electrical"},
 	{"QM", "Qualification model"},
 	{"FM", "Flight model"},
+	{"TM", "Test model"},
 	{NULL, NULL}
 };
 const char test_entries[] = {0x00, 'a', 'b', 'c', 'd', 'e', 'f', 'g'};
@@ -391,10 +393,13 @@ void f_interface_update_configuration(struct s_interface *interface, int deviced
 		if ((gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_normal]))) {
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_dac]), FALSE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_channel]), FALSE);
-		} else if ((gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_calibration]))) {
+		} else if (gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_calibration])) {
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_dac]), TRUE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_channel]), FALSE);
-		} else {
+		} else if (gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_calibration_software])) {
+			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_dac]), FALSE);
+			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_channel]), FALSE);
+		} else{
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_dac]), TRUE);
 			gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_channel]), TRUE);
 		}
@@ -430,7 +435,7 @@ void f_interface_update_configuration(struct s_interface *interface, int deviced
 	else
 		gtk_button_set_label(GTK_BUTTON(interface->switches[e_interface_switch_public]), "Read only");
 	if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_calibration]))
-		gtk_button_set_label(GTK_BUTTON(interface->switches[e_interface_switch_calibration]), "Do calibration");
+		gtk_button_set_label(GTK_BUTTON(interface->switches[e_interface_switch_calibration]), "Calibration");
 	else
 		gtk_button_set_label(GTK_BUTTON(interface->switches[e_interface_switch_calibration]), "Data");
 }

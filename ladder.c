@@ -147,6 +147,7 @@ struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) {
 		result->deviced = d_true;
 	}
 	d_assert(f_trb_event_new(&(result->last_event)));
+	d_assert(result->gain_sw.lock = f_object_new_pure(NULL));
 	d_assert(result->calibration.lock = f_object_new_pure(NULL));
 	d_assert(result->calibration.write_lock = f_object_new_pure(NULL));
 	result->calibration.size = d_common_calibration_events_default;
@@ -185,88 +186,133 @@ int p_ladder_read_integrity(struct o_trb_event *event, unsigned char *last_reade
 
 void p_ladder_read_calibrate(struct s_ladder *ladder) { d_FP;
 	struct o_string *name;
-	if (ladder->to_skip == 0)
-		if (ladder->last_event.filled) {
-			if (p_ladder_read_integrity(&(ladder->last_event), &(ladder->last_readed_code))) {
-				d_object_lock(ladder->calibration.lock);
-				if (ladder->calibration.next < ladder->calibration.size)
-					memcpy(&(ladder->calibration.events[ladder->calibration.next++]), &(ladder->last_event), sizeof(struct o_trb_event));
-				else if ((ladder->calibration.size_occupancy > 0) &&
-						(ladder->calibration.next_occupancy < ladder->calibration.size_occupancy)) {
-					ladder->calibration.step = e_ladder_calibration_step_occupancy;
-					memcpy(&(ladder->calibration.occupancy_events[ladder->calibration.next_occupancy++]), &(ladder->last_event),
-							sizeof(struct o_trb_event));
-				} else if ((ladder->calibration.size_gain_calibration_step > 0) &&
-						(ladder->calibration.next_gain_calibration_step < ladder->calibration.size_gain_calibration_step)) {
-					if (!ladder->calibration.next_gain_calibration_step)
-						if ((ladder->save_calibration_raw) && (d_strlen(ladder->output) > 0))
-							if ((ladder->deviced) && (ladder->device)) {
-								name = d_string(d_string_buffer_size, "%s/%s_gain%s", ladder->ladder_directory, ladder->output,
-										d_common_ext_calibration_raw);
-								ladder->device->m_close_stream(ladder->device);
-								ladder->device->m_stream(ladder->device, NULL, name, "w", 0777);
-								d_release(name);
-							}
-					ladder->calibration.step = e_ladder_calibration_step_gain;
-					if (ladder->calibration.reconfigure) {
-						if ((ladder->deviced) && (ladder->device)) {
-							ladder->device->m_stop(ladder->device, d_common_timeout);
-							ladder->device->m_setup(ladder->device, d_ladder_trigger_internal, ladder->last_hold_delay,
-									e_trb_mode_calibration, (ladder->gain_calibration_dac_bottom+
-										(ladder->calibration.gain_calibration_step*
-										 (float)ladder->calibration.next_gain_calibration_step)), 0x00,
-									d_common_timeout);
-						}
-						ladder->calibration.reconfigure = d_false;
-					} else if (ladder->calibration.next_gain_calibration < ladder->calibration.size_gain_calibration)
-						memcpy(&(ladder->calibration.gain_calibration_events[ladder->calibration.next_gain_calibration_step]
-									[ladder->calibration.next_gain_calibration++]), &(ladder->last_event),
-								sizeof(struct o_trb_event));
-					else {
-						ladder->calibration.next_gain_calibration = 0;
-						ladder->calibration.next_gain_calibration_step++;
-						ladder->calibration.reconfigure = d_true;
-					}
-				}
-				d_object_unlock(ladder->calibration.lock);
-			} else
-				ladder->damaged_events++;
-		}
-}
-
-void p_ladder_read_data(struct s_ladder *ladder) { d_FP;
-	if (ladder->last_event.filled) {
+	if (ladder->to_skip == 0) {
 		if (p_ladder_read_integrity(&(ladder->last_event), &(ladder->last_readed_code))) {
-			d_object_lock(ladder->data.lock);
-			if (ladder->data.next < ladder->data.size)
-				memcpy(&(ladder->data.events[ladder->data.next++]), &(ladder->last_event), sizeof(struct o_trb_event));
-			d_object_unlock(ladder->data.lock);
+			d_object_lock(ladder->calibration.lock);
+			if (ladder->calibration.next < ladder->calibration.size)
+				memcpy(&(ladder->calibration.events[ladder->calibration.next++]), &(ladder->last_event), sizeof(struct o_trb_event));
+			else if ((ladder->calibration.size_occupancy > 0) &&
+					(ladder->calibration.next_occupancy < ladder->calibration.size_occupancy)) {
+				ladder->calibration.step = e_ladder_calibration_step_occupancy;
+				memcpy(&(ladder->calibration.occupancy_events[ladder->calibration.next_occupancy++]), &(ladder->last_event),
+						sizeof(struct o_trb_event));
+			} else if ((ladder->calibration.size_gain_calibration_step > 0) &&
+					(ladder->calibration.next_gain_calibration_step < ladder->calibration.size_gain_calibration_step)) {
+				if (ladder->calibration.prepare_gain_calibration) {
+					if ((ladder->save_calibration_raw) && (d_strlen(ladder->output) > 0))
+						if ((ladder->deviced) && (ladder->device)) {
+							name = d_string(d_string_buffer_size, "%s/%s_gain%s", ladder->ladder_directory, ladder->output,
+									d_common_ext_calibration_raw);
+							ladder->device->m_close_stream(ladder->device);
+							ladder->device->m_stream(ladder->device, NULL, name, "w", 0777);
+							d_release(name);
+						}
+					ladder->calibration.prepare_gain_calibration = d_false;
+				}
+				ladder->calibration.step = e_ladder_calibration_step_gain;
+				if (ladder->calibration.reconfigure) {
+					if ((ladder->deviced) && (ladder->device)) {
+						ladder->device->m_stop(ladder->device, d_common_timeout);
+						ladder->device->m_setup(ladder->device, d_ladder_trigger_internal, ladder->last_hold_delay,
+								e_trb_mode_calibration, (ladder->gain_calibration_dac_bottom+
+									(ladder->calibration.gain_calibration_step*
+									 (float)ladder->calibration.next_gain_calibration_step)), 0x00,
+								d_common_timeout);
+					}
+					ladder->calibration.reconfigure = d_false;
+				} else if (ladder->calibration.next_gain_calibration < ladder->calibration.size_gain_calibration)
+					memcpy(&(ladder->calibration.gain_calibration_events[ladder->calibration.next_gain_calibration_step]
+								[ladder->calibration.next_gain_calibration++]), &(ladder->last_event),
+							sizeof(struct o_trb_event));
+				else {
+					ladder->calibration.next_gain_calibration = 0;
+					ladder->calibration.next_gain_calibration_step++;
+					ladder->calibration.reconfigure = d_true;
+				}
+			}
+			d_object_unlock(ladder->calibration.lock);
 		} else
 			ladder->damaged_events++;
 	}
 }
 
-
+void p_ladder_read_data(struct s_ladder *ladder) { d_FP;
+	int channel;
+	if (p_ladder_read_integrity(&(ladder->last_event), &(ladder->last_readed_code))) {
+		d_object_lock(ladder->data.lock);
+		if (ladder->data.next < ladder->data.size)
+			memcpy(&(ladder->data.events[ladder->data.next++]), &(ladder->last_event), sizeof(struct o_trb_event));
+		/* sorry for this piece of code ... no time! */
+		if (ladder->running_mode == e_trb_mode_calibration_software) {
+			if (ladder->to_skip == 0) {
+				d_object_lock(ladder->gain_sw.lock);
+				if ((ladder->gain_sw.size_gain_calibration_step > 0) && (ladder->gain_sw.next_gain_calibration_step <
+							ladder->gain_sw.size_gain_calibration_step)) {
+					if (ladder->gain_sw.reconfigure) {
+						if ((ladder->deviced) && (ladder->device)) {
+							ladder->device->m_stop(ladder->device, d_common_timeout);
+							ladder->device->m_setup(ladder->device, d_ladder_trigger_internal, ladder->last_hold_delay,
+									e_trb_mode_calibration_software, (ladder->gain_calibration_dac_bottom+
+										(ladder->gain_sw.gain_calibration_step*
+										 (float)ladder->gain_sw.next_gain_calibration_step)),
+									ladder->gain_sw.next_channel, d_common_timeout);
+							ladder->to_skip = ladder->skip;
+						}
+						ladder->gain_sw.reconfigure = d_false;
+					} else if (ladder->gain_sw.next_gain_calibration < ladder->gain_sw.size_gain_calibration) {
+						for (channel = 0; channel < d_trb_event_samples_half; ++channel) {
+							ladder->gain_sw.raw_entries[ladder->gain_sw.next_gain_calibration_step].
+								raw_channels[ladder->gain_sw.next_channel].
+								entries_left[ladder->gain_sw.next_gain_calibration][channel] =
+								ladder->last_event.values[channel];
+							ladder->gain_sw.raw_entries[ladder->gain_sw.next_gain_calibration_step].
+								raw_channels[ladder->gain_sw.next_channel].
+								entries_right[ladder->gain_sw.next_gain_calibration][channel] =
+								ladder->last_event.values[channel+d_trb_event_channels_half];
+						}
+						ladder->gain_sw.next_gain_calibration++;
+					} else {
+						if ((++ladder->gain_sw.next_channel) >= d_trb_event_channels_half) {
+							ladder->gain_sw.next_gain_calibration_step++;
+							ladder->gain_sw.next_channel = 0;
+						}
+						ladder->gain_sw.next_gain_calibration = 0;
+						ladder->gain_sw.reconfigure = d_true;
+					}
+				} else {
+					d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.calibrated, d_true);
+					d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.computed, d_false);
+					ladder->gain_sw.gained = d_true;
+					ladder->command = e_ladder_command_stop;
+					if ((ladder->deviced) && (ladder->device))
+						ladder->device->m_close_stream(ladder->device);
+					ladder->update_interface = d_true;
+				}
+				d_object_unlock(ladder->gain_sw.lock);
+			}
+		}
+		d_object_unlock(ladder->data.lock);
+	} else
+		ladder->damaged_events++;
+}
 
 void f_ladder_read(struct s_ladder *ladder, time_t timeout) { d_FP;
 	d_object_lock(ladder->lock);
 	if ((ladder->deviced) && (ladder->device)) {
 		if (ladder->command != e_ladder_command_stop) {
-			if ((!ladder->read_atomic) || (v_atomic_read_lock >= 0) ||
-					((v_atomic_read_lock = p_stream_lock_file(d_common_lock_read_file)) >= 0))
+			if ((!ladder->read_atomic) || (v_atomic_read_lock >= 0) || ((v_atomic_read_lock = p_stream_lock_file(d_common_lock_read_file)) >= 0))
 				if ((ladder->device->m_event(ladder->device, &(ladder->last_event), timeout)))
 					if (ladder->last_event.filled) {
 						ladder->evented = d_true;
 						ladder->readed_events++;
 						ladder->last_readed_kind = ladder->last_event.kind;
 						if (ladder->command == e_ladder_command_calibration) {
-							if (ladder->last_readed_kind != 0xa3) {
+							if (ladder->last_readed_kind != 0xa3)
 								p_ladder_read_calibrate(ladder);
-								if (ladder->to_skip > 0)
-									ladder->to_skip--;
-							}
 						} else
 							p_ladder_read_data(ladder);
+						if (ladder->to_skip > 0)
+							ladder->to_skip--;
 					}
 		} else if (!ladder->stopped) {
 			ladder->device->m_stop(ladder->device, timeout);
@@ -454,6 +500,7 @@ void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) {
 		ladder->calibration.size_gain_calibration_step = 0;
 		if (ladder->compute_gain_calibration) {
 			ladder->calibration.reconfigure = d_true;
+			ladder->calibration.prepare_gain_calibration = d_true;
 			ladder->calibration.size_gain_calibration = ladder->gain_calibration_bucket;
 			ladder->calibration.size_gain_calibration_step = ladder->gain_calibration_steps;
 			ladder->calibration.gain_calibration_step = (float)(ladder->gain_calibration_dac_top-ladder->gain_calibration_dac_bottom)/
@@ -638,7 +685,7 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 	ladder->readed_events = 0;
 	ladder->damaged_events = 0;
 	ladder->last_readed_events = 0;
-	ladder->to_skip = 0;
+	ladder->to_skip = ladder->skip;
 	ladder->last_readed_code = 0x00;
 	ladder->last_readed_time = current_time;
 	ladder->starting_time = current_time;
@@ -672,6 +719,7 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.size_gain_calibration_step, 0);
 			if (ladder->compute_gain_calibration) {
 				d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.reconfigure, d_true);
+				d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.prepare_gain_calibration, d_true);
 				d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.size_gain_calibration, ladder->gain_calibration_bucket);
 				d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.size_gain_calibration_step, ladder->gain_calibration_steps);
 				d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.gain_calibration_step,
@@ -680,10 +728,20 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 			}
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.computed, d_false);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.calibrated, d_false);
-			d_ladder_safe_assign(ladder->parameters_lock, ladder->to_skip, ladder->skip);
 			ladder->command = e_ladder_command_calibration;
-		} else
+		} else {
 			ladder->command = e_ladder_command_data;
+			d_ladder_safe_assign(ladder->gain_sw.lock, ladder->gain_sw.prepare_gain_calibration, d_true);
+			d_ladder_safe_assign(ladder->gain_sw.lock, ladder->gain_sw.next_channel, 0);
+			d_ladder_safe_assign(ladder->gain_sw.lock, ladder->gain_sw.next_step, 0);
+			d_ladder_safe_assign(ladder->gain_sw.lock, ladder->gain_sw.next_gain_calibration, 0);
+			d_ladder_safe_assign(ladder->gain_sw.lock, ladder->gain_sw.size_gain_calibration, ladder->gain_calibration_bucket);
+			d_ladder_safe_assign(ladder->gain_sw.lock, ladder->gain_sw.next_gain_calibration_step, 0);
+			d_ladder_safe_assign(ladder->gain_sw.lock, ladder->gain_sw.size_gain_calibration_step, ladder->gain_calibration_steps);
+			d_ladder_safe_assign(ladder->gain_sw.lock, ladder->gain_sw.gain_calibration_step, ((float)(ladder->gain_calibration_dac_top-
+							ladder->gain_calibration_dac_bottom)/(float)(ladder->gain_calibration_steps-1.0f)));
+		}
+		d_ladder_safe_assign(ladder->gain_sw.lock, ladder->gain_sw.gained, d_false);
 		p_ladder_configure_output(ladder, interface);
 	} else
 		ladder->command = e_ladder_command_stop;
@@ -721,7 +779,10 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface, 
 					if (gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_calibration]))
 						mode = e_trb_mode_calibration;
 					else {
-						mode = e_trb_mode_calibration_debug_digital;
+						if (gtk_toggle_button_get_active(interface->toggles[e_interface_toggle_calibration_software]))
+							mode = e_trb_mode_calibration_software;
+						else
+							mode = e_trb_mode_calibration_debug_digital;
 						channel = gtk_spin_button_get_value(interface->spins[e_interface_spin_channel]);
 						ladder->listening_channel = channel;
 					}
@@ -740,6 +801,7 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface, 
 				ladder->device->m_stream(ladder->device, NULL, name, "w", 0777);
 				d_release(name);
 			}
+			ladder->running_mode = mode;
 			ladder->device->m_setup(ladder->device, trigger, ladder->last_hold_delay, mode, dac, channel, d_common_timeout);
 			ladder->event_size = ladder->device->event_size;
 			ladder->stopped = d_false;
@@ -792,7 +854,8 @@ int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, 
 	d_object_unlock(ladder->lock);
 	if ((deviced) && (ladder->action[ladder->action_pointer].initialized)) {
 		if (ladder->action[ladder->action_pointer].starting > 0) {
-			if (ladder->action[ladder->action_pointer].command == e_ladder_command_calibration) {
+			if ((ladder->action[ladder->action_pointer].command == e_ladder_command_calibration) ||
+					((ladder->action[ladder->action_pointer].mode == e_trb_mode_calibration_software))) {
 				if (ladder->command == e_ladder_command_stop) {
 					p_callback_informations_action((GtkWidget *)interface->informations_configuration->window, environment);
 					finished = d_true;
@@ -812,18 +875,14 @@ int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, 
 						ladder->action[index].initialized = d_true;
 						ladder->action[index].starting = 0;
 						ladder->action[index].counter = ladder->action[index].original_counter;
-						if ((d_strlen(ladder->action[index].label) > 0) &&
-								(d_strcmp(ladder->action[index].label,
-									  ladder->action[ladder->action_pointer].destination) == 0)) {
+						if ((d_strlen(ladder->action[index].label) > 0) && (d_strcmp(ladder->action[index].label,
+										ladder->action[ladder->action_pointer].destination) == 0)) {
 							ladder->action_pointer = index;
 							break;
 						}
 					}
-				} else {
+				} else
 					ladder->action[ladder->action_pointer].initialized = d_false;
-					if ((++ladder->action_pointer) >= d_ladder_actions)
-						ladder->action_pointer = 0;
-				}
 			}
 		} else {
 			if (ladder->action_pointer == 0)
@@ -853,6 +912,9 @@ int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, 
 						break;
 					case e_trb_mode_calibration:
 						gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_calibration], d_true);
+						break;
+					case e_trb_mode_calibration_software:
+						gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_calibration_software], d_true);
 						break;
 					case e_trb_mode_calibration_debug_digital:
 						gtk_toggle_button_set_active(interface->toggles[e_interface_toggle_calibration_debug], d_true);
@@ -976,9 +1038,12 @@ void f_ladder_load_actions(struct s_ladder *ladder, struct o_stream *stream) {
 									if ((d_strcmp(singleton->content, "NORMAL") == 0) ||
 											(d_strcmp(singleton->content, "N") == 0))
 										ladder->action[current_action].mode = e_trb_mode_normal;
-									else if ((d_strcmp(singleton->content, "GAIN") == 0) &&
+									else if ((d_strcmp(singleton->content, "GAIN") == 0) ||
 											(d_strcmp(singleton->content, "G") == 0))
 										ladder->action[current_action].mode = e_trb_mode_calibration;
+									else if ((d_strcmp(singleton->content, "GAINSW") == 0) ||
+											(d_strcmp(singleton->content, "GS") == 0))
+										ladder->action[current_action].mode = e_trb_mode_calibration_software;
 									else
 										ladder->action[current_action].mode = e_trb_mode_calibration_debug_digital;
 									break;

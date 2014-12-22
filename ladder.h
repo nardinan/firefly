@@ -124,6 +124,7 @@ typedef struct s_ladder {
 	struct o_trb *device;
 	struct o_trb_event last_event;
 	enum e_ladder_commands command;
+	enum e_trb_mode running_mode;
 	time_t starting_time, finish_time;
 	long long last_readed_time;
 	unsigned int last_readed_events, readed_events, damaged_events, event_size, listening_channel, location_pointer, skip, to_skip, percent_occupancy,
@@ -139,7 +140,7 @@ typedef struct s_ladder {
 		enum e_ladder_calibration_steps step;
 		struct o_object *lock, *write_lock;
 		unsigned int next, next_occupancy, next_gain_calibration, next_gain_calibration_step, size, size_occupancy, size_gain_calibration,
-			     size_gain_calibration_step;
+			     size_gain_calibration_step, prepare_gain_calibration;
 		struct o_trb_event events[d_common_calibration_events], occupancy_events[d_common_occupancy_events],
 				   gain_calibration_events[d_common_gain_calibration_steps][d_common_gain_calibration_events];
 		float pedestal[d_trb_event_channels], sigma_raw[d_trb_event_channels], sigma[d_trb_event_channels], occupancy[d_trb_event_channels],
@@ -148,6 +149,20 @@ typedef struct s_ladder {
 			temperature[2];
 		int computed, calibrated, reconfigure, flags[d_trb_event_channels];
 	} calibration;
+	struct {
+		struct o_object *lock;
+		struct {
+			struct {
+				unsigned short int entries_left[d_common_data_events][d_trb_event_samples_half],
+					       entries_right[d_common_data_events][d_trb_event_samples_half];
+				float mean_left, mean_right;
+			} raw_channels[d_trb_event_channels_half];
+		} raw_entries[d_common_gain_calibration_steps];
+		unsigned int next_gain_calibration, next_gain_calibration_step, size_gain_calibration, size_gain_calibration_step, prepare_gain_calibration,
+			     next_channel, next_step;
+		float gain_calibration_step;
+		int gained, reconfigure;
+	} gain_sw;
 	struct {
 		struct o_object *lock;
 		unsigned int next, size, buckets_size, channel, occupancy[d_trb_event_channels], total_events;
@@ -189,6 +204,7 @@ extern void f_ladder_configure(struct s_ladder *ladder, struct s_interface *inte
 extern void f_ladder_led(struct s_ladder *ladder);
 extern int p_ladder_rsync_execution(void);
 extern int f_ladder_rsync(struct s_ladder *ladder);
+extern int p_ladder_run_action_store(struct s_ladder *ladder, struct o_stream *stream);
 extern int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, struct s_environment *environment);
 extern void f_ladder_load_actions(struct s_ladder *ladder, struct o_stream *stream);
 #endif

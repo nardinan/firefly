@@ -210,7 +210,12 @@ int f_step_progress(struct s_environment *environment, time_t current_time) { d_
 		case e_ladder_command_data:
 			if ((environment->ladder->read_atomic) && (v_atomic_read_lock == -1))
 				gtk_progress_bar_set_text(environment->interface->progress_bar, "Waiting for lock ...");
-			else
+			else if (environment->ladder->running_mode == e_trb_mode_calibration_software) {
+				snprintf(description, d_string_buffer_size, "GAIN SW (CH: %d | DAC %d)", environment->ladder->gain_sw.next_channel,
+						(int)(environment->ladder->gain_calibration_dac_bottom+(environment->ladder->gain_sw.gain_calibration_step*
+							 (float)environment->ladder->gain_sw.next_gain_calibration_step)));
+				gtk_progress_bar_set_text(environment->interface->progress_bar, description);
+			} else
 				gtk_progress_bar_set_text(environment->interface->progress_bar, "DATA (manual)");
 			if (automation) {
 				total_time = environment->ladder->action[environment->ladder->action_pointer].duration;
