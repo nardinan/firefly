@@ -19,8 +19,8 @@
 #define firefly_interface_h
 #include "components/chart.h"
 #include "common.h"
-#define d_interface_index_prototype 1
-#define d_interface_index_ladder 2
+#define d_interface_index_prototype 2
+#define d_interface_index_ladder 3
 extern const char *interface_name[], test_entries[];
 typedef struct s_interface_key_value {
 	char *code, *name;

@@ -203,6 +203,7 @@ struct s_interface_key_value location_entries[] = {
 	{NULL, NULL}
 }, kind_entries[] = {
 	{"H", "Hybrid"},
+	{"HF", "Hybrid FM"},
 	{"P", "Prototype"},
 	{"L", "Ladder"},
 	{NULL, NULL}
