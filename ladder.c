@@ -881,8 +881,11 @@ int f_ladder_run_action(struct s_ladder *ladder, struct s_interface *interface, 
 							break;
 						}
 					}
-				} else
+				} else {
 					ladder->action[ladder->action_pointer].initialized = d_false;
+					if ((++ladder->action_pointer) >= d_ladder_actions)
+						ladder->action_pointer = 0;
+				}
 			}
 		} else {
 			if (ladder->action_pointer == 0)
