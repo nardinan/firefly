@@ -30,7 +30,7 @@
 #define d_common_ext_calibration_raw ".craw"
 #define d_common_ext_calibration_pdf ".pdf"
 #define d_common_exporter "tools/firefly_cal_export.bin"
-#define d_common_timeout 500
+#define d_common_timeout 1000
 #define d_common_timeout_loop 400
 #define d_common_timeout_analyze 500000
 #define d_common_timeout_device 1500000
@@ -46,7 +46,7 @@
 #define d_common_data_events_default 64
 #define d_common_occupancy_events 5120
 #define d_common_occupancy_error 3.0
-#define d_common_gain_calibration_events 64
+#define d_common_gain_calibration_events 512
 #define d_common_gain_calibration_steps 10
 #define d_common_gain_calibration_software_events 32
 #define d_common_data_spectrum ((d_trb_event_channels_half/2)+1)

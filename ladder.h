@@ -161,7 +161,7 @@ typedef struct s_ladder {
 		unsigned int next_gain_calibration, next_gain_calibration_step, size_gain_calibration, size_gain_calibration_step, prepare_gain_calibration,
 			     next_channel, next_step;
 		float gain_calibration_step;
-		int gained, reconfigure;
+		int computed, reconfigure;
 	} gain_sw;
 	struct {
 		struct o_object *lock;

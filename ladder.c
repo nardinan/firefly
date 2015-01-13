@@ -147,9 +147,9 @@ struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) {
 		result->deviced = d_true;
 	}
 	d_assert(f_trb_event_new(&(result->last_event)));
-	d_assert(result->gain_sw.lock = f_object_new_pure(NULL));
 	d_assert(result->calibration.lock = f_object_new_pure(NULL));
 	d_assert(result->calibration.write_lock = f_object_new_pure(NULL));
+	d_assert(result->gain_sw.lock = f_object_new_pure(NULL));
 	result->calibration.size = d_common_calibration_events_default;
 	result->data.size = d_common_data_events_default;
 	result->occupancy_bucket = d_common_occupancy_events;
@@ -282,7 +282,7 @@ void p_ladder_read_data(struct s_ladder *ladder) { d_FP;
 				} else {
 					d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.calibrated, d_true);
 					d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.computed, d_false);
-					ladder->gain_sw.gained = d_true;
+					ladder->gain_sw.computed = d_true; /* gain_sw.lock already enabled */
 					ladder->command = e_ladder_command_stop;
 					if ((ladder->deviced) && (ladder->device))
 						ladder->device->m_close_stream(ladder->device);
@@ -741,7 +741,7 @@ void p_ladder_configure_setup(struct s_ladder *ladder, struct s_interface *inter
 			d_ladder_safe_assign(ladder->gain_sw.lock, ladder->gain_sw.gain_calibration_step, ((float)(ladder->gain_calibration_dac_top-
 							ladder->gain_calibration_dac_bottom)/(float)(ladder->gain_calibration_steps-1.0f)));
 		}
-		d_ladder_safe_assign(ladder->gain_sw.lock, ladder->gain_sw.gained, d_false);
+		d_ladder_safe_assign(ladder->gain_sw.lock, ladder->gain_sw.computed, d_false);
 		p_ladder_configure_output(ladder, interface);
 	} else
 		ladder->command = e_ladder_command_stop;

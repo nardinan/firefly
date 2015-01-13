@@ -57,7 +57,7 @@ void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 		d_ladder_safe_assign(ladder->calibration.lock, next_gain_calibration_step, ladder->calibration.next_gain_calibration_step);
 		d_ladder_safe_assign(ladder->calibration.lock, size_gain_calibration_step, ladder->calibration.size_gain_calibration_step);
 		d_ladder_safe_assign(ladder->calibration.lock, size_gain_calibration, ladder->calibration.size_gain_calibration);
-		d_ladder_safe_assign(ladder->gain_sw.lock, gained, ladder->gain_sw.gained);
+		d_ladder_safe_assign(ladder->gain_sw.lock, gained, ladder->gain_sw.computed);
 		if (gained) {
 			d_object_lock(ladder->gain_sw.lock);
 			d_object_lock(ladder->calibration.lock);
@@ -145,7 +145,7 @@ void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 		if (done) {
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.computed, d_true);
 			d_ladder_safe_assign(ladder->calibration.lock, ladder->calibration.calibrated, d_true);
-			d_ladder_safe_assign(ladder->gain_sw.lock, ladder->gain_sw.gained, d_false);
+			d_ladder_safe_assign(ladder->gain_sw.lock, ladder->gain_sw.computed, d_false);
 		}
 	}
 }
