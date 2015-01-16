@@ -1,5 +1,6 @@
 # this job reads informations from temperature sensors
 # every minute for 20 times
+# ---- MINUTE 1 ----
 label=TEMP1
 command=TEMP
 [NEW]
@@ -9,6 +10,7 @@ command=CURR
 label=SLEEP1
 command=SLEEP
 duration=60
+# ---- MINUTE 2 ----
 [NEW]
 label=TEMP2
 command=TEMP
@@ -19,6 +21,7 @@ command=CURR
 label=SLEEP2
 command=SLEEP
 duration=60
+# ---- MINUTE 3 ----
 [NEW]
 label=TEMP3
 command=TEMP
@@ -29,6 +32,7 @@ command=CURR
 label=SLEEP3
 command=SLEEP
 duration=60
+# ---- MINUTE 4 ----
 [NEW]
 label=TEMP4
 command=TEMP
@@ -39,6 +43,7 @@ command=CURR
 label=SLEEP4
 command=SLEEP
 duration=60
+# ---- MINUTE 5 ----
 [NEW]
 label=TEMP5
 command=TEMP
@@ -50,11 +55,9 @@ label=CAL5
 command=CAL
 mode=NORMAL
 write=TRUE
-hold_delay=6.6
 trigger=TRUE
-[NEW]
-label=SLEEP5
-command=SLEEP
-duration=60
+hold_delay=6.6
 destination=TEMP1
-counter=100
+counter=150
+# the calibration will costs about one minute
+# so no sleep is needed
