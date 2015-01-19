@@ -218,7 +218,7 @@ struct s_interface_key_value location_entries[] = {
 	{"TM", "Test model"},
 	{NULL, NULL}
 };
-const char test_entries[] = {0x00, 'a', 'b', 'c', 'd', 'e', 'f', 'g'};
+const char test_entries[] = {0x00, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
 void p_interface_new_scale(struct s_interface *result, GtkBuilder *scale_interface) {
 	int index;
 	if (!result->scale_configuration)
