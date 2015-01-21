@@ -26,6 +26,7 @@ const char *interface_labels[] = {
 	"v_temp2",
 	"v_status_label",
 	"v_jobs_label",
+	"v_ladder_name",
 	NULL
 }, *interface_switches[] = {
 	"v_public",

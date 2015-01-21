@@ -156,6 +156,7 @@ int f_step_interface(struct s_environment *environment, time_t current_time) { d
 			gtk_label_set_text(environment->interface->labels[e_interface_label_output], "read-only");
 			gtk_label_set_text(environment->interface->labels[e_interface_label_size], "-");
 		}
+		gtk_label_set_text(environment->interface->labels[e_interface_label_name], environment->ladder->name);
 	}
 	if (p_ladder_rsync_execution())
 		gtk_label_set_text(environment->interface->labels[e_interface_label_status], "Running rsync ...");
