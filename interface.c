@@ -221,19 +221,19 @@ struct s_interface_key_value location_entries[] = {
 	{"TR", "SERMS"},
 	{NULL, NULL}
 }, kind_entries[] = {
-	{"H", "Hybrid"},
 	{"HF", "Hybrid FM"},
-	{"P", "Prototype"},
 	{"L", "Ladder"},
+	{"P", "Prototype"},
+	{"H", "Hybrid QM"},
 	{NULL, NULL}
 }, assembly_entries[] = {
 	{"P", "Perugia"},
 	{"G", "Geneva"},
 	{NULL, NULL}
 }, quality_entries[] = {
+	{"FM", "Flight model"},
 	{"EL", "Electrical"},
 	{"QM", "Qualification model"},
-	{"FM", "Flight model"},
 	{"TM", "Test model"},
 	{NULL, NULL}
 };
