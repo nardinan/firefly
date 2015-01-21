@@ -97,6 +97,7 @@ struct s_environment *f_environment_new(struct s_environment *supplied, const ch
 	d_assert(result->ladder = f_ladder_new(NULL, NULL));
 	d_assert(result->interface = f_interface_new(NULL, main_builder, scale_builder, parameters_builder, informations_builder, jobs_builder));
 	f_interface_update_configuration(result->interface, result->ladder->deviced);
+	gtk_combo_box_set_active(result->interface->combos[e_interface_combo_assembly], location_entries[result->ladder->location_pointer].id);
 	p_environment_new_main_hook(result);
 	p_environment_new_scale_hook(result);
 	p_environment_new_parameters_hook(result);

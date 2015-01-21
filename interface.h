@@ -24,6 +24,7 @@
 extern const char *interface_name[], test_entries[];
 typedef struct s_interface_key_value {
 	char *code, *name;
+	int id;
 } s_interface_key_value;
 extern struct s_interface_key_value location_entries[], kind_entries[], assembly_entries[], quality_entries[];
 typedef enum e_interface_labels {

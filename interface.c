@@ -210,12 +210,12 @@ const char *interface_labels[] = {
 	"fourier_transform_signal_adc_2"
 };
 struct s_interface_key_value location_entries[] = {
-	{"PA", "Perugia - clean room"},
-	{"PC", "Perugia - cosmic rays"},
-	{"PL", "Perugia - laboratory"},
-	{"GA", "Geneva - clean room"},
-	{"GC", "Geneva - cosmic rays"},
-	{"GL", "Geneva - laboratory"},
+	{"PA", "Perugia - clean room", 0},
+	{"PC", "Perugia - cosmic rays", 0},
+	{"PL", "Perugia - laboratory", 0},
+	{"GA", "Geneva - clean room", 1},
+	{"GC", "Geneva - cosmic rays", 1},
+	{"GL", "Geneva - laboratory", 1},
 	{"BE", "Beijing"},
 	{"HSA", "Hybrid SA"},
 	{"TR", "SERMS"},
