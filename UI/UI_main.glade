@@ -159,7 +159,7 @@
                   <object class="GtkMenu" id="v_test_menu">
                     <property name="visible">True</property>
                     <child>
-                      <object class="GtkRadioMenuItem" id="v_test_Z">
+                      <object class="GtkRadioMenuItem" id="v_test_null">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Unofficial test</property>
                         <property name="active">True</property>
@@ -170,7 +170,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "a"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -178,7 +178,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "b"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -186,7 +186,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "c"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -194,7 +194,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "d"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -202,7 +202,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "e"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -210,7 +210,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "f"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -218,7 +218,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "g"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -226,7 +226,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "h"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -234,7 +234,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "i"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -242,7 +242,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "j"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -250,7 +250,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "k"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -258,7 +258,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "l"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -266,7 +266,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "m"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -274,7 +274,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "n"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -282,7 +282,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "o"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -290,7 +290,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "p"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -298,7 +298,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "q"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -306,7 +306,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "r"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -314,7 +314,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "s"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -322,7 +322,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "t"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -330,7 +330,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "u"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -338,7 +338,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "v"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -346,7 +346,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "w"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -354,7 +354,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "x"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -362,7 +362,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "y"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                     <child>
@@ -370,7 +370,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Test "z"</property>
                         <property name="draw_as_radio">True</property>
-                        <property name="group">v_test_Z</property>
+                        <property name="group">v_test_null</property>
                       </object>
                     </child>
                   </object>
