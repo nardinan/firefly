@@ -46,7 +46,7 @@ void p_analyzer_thread_calibrate_channels(struct s_ladder *ladder, float sigma_k
 
 void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 	int next, next_occupancy, next_gain_calibration_step, size, size_occupancy, size_gain_calibration_step, size_gain_calibration, computed,
-	    done = d_false, index, channel, va, gained, step, entry;
+	    done = d_false, index, channel, va, gained, step, entry, sample, max_sample_left, max_sample_right;
 	float cn[d_trb_event_vas], value, occupancy_bad_value = ((float)ladder->percent_occupancy/100.0), sum_x, sum_y, sum_x_squares, sum_products, dac;
 	d_ladder_safe_assign(ladder->calibration.lock, computed, ladder->calibration.computed);
 	if (!computed) {
@@ -64,10 +64,18 @@ void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 			for (step = 0; step < ladder->gain_sw.size_gain_calibration_step; ++step)
 				for (channel = 0; channel < d_trb_event_channels_half; ++channel)
 					for (entry = 0; entry < ladder->gain_sw.size_gain_calibration; ++entry) {
+						for (sample = 1, max_sample_left = 0, max_sample_left = 0; sample < d_trb_event_samples_half; ++sample) {
+							if (ladder->gain_sw.raw_entries[step].raw_channels[channel].entries_left[entry][sample] >
+									ladder->gain_sw.raw_entries[step].raw_channels[channel].entries_left[entry][max_sample_left])
+								max_sample_left = sample;
+							if (ladder->gain_sw.raw_entries[step].raw_channels[channel].entries_right[entry][sample] >
+									ladder->gain_sw.raw_entries[step].raw_channels[channel].entries_right[entry][max_sample_right])
+								max_sample_right = sample;
+						}
 						ladder->calibration.gain_calibration_events[step][entry].values[channel] =
-							ladder->gain_sw.raw_entries[step].raw_channels[channel].entries_left[entry][30]; /* fixme */
+							ladder->gain_sw.raw_entries[step].raw_channels[channel].entries_left[entry][max_sample_left]; /* fixme */
 						ladder->calibration.gain_calibration_events[step][entry].values[channel+d_trb_event_channels_half] =
-							ladder->gain_sw.raw_entries[step].raw_channels[channel].entries_right[entry][30]; /* fixme */
+							ladder->gain_sw.raw_entries[step].raw_channels[channel].entries_right[entry][max_sample_right]; /* fixme */
 					}
 			ladder->calibration.next_gain_calibration_step = ladder->gain_sw.next_gain_calibration_step;
 			ladder->calibration.next_gain_calibration = ladder->gain_sw.next_gain_calibration;
