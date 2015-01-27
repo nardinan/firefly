@@ -38,6 +38,7 @@ typedef enum e_interface_labels {
 	e_interface_label_status,
 	e_interface_label_jobs,
 	e_interface_label_name,
+	e_interface_label_test,
 	e_interface_label_NULL
 } e_interface_labels;
 typedef enum e_interface_switches {

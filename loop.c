@@ -104,7 +104,7 @@ int f_step_plot_slow(struct s_environment *environment, time_t current_time) { d
 }
 
 int f_step_interface(struct s_environment *environment, time_t current_time) { d_FP;
-	char buffer[d_string_buffer_size], value[d_string_buffer_size], *unity[] = {
+	char test_code, buffer[d_string_buffer_size], value[d_string_buffer_size], *unity[] = {
 		"Bytes",
 		"Kb",
 		"Mb",
@@ -157,6 +157,15 @@ int f_step_interface(struct s_environment *environment, time_t current_time) { d
 			gtk_label_set_text(environment->interface->labels[e_interface_label_size], "-");
 		}
 		gtk_label_set_text(environment->interface->labels[e_interface_label_name], environment->ladder->name);
+	}
+	for (index = 0, test_code = 0x00; index < e_interface_test_toggle_NULL; ++index)
+		if (gtk_check_menu_item_get_active(environment->interface->test_modes[index]))
+			test_code = test_entries[index];
+	if (test_code == 0x00)
+		gtk_label_set_text(environment->interface->labels[e_interface_label_test], "unofficial test");
+	else {
+		snprintf(buffer, d_string_buffer_size, "test '%c'", (test_code-32));
+		gtk_label_set_text(environment->interface->labels[e_interface_label_test], buffer);
 	}
 	if (p_ladder_rsync_execution())
 		gtk_label_set_text(environment->interface->labels[e_interface_label_status], "Running rsync ...");
@@ -214,7 +223,7 @@ int f_step_progress(struct s_environment *environment, time_t current_time) { d_
 			else if (environment->ladder->running_mode == e_trb_mode_calibration_software) {
 				snprintf(description, d_string_buffer_size, "GAIN SW (CH: %d | DAC %d)", environment->ladder->gain_sw.next_channel,
 						(int)(environment->ladder->gain_calibration_dac_bottom+(environment->ladder->gain_sw.gain_calibration_step*
-							 (float)environment->ladder->gain_sw.next_gain_calibration_step)));
+								(float)environment->ladder->gain_sw.next_gain_calibration_step)));
 				gtk_progress_bar_set_text(environment->interface->progress_bar, description);
 			} else
 				gtk_progress_bar_set_text(environment->interface->progress_bar, "DATA (manual)");

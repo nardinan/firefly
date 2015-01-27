@@ -27,6 +27,7 @@ const char *interface_labels[] = {
 	"v_status_label",
 	"v_jobs_label",
 	"v_ladder_name",
+	"v_ladder_test",
 	NULL
 }, *interface_switches[] = {
 	"v_public",
@@ -401,7 +402,7 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 }
 
 void f_interface_update_configuration(struct s_interface *interface, int deviced) { d_FP;
-	int selected = 0;
+	int selected = 0, index;
 	if (deviced) {
 		gtk_label_set_markup(interface->connected_label, "<span background='#00FF00'>miniTRB is <b>online</b></span>");
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->toggles[e_interface_toggle_action]), TRUE);
@@ -445,9 +446,24 @@ void f_interface_update_configuration(struct s_interface *interface, int deviced
 	if ((selected == d_interface_index_prototype) || (selected == d_interface_index_ladder)) {
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->combos[e_interface_combo_assembly]), TRUE);
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->combos[e_interface_combo_quality]), TRUE);
+		for (index = e_interface_test_toggle_a; index <= e_interface_test_toggle_k; ++index) {
+			gtk_widget_set_sensitive(GTK_WIDGET(interface->test_modes[index]), FALSE);
+			if (gtk_check_menu_item_get_active(interface->test_modes[index]))
+				gtk_check_menu_item_set_active(interface->test_modes[e_interface_test_toggle_unofficial], TRUE);
+		}
+		for (index = e_interface_test_toggle_l; index <= e_interface_test_toggle_z; ++index)
+			gtk_widget_set_sensitive(GTK_WIDGET(interface->test_modes[index]), TRUE);
 	} else {
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->combos[e_interface_combo_assembly]), FALSE);
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->combos[e_interface_combo_quality]), FALSE);
+		for (index = e_interface_test_toggle_a; index <= e_interface_test_toggle_k; ++index)
+			gtk_widget_set_sensitive(GTK_WIDGET(interface->test_modes[index]), TRUE);
+		for (index = e_interface_test_toggle_l; index <= e_interface_test_toggle_z; ++index) {
+			gtk_widget_set_sensitive(GTK_WIDGET(interface->test_modes[index]), FALSE);
+			if (gtk_check_menu_item_get_active(interface->test_modes[index]))
+				gtk_check_menu_item_set_active(interface->test_modes[e_interface_test_toggle_unofficial], TRUE);
+		}
+
 	}
 	if (gtk_toggle_button_get_active(interface->switches[e_interface_switch_internal]))
 		gtk_button_set_label(GTK_BUTTON(interface->switches[e_interface_switch_internal]), "Internal (50Hz)");
