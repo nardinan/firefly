@@ -44,6 +44,7 @@
 #define d_ladder_extension_size 3
 #define d_ladder_actions 32
 #define d_ladder_action_reset "[NEW]"
+#define d_ladder_sensors_default "not yet readed"
 #define d_ladder_safe_assign(sep,res,val)\
 do{\
 	d_object_lock(sep);\

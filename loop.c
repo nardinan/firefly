@@ -118,10 +118,18 @@ int f_step_interface(struct s_environment *environment, time_t current_time) { d
 	strftime(buffer, d_string_buffer_size, d_common_interface_time_format, localtime(&current_time));
 	gtk_label_set_text(environment->interface->labels[e_interface_label_current_time], buffer);
 	if (environment->ladder->read_temperature) {
-		snprintf(value, d_string_buffer_size, "%.02f C (%s)", environment->ladder->calibration.temperature[0], environment->ladder->sensors[0]);
-		gtk_label_set_text(environment->interface->labels[e_interface_label_temperature1], value);
-		snprintf(value, d_string_buffer_size, "%.02f C (%s)", environment->ladder->calibration.temperature[1], environment->ladder->sensors[1]);
-		gtk_label_set_text(environment->interface->labels[e_interface_label_temperature2], value);
+		if (strlen(environment->ladder->sensors[0]) > 0)
+			snprintf(value, d_string_buffer_size, "%.02f C (<span foreground='#009900'>%s</span>)", environment->ladder->calibration.temperature[0],
+					environment->ladder->sensors[0]);
+		else
+			strncpy(value, "<span foreground='#990000'>probably <b>DEAD</b></span>", d_string_buffer_size);
+		gtk_label_set_markup(environment->interface->labels[e_interface_label_temperature1], value);
+		if (strlen(environment->ladder->sensors[1]) > 0)
+			snprintf(value, d_string_buffer_size, "%.02f C (<span foreground='#009900'>%s</span>)", environment->ladder->calibration.temperature[1],
+					environment->ladder->sensors[1]);
+		else
+			strncpy(value, "<span foreground='#990000'>probably <b>DEAD</b></span>", d_string_buffer_size);
+		gtk_label_set_markup(environment->interface->labels[e_interface_label_temperature2], value);
 	} else {
 		gtk_label_set_text(environment->interface->labels[e_interface_label_temperature1], "disabled");
 		gtk_label_set_text(environment->interface->labels[e_interface_label_temperature2], "disabled");

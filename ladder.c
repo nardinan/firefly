@@ -168,6 +168,8 @@ struct s_ladder *f_ladder_new(struct s_ladder *supplied, struct o_trb *device) {
 		snprintf(result->log, d_string_buffer_size, "%s", d_common_log_safe);
 	else
 		fclose(stream);
+	strcpy(result->sensors[0], d_ladder_sensors_default);
+	strcpy(result->sensors[1], d_ladder_sensors_default);
 	pthread_create(&(result->analyze_thread), NULL, f_analyzer_thread, (void *)result);
 	return result;
 }
