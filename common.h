@@ -40,8 +40,8 @@
 #define d_common_temperature_sensors 2
 #define d_common_file_time_format "_%m.%d.%Y-%H.%M.%S"
 #define d_common_interface_time_format "%d %b %Y %H:%M:%S"
-#define d_common_calibration_events 1024
-#define d_common_calibration_events_default 512
+#define d_common_calibration_events 5012
+#define d_common_calibration_events_default 2048
 #define d_common_data_events 2048
 #define d_common_data_events_default 64
 #define d_common_occupancy_events 5120
