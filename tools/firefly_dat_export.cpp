@@ -47,8 +47,7 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 		if ((stream->m_read_raw(stream, (unsigned char *)&(file_header), sizeof(struct s_singleton_file_header)))) {
 			if (file_header.endian_check == (unsigned short)d_compress_endian) {
 				while ((clusters = f_decompress_event(stream, &event_header))) {
-					printf("\r%80s", "");
-					printf("\r[processing event: %d] %d clusters", current_event++, event_header.clusters);
+					printf("\r%80s\r[processing event: %d] %d clusters", "", current_event++, event_header.clusters);
 					fflush(stdout);
 					for (index = 0; index < event_header.clusters; index++) {
 						if (charts->signals) {
@@ -119,7 +118,6 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 									if ((clusters[index].header.strips >= 1) && (clusters[index].header.strips <= 5))
 										charts->eta_array[clusters[index].header.strips-1]->
 											Fill(clusters[index].header.eta);
-
 								}
 					}
 					d_free(clusters);
@@ -166,54 +164,76 @@ void f_export_histograms(struct o_string *output, struct s_data_charts *charts) 
 }
 
 int main (int argc, char *argv[]) {
-	struct s_data_charts charts;
-	struct o_string *compressed = NULL, *output = NULL, *output_root = NULL, *extension = f_string_new_constant(NULL, ".root");
+	struct s_data_charts charts = {
+		d_chart("Number of channel;# Channels;# Entries", 40, 0.0, 40.0),
+		d_chart("Common noise;CN;# Entries", 1200, -60.0, 60.0),
+		d_chart("Signal of cluster (foreach event, foreach cluster);Signal;# Entries", 2000, 0.0, 400.0),
+		{
+			d_chart("Signal of clusters with #strips == 1", 2000, 0.0, 400.0),
+			d_chart("Signal of clusters with #strips == 2", 2000, 0.0, 400.0),
+			d_chart("Signal of clusters with #strips == 3", 2000, 0.0, 400.0),
+			d_chart("Signal of clusters with #strips == 4", 2000, 0.0, 400.0),
+			d_chart("Signal of clusters with #strips == 5", 2000, 0.0, 400.0)
+		},
+		d_chart("Signal over noise (SN) of clusters;SN;# Entries", 2000, 0.0, 100.0),
+		d_chart("Center of gravity;Gravity;# Entries", d_trb_event_channels, 0.0, d_trb_event_channels),
+		d_chart("Center of gravity of SEED strip;Gravity;# Entries", d_trb_event_channels, 0.0, d_trb_event_channels),
+		d_chart("ETA;ETA;# Entries", 500, 0.0, 1.0),
+		{
+			d_chart("ETA of clusters with #strips == 1", 500, 0.0, 100.0),
+			d_chart("ETA of clusters with #strips == 2", 500, 0.0, 100.0),
+			d_chart("ETA of clusters with #strips == 3", 500, 0.0, 100.0),
+			d_chart("ETA of clusters with #strips == 4", 500, 0.0, 100.0),
+			d_chart("ETA of clusters with #strips == 5", 500, 0.0, 100.0)
+		},
+		d_chart("Signal over noise (SN) of clusters with #strips == 1", 5000, 0.0, 100.0),
+		d_chart("Signal over noise (SN) of clusters with #strips == 2", 5000, 0.0, 100.0),
+		d_chart("Signal over noise (SN) of SEED strip in clusters with #strips == 2", 5000, 0.0, 100.0),
+		d_chart("Signal over noise (SN) of SECONDARY strip in clusters with #strips == 2", 5000, 0.0, 100.0),
+		d_chart("Signal of clusters with #strips == 1", 2000, 0.0, 400.0),
+		d_chart("Signal of clusters with #strips == 2", 2000, 0.0, 400.0),
+		d_chart("Signal of SEED strip in clusters with #strips == 2", 2000, 0.0, 400.0),
+		d_chart("Signal of SECONDARY strip in clusters with #strips == 2", 2000, 0.0, 400.0),
+		{
+			d_chart("ETA of clusters with signal 18.0-30.0;ETA;# Entries", 500, 0.0, 1.0),
+			d_chart("ETA of clusters with signal 30.0-50.0;ETA;# Entries", 500, 0.0, 1.0),
+			d_chart("ETA of clusters with signal 50.0-70.0;ETA;# Entries", 500, 0.0, 1.0),
+			d_chart("ETA of clusters with signal 70.0-90.0;ETA;# Entries", 500, 0.0, 1.0),
+			d_chart("ETA of clusters with signal 90.0-110.0;ETA;# Entries", 500, 0.0, 1.0)
+		},
+		d_chart_2D("Signal over ETA;ETA;Signal", 100, 0.0, 1.0, 300.0, 0.0, 300.0),
+		d_chart_2D("Signal over gravity;CoG;Signal", d_trb_event_channels, 0.0, d_trb_event_channels, 2000.0, 0.0, 400.0),
+		d_chart_2D("Number of channels over gravity;CoG;NoC", d_trb_event_channels, 0.0, d_trb_event_channels, 40.0, 0.0, 40.0),
+		NULL,
+		NULL,
+		NULL
+	};
+	struct o_stream *compressed_stream;
+	struct o_string *compressed = NULL, *compressed_buffer = NULL, *compressed_list = NULL, *output = NULL, *output_root = NULL, 
+			*extension = f_string_new_constant(NULL, ".root");
 	struct s_exception *exception = NULL;
 	int arguments = 0, index;
 	float range_start, range_end;
-	char buffer[d_string_buffer_size];
 	TFile *output_file;
 	d_try {
 		d_compress_argument(arguments, "-c", compressed, d_string_pure, "No compressed file specified (-c)");
+		d_compress_argument(arguments, "-cl", compressed_list, d_string_pure, "No compressed file list specified (-cl)");
 		d_compress_argument(arguments, "-o", output, d_string_pure, "No output file specified (-o)");
-		if ((compressed) && (output)) {
+		if (((compressed) || (compressed_list)) && (output)) {
 			output_root = d_clone(output, struct o_string);
 			output_root->m_append(output_root, extension);
 			output_file = new TFile(output_root->content, "RECREATE");
 			d_release(output_root);
 			output_file->cd();
-			charts.n_channels = d_chart("Number of channel;# Channels;# Entries", 40.0, 0.0, 40.0);
-			charts.common_noise = d_chart("Common Noise;CN;# Entries", 1200, -60.0, 60.0);
-			charts.signals = d_chart("Signal of cluster (foreach event, foreach cluster);Signal;# Entries", 2000, 0.0, 400.0);
-			for (index = 0; index < 5; index++) {
-				snprintf(buffer, d_string_buffer_size, "Signal of clusters with #strips == %d", (index+1));
-				charts.signals_array[index] = d_chart(buffer, 2000, 0.0, 400.0);
-			}
-			charts.signal_one = d_chart("Signal of clusters #strips == 1", 2000, 0.0, 400.0);
-			charts.signals_two = d_chart("Signal of clusters #strips == 2", 2000, 0.0, 400.0);
-			charts.signals_two_major = d_chart("Signal of SEED strip in clusters with #strips == 2", 2000, 0.0, 100.0);
-			charts.signals_two_minor = d_chart("Signal of SECONDARY strip in clusters with #strips == 2", 2000, 0.0, 100.0);
-			charts.signal_over_noise = d_chart("Signal over noise (SN) of cluster;SN;# Entries", 2000, 0.0, 100.0);
-			charts.channel_one = d_chart("Signal over noise (SN) of clusters with #strips == 1", 5000, 0.0, 100.0);
-			charts.channels_two = d_chart("Signal overs noise (SN) of clusters with #strips == 2", 5000, 0.0, 100.0);
-			charts.channels_two_major = d_chart("Signal over noise (SN) of SEED strip in  clusters with #strips == 2", 5000, 0.0, 100.0);
-			charts.channels_two_minor = d_chart("Signal over noise (SN) of SECONDARY strip in clusters with #strips == 2", 5000, 0.0, 100.0);
-			charts.strips_gravity = d_chart("Center of gravity;Gravity;# Entries", d_trb_event_channels, 0.0, d_trb_event_channels);
-			charts.main_strips_gravity = d_chart("Center of gravity of SEED strips", d_trb_event_channels, 0.0, d_trb_event_channels);
-			charts.eta = d_chart("Eta;Eta;# Entries", 500, 0.0, 1.0);
-			for (index = 0; index < 5; index++) {
-				snprintf(buffer, d_string_buffer_size, "Eta of clusters with #strips == %d", (index+1));
-				charts.eta_array[index] = d_chart(buffer, 500, 0.0, 1.0);
-			}
-			charts.signal_eta = d_chart_2D("signal over eta;Eta;Signal", 100, 0.0, 1.0, 300.0, 0.0, 300.0);
-			charts.signal_gravity = d_chart_2D("signal over gravity;CoG;Signal", d_trb_event_channels, 0.0, d_trb_event_channels, 2000.0, 0.0, 400.0);
-			charts.n_channels_gravity = d_chart_2D("Number of channels over gravity;CoG;NoC", d_trb_event_channels, 0.0, d_trb_event_channels, 40.0, 0.0, 40.0);
-			for (index = 0; index < d_cuts_steps; index++) {
-				snprintf(buffer, d_string_buffer_size, "Eta of clusters with signal %.00f-%.00f;Eta;# Entries", cuts[index].low,
-						cuts[index].top);
-				charts.etas[index] = d_chart(buffer, 500, 0.0, 1.0);
-			}
-			f_fill_histograms(compressed, &charts);
+			if (compressed_list) {
+				compressed_stream = f_stream_new_file(NULL, compressed_list, "r", 0777);
+				while ((compressed = compressed_stream->m_read_line(compressed_stream, compressed_buffer, d_string_buffer_size))) {
+					f_fill_histograms(compressed, &charts);
+					compressed_buffer = compressed;
+				}
+				d_release(compressed_stream);
+			} else
+				f_fill_histograms(compressed, &charts);
 			charts.profile = (TH1D *) charts.signal_eta->ProfileX("Signal over eta (Profile)");
 			charts.profile_sg = (TH1D *) charts.signal_gravity->ProfileX("Signal over gravity (Profile)");
 			charts.profile_nc_g = (TH1D *) charts.n_channels_gravity->ProfileX("Number of channels over gravity (Profile)");
