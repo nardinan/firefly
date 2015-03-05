@@ -26,6 +26,8 @@
 #define d_chart_bucket 1024
 #define d_chart_max_nested 4
 #define d_chart_font_size 7.0
+#define d_chart_gui_font_size 10.0
+#define d_chart_font_message_size 18.0
 #define d_chart_font_factor 2.0
 #define d_chart_font_height 12.0
 #define d_same_sign(a,b) (((a)>=0)^((b)<0))

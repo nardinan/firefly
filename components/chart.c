@@ -459,14 +459,7 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 			}
 		if (chart->show_borders) {
 			cairo_set_source_rgb(chart->cairo_brush, 0.0, 0.0, 0.0);
-			code = 0;
-			if (strlen(chart->message) > 0) {
-				cairo_move_to(chart->cairo_brush, chart->border_x+(d_chart_font_size*d_chart_font_factor),
-						(chart->border_y+d_chart_font_height));
-				cairo_show_text(chart->cairo_brush, chart->message);
-				code++;
-			}
-			for (; code < d_chart_max_nested; code++)
+			for (code = 0; code < d_chart_max_nested; code++)
 				if (chart->head[code]) {
 					cairo_move_to(chart->cairo_brush, chart->border_x+d_chart_font_size, (chart->border_y+(code*d_chart_font_height)));
 					if (chart->kind[code] == e_chart_kind_envelope)
@@ -478,6 +471,12 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 								rms[code]);
 					cairo_show_text(chart->cairo_brush, buffer);
 				}
+			if (strlen(chart->message) > 0) {
+				cairo_set_font_size(chart->cairo_brush, d_chart_font_message_size);
+				cairo_move_to(chart->cairo_brush, chart->border_x+d_chart_font_size, (chart->border_y+(code*d_chart_font_height)));
+				cairo_show_text(chart->cairo_brush, chart->message);
+				cairo_set_font_size(chart->cairo_brush, d_chart_gui_font_size);
+			}
 		}
 		p_chart_redraw_axis_x(chart->cairo_brush, chart, full_h, full_w, dimension.width, dimension.height);
 		p_chart_redraw_axis_y(chart->cairo_brush, chart, full_h, full_w, dimension.width, dimension.height);
