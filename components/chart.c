@@ -72,6 +72,9 @@ void f_chart_style(struct s_chart *chart, struct o_stream *configuration) {
 		p_chart_style_int(dictionary, "border", 'x', &(chart->border_x));
 		p_chart_style_int(dictionary, "border", 'y', &(chart->border_y));
 		p_chart_style_int(dictionary, "show_borders", 'z', &(chart->show_borders));
+		p_chart_style_float(dictionary, "background_color_R", 'z', &(chart->background.R));
+		p_chart_style_float(dictionary, "background_color_G", 'z', &(chart->background.G));
+		p_chart_style_float(dictionary, "background_color_B", 'z', &(chart->background.B));
 		for (index = 0; index < d_chart_max_nested; index++) {
 			snprintf(buffer, d_string_buffer_size, "dot_size_%d", index);
 			p_chart_style_float(dictionary, buffer, 'z', &(chart->data.dot_size[index]));
@@ -130,6 +133,9 @@ void f_chart_style_store(struct s_chart *chart, struct o_stream *configuration) 
 	p_chart_style_store_int(configuration, "border", 'x', chart->border_x);
 	p_chart_style_store_int(configuration, "border", 'y', chart->border_y);
 	p_chart_style_store_int(configuration, "show_borders", 'z', chart->show_borders);
+	p_chart_style_store_float(configuration, "background_color_R", 'z', chart->background.R);
+	p_chart_style_store_float(configuration, "background_color_G", 'z', chart->background.G);
+	p_chart_style_store_float(configuration, "background_color_B", 'z', chart->background.B);
 	for (index = 0; index < d_chart_max_nested; index++) {
 		snprintf(buffer, d_string_buffer_size, "dot_size_%d", index);
 		p_chart_style_store_float(configuration, buffer, 'z', chart->data.dot_size[index]);
@@ -459,6 +465,11 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 		}
 		p_chart_normalize(chart, full_h, full_w, dimension.width, dimension.height);
 		cairo_set_dash(chart->cairo_brush, NULL, 0, 0);
+		cairo_set_source_rgb(chart->cairo_brush, chart->background.R, chart->background.G, chart->background.B);
+		cairo_set_line_width(chart->cairo_brush, dimension.width);
+		cairo_move_to(chart->cairo_brush, (dimension.width/2.0), 0);
+		cairo_line_to(chart->cairo_brush, (dimension.width/2.0), dimension.height);
+		cairo_stroke(chart->cairo_brush);
 		for (code = 0; code < d_chart_max_nested; code++)
 			if (chart->head[code]) {
 				cairo_set_source_rgb(chart->cairo_brush, chart->data.color[code].R, chart->data.color[code].G, chart->data.color[code].B);
