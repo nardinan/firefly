@@ -187,7 +187,7 @@
                       <object class="GtkRadioMenuItem" id="v_test_a">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Test "a"</property>
+                        <property name="label" translatable="yes">Test "a" (DPNC - Hybrid - Before the Thermal Cycling)</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_null</property>
                       </object>
@@ -196,7 +196,7 @@
                       <object class="GtkRadioMenuItem" id="v_test_b">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Test "b"</property>
+                        <property name="label" translatable="yes">Test "b" (DPNC - Hybrid - After the Thermal Cycling)</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_null</property>
                       </object>
@@ -205,7 +205,7 @@
                       <object class="GtkRadioMenuItem" id="v_test_c">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Test "c"</property>
+			<property name="label" translatable="yes">Test "c" (DPNC/INFN - Hybrid - Before gluing)</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_null</property>
                       </object>
@@ -286,7 +286,7 @@
                       <object class="GtkRadioMenuItem" id="v_test_l">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Test "l"</property>
+			<property name="label" translatable="yes">Test "l" (DPNC/INFN - Ladder - Without SSD before gluing)</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_null</property>
                       </object>
@@ -295,7 +295,7 @@
                       <object class="GtkRadioMenuItem" id="v_test_m">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Test "m"</property>
+			<property name="label" translatable="yes">Test "m" (DPNC/INFN - Ladder - After bonding)</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_null</property>
                       </object>
@@ -313,7 +313,7 @@
                       <object class="GtkRadioMenuItem" id="v_test_o">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Test "o"</property>
+			<property name="label" translatable="yes">Test "o" (DPNC/INFN - Ladder - Cosmic rays data acquisition)</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_null</property>
                       </object>
@@ -340,7 +340,7 @@
                       <object class="GtkRadioMenuItem" id="v_test_r">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Test "r"</property>
+			<property name="label" translatable="yes">Test "r" (DPNC/INFN - Ladder - Before gluing on the plane)</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_null</property>
                       </object>
@@ -349,7 +349,7 @@
                       <object class="GtkRadioMenuItem" id="v_test_s">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Test "s"</property>
+			<property name="label" translatable="yes">Test "s" (DPNC/INFN - Ladder - After gluing on the plane)</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_null</property>
                       </object>
@@ -412,7 +412,7 @@
                       <object class="GtkRadioMenuItem" id="v_test_z">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Test "z"</property>
+			<property name="label" translatable="yes">Test "z" (DPNC/INFN - Ladder - Last test)</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_null</property>
                       </object>
