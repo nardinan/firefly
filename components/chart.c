@@ -90,6 +90,62 @@ void f_chart_style(struct s_chart *chart, struct o_stream *configuration) {
 	d_release(dictionary);
 }
 
+void p_chart_style_store_float(struct o_stream *configuration, const char *key, const char postfix, float value) {
+	struct o_string *string = NULL;
+	if ((string = f_string_new(string, d_string_buffer_size, "%s_%c=%f\n", key, postfix, value))) {
+		configuration->m_write_string(configuration, string);
+		d_free(string);
+	}
+}
+
+void p_chart_style_store_int(struct o_stream *configuration, const char *key, const char postfix, int value) {
+	struct o_string *string = NULL;
+	if ((string = f_string_new(string, d_string_buffer_size, "%s_%c=%d\n", key, postfix, value))) {
+		configuration->m_write_string(configuration, string);
+		d_free(string);
+	}
+}
+
+void p_chart_style_store_axis(struct o_stream *configuration, const char postfix, struct s_chart_axis *axis) {
+	p_chart_style_store_int(configuration, "segments", postfix, (int)axis->segments);
+	p_chart_style_store_int(configuration, "show_negative", postfix, axis->show_negative);
+	p_chart_style_store_int(configuration, "show_positive", postfix, axis->show_positive);
+	p_chart_style_store_int(configuration, "show_grid", postfix, axis->show_grid);
+	p_chart_style_store_int(configuration, "logarithmic", postfix, axis->logarithmic);
+	p_chart_style_store_float(configuration, "range_bottom", postfix, axis->range[0]);
+	p_chart_style_store_float(configuration, "range_top", postfix, axis->range[1]);
+	p_chart_style_store_float(configuration, "minimum_distance", postfix, axis->minimum_distance);
+	p_chart_style_store_float(configuration, "offset", postfix, axis->offset);
+	p_chart_style_store_float(configuration, "size", postfix, axis->size);
+	p_chart_style_store_float(configuration, "color_R", postfix, axis->color.R);
+	p_chart_style_store_float(configuration, "color_G", postfix, axis->color.G);
+	p_chart_style_store_float(configuration, "color_B", postfix, axis->color.B);
+}
+
+void f_chart_style_store(struct s_chart *chart, struct o_stream *configuration) {
+	char buffer[d_string_buffer_size];
+	int index;
+	p_chart_style_store_axis(configuration, 'x', &(chart->axis_x));
+	p_chart_style_store_axis(configuration, 'y', &(chart->axis_y));
+	p_chart_style_store_int(configuration, "border", 'x', chart->border_x);
+	p_chart_style_store_int(configuration, "border", 'y', chart->border_y);
+	p_chart_style_store_int(configuration, "show_borders", 'z', chart->show_borders);
+	for (index = 0; index < d_chart_max_nested; index++) {
+		snprintf(buffer, d_string_buffer_size, "dot_size_%d", index);
+		p_chart_style_store_float(configuration, buffer, 'z', chart->data.dot_size[index]);
+		snprintf(buffer, d_string_buffer_size, "line_size_%d", index);
+		p_chart_style_store_float(configuration, buffer, 'z', chart->data.line_size[index]);
+		snprintf(buffer, d_string_buffer_size, "color_R_%d", index);
+		p_chart_style_store_float(configuration, buffer, 'z', chart->data.color[index].R);
+		snprintf(buffer, d_string_buffer_size, "color_G_%d", index);
+		p_chart_style_store_float(configuration, buffer, 'z', chart->data.color[index].G);
+		snprintf(buffer, d_string_buffer_size, "color_B_%d", index);
+		p_chart_style_store_float(configuration, buffer, 'z', chart->data.color[index].B);
+		snprintf(buffer, d_string_buffer_size, "bins_%d", index);
+		p_chart_style_store_float(configuration, buffer, 'z', chart->bins[index]);
+	}
+}
+
 void p_chart_create_bins(struct s_chart *chart, unsigned int code) {
 	float step = fabs(chart->axis_x.range[1]-chart->axis_x.range[0])/(float)chart->bins[code], current_value;
 	for (current_value = chart->axis_x.range[0]; current_value <= chart->axis_x.range[1]; current_value += step) {

@@ -207,25 +207,40 @@ int p_callback_hide_on_exit(GtkWidget *widget, struct s_environment *environment
 }
 
 void p_callback_scale_action(GtkWidget *widget, struct s_environment *environment) {
+	struct o_stream *style_stream;
+	struct o_string *style_path;
 	float value_top, value_bottom;
+	int chart_id;
 	if (environment->interface->scale_configuration->hooked_chart) {
-		value_top = (float)gtk_spin_button_get_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_y_top]);
-		value_bottom = (float)gtk_spin_button_get_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_y_bottom]);
-		environment->interface->scale_configuration->hooked_chart->axis_y.range[0] = d_min(value_top, value_bottom);
-		environment->interface->scale_configuration->hooked_chart->axis_y.range[1] = d_max(value_top, value_bottom);
-		environment->interface->scale_configuration->hooked_chart->axis_y.segments =
-			gtk_spin_button_get_value_as_int(environment->interface->scale_configuration->spins[e_interface_scale_spin_y_segments]);
-		value_top = (float)gtk_spin_button_get_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_top]);
-		value_bottom = (float)gtk_spin_button_get_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_bottom]);
-		environment->interface->scale_configuration->hooked_chart->axis_x.range[0] = d_min(value_top, value_bottom);
-		environment->interface->scale_configuration->hooked_chart->axis_x.range[1] = d_max(value_top, value_bottom);
-		environment->interface->scale_configuration->hooked_chart->axis_x.segments =
-			gtk_spin_button_get_value_as_int(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_segments]);
-		environment->interface->scale_configuration->hooked_chart->show_borders =
-			gtk_toggle_button_get_active(environment->interface->scale_configuration->switches[e_interface_scale_switch_informations]);
-		p_callback_hide_on_exit(GTK_WIDGET(environment->interface->scale_configuration->window), environment);
-		f_chart_denormalize(environment->interface->scale_configuration->hooked_chart);
-		f_chart_integerize(environment->interface->scale_configuration->hooked_chart);
+		for (chart_id = 0; chart_id < e_interface_alignment_NULL; ++chart_id)
+			if (environment->interface->charts[chart_id] == environment->interface->scale_configuration->hooked_chart)
+				break;
+		if (chart_id < e_interface_alignment_NULL) {
+			value_top = (float)gtk_spin_button_get_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_y_top]);
+			value_bottom = (float)gtk_spin_button_get_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_y_bottom]);
+			environment->interface->scale_configuration->hooked_chart->axis_y.range[0] = d_min(value_top, value_bottom);
+			environment->interface->scale_configuration->hooked_chart->axis_y.range[1] = d_max(value_top, value_bottom);
+			environment->interface->scale_configuration->hooked_chart->axis_y.segments =
+				gtk_spin_button_get_value_as_int(environment->interface->scale_configuration->spins[e_interface_scale_spin_y_segments]);
+			value_top = (float)gtk_spin_button_get_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_top]);
+			value_bottom = (float)gtk_spin_button_get_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_bottom]);
+			environment->interface->scale_configuration->hooked_chart->axis_x.range[0] = d_min(value_top, value_bottom);
+			environment->interface->scale_configuration->hooked_chart->axis_x.range[1] = d_max(value_top, value_bottom);
+			environment->interface->scale_configuration->hooked_chart->axis_x.segments =
+				gtk_spin_button_get_value_as_int(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_segments]);
+			environment->interface->scale_configuration->hooked_chart->show_borders =
+				gtk_toggle_button_get_active(environment->interface->scale_configuration->switches[e_interface_scale_switch_informations]);
+			p_callback_hide_on_exit(GTK_WIDGET(environment->interface->scale_configuration->window), environment);
+			f_chart_denormalize(environment->interface->scale_configuration->hooked_chart);
+			f_chart_integerize(environment->interface->scale_configuration->hooked_chart);
+			if ((style_path = f_string_new_constant(NULL, interface_styles[chart_id]))) {
+				if ((style_stream = f_stream_new_file(NULL, style_path, "w", 0666))) {
+					f_chart_style_store(environment->interface->scale_configuration->hooked_chart, style_stream);
+					d_free(style_stream);
+				}
+				d_free(style_path);
+			}
+		}
 	}
 }
 

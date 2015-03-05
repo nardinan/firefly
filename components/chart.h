@@ -74,6 +74,10 @@ extern void p_chart_style_float(struct o_dictionary *dictionary, const char *key
 extern void p_chart_style_int(struct o_dictionary *dictionary, const char *key, const char postfix, int *value);
 extern void p_chart_style_axis(struct o_dictionary *dictionary, const char postfix, struct s_chart_axis *axis);
 extern void f_chart_style(struct s_chart *chart, struct o_stream *configuration);
+extern void p_chart_style_store_float(struct o_stream *configuration, const char *key, const char postfix, float value);
+extern void p_chart_style_store_int(struct o_stream *configuration, const char *key, const char postfix, int value);
+extern void p_chart_style_store_axis(struct o_stream *configuration, const char postfix, struct s_chart_axis *axis);
+extern void f_chart_style_store(struct s_chart *chart, struct o_stream *configuration);
 extern void p_chart_build_bins(struct s_chart *chart, unsigned int code);
 extern void f_chart_append_signal(struct s_chart *chart, unsigned int code, float x, float y);
 extern void f_chart_append_histogram(struct s_chart *chart, unsigned int code, float value);

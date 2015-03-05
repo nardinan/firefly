@@ -21,7 +21,7 @@
 #include "common.h"
 #define d_interface_index_prototype 2
 #define d_interface_index_ladder 1
-extern const char *interface_name[], test_entries[];
+extern const char *interface_name[], *interface_styles[], test_entries[];
 typedef struct s_interface_key_value {
 	char *code, *name;
 	int id;
