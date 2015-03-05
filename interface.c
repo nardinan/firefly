@@ -40,6 +40,7 @@ const char *interface_labels[] = {
 }, *interface_spins[] = {
 	"v_dac",
 	"v_channel",
+	"v_channel_other",
 	"v_delay",
 	"v_ladder_serial",
 	NULL
@@ -139,6 +140,7 @@ const char *interface_labels[] = {
 	"v_calibration_pedestal_alignment",
 	"v_calibration_sigma_raw_alignment",
 	"v_calibration_sigma_alignment",
+	"v_calibration_status_alignment",
 	"v_calibration_gain_alignment",
 	"v_calibration_gain_vas_alignment",
 	"v_calibration_histogram_pedestal_alignment",
@@ -167,6 +169,7 @@ const char *interface_labels[] = {
 	"styles/pedestal.keys",
 	"styles/sigma_raw.keys",
 	"styles/sigma.keys",
+	"styles/status.keys",
 	"styles/gain.keys",
 	"styles/gain_vas.keys",
 	"styles/histogram_pedestal.keys",
@@ -337,15 +340,17 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 	for (index = 0; interface_switches[index]; index++)
 		d_assert(result->switches[index] = GTK_TOGGLE_BUTTON(gtk_builder_get_object(main_interface, interface_switches[index])));
 	for (index = 0; interface_spins[index]; index++)
-		d_assert(result->spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(main_interface, interface_spins[index])));
+		d_assert(result->spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(main_interface, interface_spins[index])))
 	for (index = 0; interface_bucket_spins[index]; index++)
 		d_assert(result->bucket_spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(main_interface, interface_bucket_spins[index])));
 	gtk_spin_button_set_value(result->spins[e_interface_spin_dac], 10.0);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_channel], 0.0);
+	gtk_spin_button_set_value(result->spins[e_interface_spin_channel_other], 192.0);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_delay], 6.6);
 	gtk_spin_button_set_value(result->bucket_spins[e_interface_bucket_spin_data], d_common_data_events_default);
 	gtk_spin_button_set_value(result->bucket_spins[e_interface_bucket_spin_calibration], d_common_calibration_events_default);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_serial], 0.0);
+	gtk_widget_set_sensitive(GTK_WIDGET(result->spins[e_interface_spin_channel_other]), FALSE);
 	for (index = 0; interface_combos[index]; index++) {
 		d_assert(result->combos[index] = GTK_COMBO_BOX(gtk_builder_get_object(main_interface, interface_combos[index])));
 		gtk_combo_box_set_active(GTK_COMBO_BOX(result->combos[index]), 0);
@@ -516,6 +521,7 @@ void f_interface_clean_calibration(struct s_chart **charts) {
 	f_chart_flush(charts[e_interface_alignment_pedestal]);
 	f_chart_flush(charts[e_interface_alignment_sigma_raw]);
 	f_chart_flush(charts[e_interface_alignment_sigma]);
+	f_chart_flush(charts[e_interface_alignment_status]);
 	f_chart_flush(charts[e_interface_alignment_gain]);
 	f_chart_flush(charts[e_interface_alignment_gain_vas]);
 	f_chart_flush(charts[e_interface_alignment_histogram_pedestal]);

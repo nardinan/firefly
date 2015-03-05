@@ -479,7 +479,7 @@
                                   <object class="GtkLabel" id="v_sigma_raw_noise_cut_label">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">Noise cut</property>
+                                    <property name="label" translatable="yes">Dynamic cut</property>
                                   </object>
                                   <packing>
                                     <property name="top_attach">2</property>
@@ -1071,6 +1071,9 @@
                                     <property name="top_attach">3</property>
                                     <property name="bottom_attach">4</property>
                                   </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>

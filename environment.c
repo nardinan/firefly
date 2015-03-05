@@ -34,6 +34,7 @@ void p_environment_new_main_hook(struct s_environment *result) {
 	g_signal_connect(G_OBJECT(result->interface->toggles[e_interface_toggle_action]), "toggled", G_CALLBACK(p_callback_action), result);
 	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_public]), "toggled", G_CALLBACK(p_callback_refresh), result);
 	g_signal_connect(G_OBJECT(result->interface->switches[e_interface_switch_internal]), "toggled", G_CALLBACK(p_callback_refresh), result);
+	g_signal_connect(G_OBJECT(result->interface->spins[e_interface_spin_channel]), "value-changed", G_CALLBACK(p_callback_change_channel), result);
 	g_signal_connect(G_OBJECT(result->interface->bucket_spins[e_interface_bucket_spin_calibration]), "value-changed",
 			G_CALLBACK(p_callback_change_bucket), result);
 	g_signal_connect(G_OBJECT(result->interface->bucket_spins[e_interface_bucket_spin_data]), "value-changed",
@@ -170,7 +171,16 @@ void p_callback_calibration(GtkWidget *widget, struct s_environment *environment
 	d_object_unlock(environment->ladder->lock);
 }
 
-void p_callback_change_bucket(GtkWidget *widget, struct s_environment *environment) {
+void p_callback_change_channel(GtkWidget *widget, struct s_environment *environment) { d_FP;
+	int channel = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(widget));
+	if (channel >= d_trb_event_channels_half) {
+		channel -= d_trb_event_channels_half;
+		gtk_spin_button_set_value(GTK_SPIN_BUTTON(widget), channel);
+	}
+	gtk_spin_button_set_value(environment->interface->spins[e_interface_spin_channel_other], channel+d_trb_event_channels_half);
+}
+
+void p_callback_change_bucket(GtkWidget *widget, struct s_environment *environment) { d_FP;
 	int value = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(widget));
 	if (widget == GTK_WIDGET(environment->interface->bucket_spins[e_interface_bucket_spin_calibration]))
 		d_ladder_safe_assign(environment->ladder->calibration.lock, environment->ladder->calibration.size, value);
@@ -178,12 +188,12 @@ void p_callback_change_bucket(GtkWidget *widget, struct s_environment *environme
 		d_ladder_safe_assign(environment->ladder->data.lock, environment->ladder->data.size, value);
 }
 
-void p_callback_change_chart(GtkWidget *widget, struct s_environment *environment) {
+void p_callback_change_chart(GtkWidget *widget, struct s_environment *environment) { d_FP;
 	int selected = gtk_combo_box_get_active(environment->interface->combo_charts);
 	f_interface_show(environment->interface, selected);
 }
 
-void p_callback_change_page(GtkWidget *widget, gpointer *page, unsigned int page_index, struct s_environment *environment) {
+void p_callback_change_page(GtkWidget *widget, gpointer *page, unsigned int page_index, struct s_environment *environment) { d_FP;
 	int selected = gtk_combo_box_get_active(environment->interface->combo_charts);
 	if (page_index)
 		f_interface_show(environment->interface, e_interface_alignment_NULL);

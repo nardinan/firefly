@@ -54,6 +54,7 @@ typedef enum e_interface_scale_switches {
 typedef enum e_interface_spins {
 	e_interface_spin_dac = 0,
 	e_interface_spin_channel,
+	e_interface_spin_channel_other,
 	e_interface_spin_delay,
 	e_interface_spin_serial,
 	e_interface_spin_NULL
@@ -163,6 +164,7 @@ typedef enum e_interface_alignments {
 	e_interface_alignment_pedestal,
 	e_interface_alignment_sigma_raw,
 	e_interface_alignment_sigma,
+	e_interface_alignment_status,
 	e_interface_alignment_gain,
 	e_interface_alignment_gain_vas,
 	e_interface_alignment_histogram_pedestal,

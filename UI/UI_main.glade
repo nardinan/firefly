@@ -40,7 +40,12 @@
     <property name="page_increment">10</property>
   </object>
   <object class="GtkAdjustment" id="v_channel_model">
-    <property name="upper">191</property>
+    <property name="upper">383</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="v_channel_other_adjustement">
+    <property name="upper">384</property>
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
@@ -796,7 +801,7 @@
                               <object class="GtkTable" id="v_mode_values_grid">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="n_rows">2</property>
+                                <property name="n_rows">3</property>
                                 <property name="n_columns">2</property>
                                 <child>
                                   <object class="GtkSpinButton" id="v_dac">
@@ -848,6 +853,39 @@
                                   <packing>
                                     <property name="top_attach">1</property>
                                     <property name="bottom_attach">2</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSpinButton" id="v_channel_other">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="editable">False</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="primary_icon_activatable">False</property>
+                                    <property name="secondary_icon_activatable">False</property>
+                                    <property name="primary_icon_sensitive">True</property>
+                                    <property name="secondary_icon_sensitive">True</property>
+                                    <property name="adjustment">v_channel_other_adjustement</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">1</property>
+                                    <property name="right_attach">2</property>
+                                    <property name="top_attach">2</property>
+                                    <property name="bottom_attach">3</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="v_events_label1">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="label" translatable="yes">Channel (other ADC)</property>
+                                    <attributes>
+                                      <attribute name="scale" value="0.80000000000000004"/>
+                                    </attributes>
+                                  </object>
+                                  <packing>
+                                    <property name="top_attach">2</property>
+                                    <property name="bottom_attach">3</property>
                                   </packing>
                                 </child>
                               </object>
@@ -1554,9 +1592,6 @@
                                 <property name="n_columns">2</property>
                                 <property name="homogeneous">True</property>
                                 <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
                                   <object class="GtkFrame" id="v_calibration_sigma_raw">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
@@ -1650,6 +1685,41 @@
                                       </object>
                                     </child>
                                   </object>
+                                </child>
+                                <child>
+                                  <object class="GtkFrame" id="v_calibration_status">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="label_xalign">0.5</property>
+                                    <property name="shadow_type">in</property>
+                                    <child>
+                                      <object class="GtkAlignment" id="v_calibration_status_alignment">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="top_padding">3</property>
+                                        <property name="bottom_padding">3</property>
+                                        <property name="left_padding">3</property>
+                                        <property name="right_padding">3</property>
+                                        <child>
+                                          <placeholder/>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child type="label">
+                                      <object class="GtkLabel" id="v_calibration_status_label">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="label" translatable="yes">&lt;i&gt;Status&lt;/i&gt;</property>
+                                        <property name="use_markup">True</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">1</property>
+                                    <property name="right_attach">2</property>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
+                                  </packing>
                                 </child>
                               </object>
                             </child>

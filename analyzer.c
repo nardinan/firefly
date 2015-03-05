@@ -47,7 +47,8 @@ void p_analyzer_thread_calibrate_channels(struct s_ladder *ladder, float sigma_k
 void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 	int next, next_occupancy, next_gain_calibration_step, size, size_occupancy, size_gain_calibration_step, size_gain_calibration, computed,
 	    done = d_false, index, channel, va, gained, step, entry, sample, max_sample_left, max_sample_right;
-	float cn[d_trb_event_vas], value, occupancy_bad_value = ((float)ladder->percent_occupancy/100.0), sum_x, sum_y, sum_x_squares, sum_products, dac;
+	float cn[d_trb_event_vas], value, occupancy_bad_value = ((float)ladder->percent_occupancy/100.0), sum_x, sum_y, sum_x_squares, sum_products, dac,
+	      sigma_raw_mean, sigma_raw_noise_cut_top, sigma_raw_noise_cut_bottom;
 	d_ladder_safe_assign(ladder->calibration.lock, computed, ladder->calibration.computed);
 	if (!computed) {
 		d_ladder_safe_assign(ladder->calibration.lock, next, ladder->calibration.next);
@@ -89,9 +90,14 @@ void p_analyzer_thread_calibrate(struct s_ladder *ladder) { d_FP;
 			d_object_lock(ladder->calibration.write_lock);
 			d_assert(p_trb_event_pedestal(ladder->calibration.events, next, ladder->calibration.pedestal));
 			d_assert(p_trb_event_sigma_raw(ladder->calibration.events, next, ladder->calibration.sigma_raw));
-			p_analyzer_thread_calibrate_channels(ladder, ladder->sigma_raw_cut, ladder->sigma_raw_noise_cut_bottom,
-					ladder->sigma_raw_noise_cut_top, ladder->calibration.sigma_raw, d_trb_event_channels,
-					e_trb_event_channel_bad_sigma_raw_low, e_trb_event_channel_bad_sigma_raw_high, e_trb_event_channel_bad_sigma_raw_rms);
+			for (channel = 0, sigma_raw_mean = 0; channel < d_trb_event_channels; ++channel)
+				sigma_raw_mean += ladder->calibration.sigma_raw[channel];
+			sigma_raw_mean /= (float)d_trb_event_channels;
+			sigma_raw_noise_cut_bottom = sigma_raw_mean+ladder->sigma_raw_noise_cut_bottom;
+			sigma_raw_noise_cut_top = sigma_raw_mean+ladder->sigma_raw_noise_cut_top;
+			p_analyzer_thread_calibrate_channels(ladder, ladder->sigma_raw_cut, sigma_raw_noise_cut_bottom, sigma_raw_noise_cut_top,
+					ladder->calibration.sigma_raw, d_trb_event_channels, e_trb_event_channel_bad_sigma_raw_low,
+					e_trb_event_channel_bad_sigma_raw_high, e_trb_event_channel_bad_sigma_raw_rms);
 			d_assert(p_trb_event_sigma(ladder->calibration.events, next, ladder->sigma_k, ladder->calibration.sigma_raw,
 						ladder->calibration.pedestal, ladder->calibration.flags, ladder->calibration.sigma));
 			p_analyzer_thread_calibrate_channels(ladder, ladder->sigma_cut, ladder->sigma_noise_cut_bottom, ladder->sigma_noise_cut_top,

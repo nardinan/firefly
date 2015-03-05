@@ -470,14 +470,17 @@ void p_ladder_analyze_finished(struct s_ladder *ladder, struct s_interface *inte
 }
 
 void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) { d_FP;
-	int index, step;
+	int index, step, bad_channels = 0;
 	d_object_lock(ladder->calibration.lock);
 	if (ladder->calibration.computed) {
 		f_interface_clean_calibration(charts);
 		for (index = 0; index < d_trb_event_channels; index++) {
 			f_chart_append_signal(charts[e_interface_alignment_pedestal], 0, index, ladder->calibration.pedestal[index]);
-			f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 1, index, ladder->calibration.sigma_raw[index]);
-			f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 0, index, -((float)ladder->calibration.flags[index]/10.0));
+			f_chart_append_signal(charts[e_interface_alignment_sigma_raw], 0, index, ladder->calibration.sigma_raw[index]);
+			f_chart_append_signal(charts[e_interface_alignment_status], 0, index, ladder->calibration.flags[index]);
+			if (ladder->calibration.flags[index] > 0)
+				bad_channels++;
+			snprintf(charts[e_interface_alignment_status]->message, d_chart_max_message, "BAD CHANNELS: %d", bad_channels);
 			f_chart_append_signal(charts[e_interface_alignment_sigma], 0, index, ladder->calibration.sigma[index]);
 			f_chart_append_histogram(charts[e_interface_alignment_histogram_pedestal], 0, ladder->calibration.pedestal[index]);
 			f_chart_append_histogram(charts[e_interface_alignment_histogram_sigma_raw], 0, ladder->calibration.sigma_raw[index]);
@@ -489,7 +492,7 @@ void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) {
 			for (step = 0; step < ladder->calibration.next_gain_calibration_step; step++)
 				f_chart_append_signal(charts[e_interface_alignment_gain_vas], 0, (index*d_common_gain_calibration_steps)+step,
 						ladder->calibration.gain_calibration_vas[step][index]);
-		charts[e_interface_alignment_sigma_raw]->kind[0] = e_chart_kind_histogram;
+		charts[e_interface_alignment_status]->kind[0] = e_chart_kind_histogram;
 		ladder->calibration.step = e_ladder_calibration_step_pedestal;
 		ladder->calibration.next = 0;
 		ladder->calibration.next_occupancy = 0;
@@ -786,6 +789,10 @@ void f_ladder_configure(struct s_ladder *ladder, struct s_interface *interface, 
 						else
 							mode = e_trb_mode_calibration_debug_digital;
 						channel = gtk_spin_button_get_value(interface->spins[e_interface_spin_channel]);
+						if (channel >= d_trb_event_channels_half)
+							channel = (channel-d_trb_event_channels_half);
+						gtk_spin_button_set_value(interface->spins[e_interface_spin_channel], channel);
+						gtk_spin_button_set_value(interface->spins[e_interface_spin_channel_other], channel+d_trb_event_channels_half);
 						ladder->listening_channel = channel;
 					}
 				}

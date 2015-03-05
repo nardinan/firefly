@@ -390,7 +390,7 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 	float full_w = fabs(chart->axis_x.range[1]-chart->axis_x.range[0]), full_h = fabs(chart->axis_y.range[1]-chart->axis_y.range[0]),
 	      arc_size = (2.0*G_PI), min_value[d_chart_max_nested] = {0}, max_value[d_chart_max_nested] = {0}, min_channel[d_chart_max_nested] = {0},
 	      max_channel[d_chart_max_nested] = {0}, rms[d_chart_max_nested], pedestal[d_chart_max_nested], total_square, fraction;
-	int index, code, first;
+	int index, code, real_code, first;
 	char buffer[d_string_buffer_size];
 	if ((chart->cairo_brush = gdk_cairo_create(chart->plane->window))) {
 		gtk_widget_get_allocation(GTK_WIDGET(chart->plane), &dimension);
@@ -448,14 +448,25 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 					rms[code] = sqrtf(fabs(total_square-(pedestal[code]*pedestal[code])));
 				}
 				if (chart->show_borders) {
-					cairo_move_to(chart->cairo_brush, (chart->border_x-d_chart_font_size), (chart->border_y+(code*d_chart_font_height)));
+					real_code = code;
+					if (strlen(chart->message) > 0)
+						real_code = code+1;
+					cairo_move_to(chart->cairo_brush, (chart->border_x-d_chart_font_size), (chart->border_y+
+								(real_code*d_chart_font_height)));
 					cairo_show_text(chart->cairo_brush, "@");
 				}
 				cairo_stroke(chart->cairo_brush);
 			}
 		if (chart->show_borders) {
 			cairo_set_source_rgb(chart->cairo_brush, 0.0, 0.0, 0.0);
-			for (code = 0; code < d_chart_max_nested; code++)
+			code = 0;
+			if (strlen(chart->message) > 0) {
+				cairo_move_to(chart->cairo_brush, chart->border_x+(d_chart_font_size*d_chart_font_factor),
+						(chart->border_y+d_chart_font_height));
+				cairo_show_text(chart->cairo_brush, chart->message);
+				code++;
+			}
+			for (; code < d_chart_max_nested; code++)
 				if (chart->head[code]) {
 					cairo_move_to(chart->cairo_brush, chart->border_x+d_chart_font_size, (chart->border_y+(code*d_chart_font_height)));
 					if (chart->kind[code] == e_chart_kind_envelope)
