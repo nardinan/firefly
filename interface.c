@@ -197,6 +197,7 @@ const char *interface_labels[] = {
 	"pedestal",
 	"sigma_raw",
 	"sigma",
+	"status",
 	"gain_slope",
 	"gain_vas",
 	"histogram_pedestal",
