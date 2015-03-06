@@ -451,9 +451,10 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 	struct s_chart *chart = (struct s_chart *)v_chart;
 	float full_w = fabs(chart->axis_x.range[1]-chart->axis_x.range[0]), full_h = fabs(chart->axis_y.range[1]-chart->axis_y.range[0]),
 	      arc_size = (2.0*G_PI), min_value[d_chart_max_nested] = {0}, max_value[d_chart_max_nested] = {0}, min_channel[d_chart_max_nested] = {0},
-	      max_channel[d_chart_max_nested] = {0}, rms[d_chart_max_nested], pedestal[d_chart_max_nested], total_square, fraction;
-	int index, code, real_code, first;
+	      max_channel[d_chart_max_nested] = {0}, rms[d_chart_max_nested], pedestal[d_chart_max_nested], total_square, fraction, total_width;
+	int index, code, first;
 	char buffer[d_string_buffer_size];
+	size_t length;
 	if ((chart->cairo_brush = gdk_cairo_create(chart->plane->window))) {
 		gtk_widget_get_allocation(GTK_WIDGET(chart->plane), &dimension);
 		if ((dimension.width != chart->last_width) || (dimension.height != chart->last_height)) {
@@ -515,11 +516,8 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 					rms[code] = sqrtf(fabs(total_square-(pedestal[code]*pedestal[code])));
 				}
 				if (chart->show_borders) {
-					real_code = code;
-					if (strlen(chart->message) > 0)
-						real_code = code+1;
 					cairo_move_to(chart->cairo_brush, (chart->border_x-d_chart_font_size), (chart->border_y+
-								(real_code*d_chart_font_height)));
+								(code*d_chart_font_height)));
 					cairo_show_text(chart->cairo_brush, "@");
 				}
 				cairo_stroke(chart->cairo_brush);
@@ -533,17 +531,26 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 						snprintf(buffer, d_string_buffer_size, "min %.02f (%.0f)| max: %.02f (%.0f)", min_value[code],
 								min_channel[code], max_value[code], max_channel[code]);
 					else
-						snprintf(buffer, d_string_buffer_size, "min: %.02f (%.0f)| max: %.02f (%.0f)| mean: %.02f | RMS: %.02f ",
+						snprintf(buffer, d_string_buffer_size, "min: %.02f (%.0f)| max: %.02f (%.0f)| mean: %.02f | RMS: %.02f",
 								min_value[code], min_channel[code], max_value[code], max_channel[code], pedestal[code],
 								rms[code]);
 					cairo_show_text(chart->cairo_brush, buffer);
 				}
-			if (strlen(chart->message) > 0) {
-				cairo_set_font_size(chart->cairo_brush, d_chart_font_message_size);
-				cairo_move_to(chart->cairo_brush, chart->border_x+d_chart_font_size, (chart->border_y+(code*d_chart_font_height)));
-				cairo_show_text(chart->cairo_brush, chart->message);
-				cairo_set_font_size(chart->cairo_brush, d_chart_gui_font_size);
+			for (code = 0, total_width = 0; code < d_chart_max_message_rows; ++code) {
+				if ((length = strlen(chart->message[code])) > 0)
+					if ((length*(d_chart_font_message_size/2.0)) > total_width)
+						total_width = (length*(d_chart_font_message_size/2.0));
 			}
+			cairo_set_font_size(chart->cairo_brush, d_chart_font_message_title_size);
+			for (code = 0; code < d_chart_max_message_rows; ++code) {
+				if (strlen(chart->message[code]) > 0) {
+					cairo_move_to(chart->cairo_brush, (dimension.width-total_width)+d_chart_font_message_size,
+							(chart->border_y+(code*d_chart_font_message_title_size)));
+					cairo_show_text(chart->cairo_brush, chart->message[code]);
+				}
+				cairo_set_font_size(chart->cairo_brush, d_chart_font_message_size);
+			}
+			cairo_set_font_size(chart->cairo_brush, d_chart_gui_font_size);
 		}
 		p_chart_redraw_axis_x(chart->cairo_brush, chart, full_h, full_w, dimension.width, dimension.height);
 		p_chart_redraw_axis_y(chart->cairo_brush, chart, full_h, full_w, dimension.width, dimension.height);

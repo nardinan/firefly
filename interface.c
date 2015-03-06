@@ -395,6 +395,16 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 		} d_endtry;
 		gtk_container_add(GTK_CONTAINER(result->alignments[index]), g_object_ref(result->charts[index]->plane));
 	}
+	snprintf(result->charts[e_interface_alignment_status]->message[0], d_chart_max_message, "bad channels: 0");
+	snprintf(result->charts[e_interface_alignment_status]->message[1], d_chart_max_message, "-------------------------------------");
+	snprintf(result->charts[e_interface_alignment_status]->message[2], d_chart_max_message, "[%03d] generic bad channel", e_trb_event_channel_bad);
+	snprintf(result->charts[e_interface_alignment_status]->message[3], d_chart_max_message, "[%03d] sigma raw too low", e_trb_event_channel_bad_sigma_raw_low);
+	snprintf(result->charts[e_interface_alignment_status]->message[4], d_chart_max_message, "[%03d] sigma raw too high", e_trb_event_channel_bad_sigma_raw_high);
+	snprintf(result->charts[e_interface_alignment_status]->message[5], d_chart_max_message, "[%03d] sigma raw out of mean (+/- RMS)", e_trb_event_channel_bad_sigma_raw_rms);
+	snprintf(result->charts[e_interface_alignment_status]->message[6], d_chart_max_message, "[%03d] sigma too low", e_trb_event_channel_bad_sigma_low);
+	snprintf(result->charts[e_interface_alignment_status]->message[7], d_chart_max_message, "[%03d] sigma too high", e_trb_event_channel_bad_sigma_high);
+	snprintf(result->charts[e_interface_alignment_status]->message[8], d_chart_max_message, "[%03d] sigma out of mean (+/- RMS)", e_trb_event_channel_bad_sigma_rms);
+	snprintf(result->charts[e_interface_alignment_status]->message[9], d_chart_max_message, "[%03d] bad occupancy", e_trb_event_channel_bad_occupancy);
 	gtk_combo_box_set_active(result->combo_charts, 0);
 	d_assert(result->main_interface_alignment = GTK_ALIGNMENT(gtk_builder_get_object(main_interface, "v_charts_main_master_alignment")));
 	d_assert(result->progress_bar = GTK_PROGRESS_BAR(gtk_builder_get_object(main_interface, "v_action_bar")));

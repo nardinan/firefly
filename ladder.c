@@ -480,7 +480,7 @@ void p_ladder_plot_calibrate(struct s_ladder *ladder, struct s_chart **charts) {
 			f_chart_append_signal(charts[e_interface_alignment_status], 0, index, ladder->calibration.flags[index]);
 			if (ladder->calibration.flags[index] > 0)
 				bad_channels++;
-			snprintf(charts[e_interface_alignment_status]->message, d_chart_max_message, "BAD CHANNELS: %d", bad_channels);
+			snprintf(charts[e_interface_alignment_status]->message[0], d_chart_max_message, "bad channels: %d", bad_channels);
 			f_chart_append_signal(charts[e_interface_alignment_sigma], 0, index, ladder->calibration.sigma[index]);
 			f_chart_append_histogram(charts[e_interface_alignment_histogram_pedestal], 0, ladder->calibration.pedestal[index]);
 			f_chart_append_histogram(charts[e_interface_alignment_histogram_sigma_raw], 0, ladder->calibration.sigma_raw[index]);
