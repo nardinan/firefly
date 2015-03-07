@@ -536,21 +536,20 @@ int p_chart_callback(GtkWidget *widget, GdkEvent *event, void *v_chart) {
 								rms[code]);
 					cairo_show_text(chart->cairo_brush, buffer);
 				}
-			for (code = 0, total_width = 0; code < d_chart_max_message_rows; ++code) {
+			for (code = 0, total_width = 0; code < d_chart_max_message_rows; ++code)
 				if ((length = strlen(chart->message[code])) > 0)
 					if ((length*(d_chart_font_message_size/2.0)) > total_width)
 						total_width = (length*(d_chart_font_message_size/2.0));
-			}
 			cairo_set_font_size(chart->cairo_brush, d_chart_font_message_title_size);
 			for (code = 0; code < d_chart_max_message_rows; ++code) {
 				if (strlen(chart->message[code]) > 0) {
-					cairo_move_to(chart->cairo_brush, (dimension.width-total_width)+d_chart_font_message_size,
+					cairo_move_to(chart->cairo_brush, (dimension.width-total_width)-d_chart_font_message_size,
 							(chart->border_y+(code*d_chart_font_message_title_size)));
 					cairo_show_text(chart->cairo_brush, chart->message[code]);
 				}
 				cairo_set_font_size(chart->cairo_brush, d_chart_font_message_size);
 			}
-			cairo_set_font_size(chart->cairo_brush, d_chart_gui_font_size);
+			cairo_set_font_size(chart->cairo_brush, d_chart_font_default_size);
 		}
 		p_chart_redraw_axis_x(chart->cairo_brush, chart, full_h, full_w, dimension.width, dimension.height);
 		p_chart_redraw_axis_y(chart->cairo_brush, chart, full_h, full_w, dimension.width, dimension.height);

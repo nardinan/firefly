@@ -71,8 +71,19 @@ typedef enum e_interface_scale_spins {
 	e_interface_scale_spin_x_top,
 	e_interface_scale_spin_x_bottom,
 	e_interface_scale_spin_x_segments,
+	e_interface_scale_spin_line_size,
+	e_interface_scale_spin_dot_size,
 	e_interface_scale_spin_NULL
 } e_interface_scale_spins;
+typedef enum e_interface_scale_scales {
+	e_interface_scale_scale_line_R = 0,
+	e_interface_scale_scale_line_G,
+	e_interface_scale_scale_line_B,
+	e_interface_scale_scale_background_R,
+	e_interface_scale_scale_background_G,
+	e_interface_scale_scale_background_B,
+	e_interface_scale_scale_NULL
+} e_interface_scale_scales;
 typedef enum e_interface_parameters_spins {
 	e_interface_parameters_spin_skip = 0,
 	e_interface_parameters_spin_sigma_raw_cut,
@@ -193,6 +204,7 @@ typedef struct s_interface_scale {
 	GtkBuilder *interface;
 	GtkWindow *window;
 	GtkSpinButton *spins[e_interface_scale_spin_NULL];
+	GtkScale *scales[e_interface_scale_scale_NULL];
 	GtkToggleButton *switches[e_interface_scale_switch_NULL];
 	GtkButton *action, *export_csv, *export_png;
 	struct s_chart *hooked_chart;

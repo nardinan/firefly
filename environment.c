@@ -230,6 +230,22 @@ void p_callback_scale_action(GtkWidget *widget, struct s_environment *environmen
 				gtk_spin_button_get_value_as_int(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_segments]);
 			environment->interface->scale_configuration->hooked_chart->show_borders =
 				gtk_toggle_button_get_active(environment->interface->scale_configuration->switches[e_interface_scale_switch_informations]);
+			environment->interface->scale_configuration->hooked_chart->data.line_size[0] =
+				gtk_spin_button_get_value_as_int(environment->interface->scale_configuration->spins[e_interface_scale_spin_line_size]);
+			environment->interface->scale_configuration->hooked_chart->data.dot_size[0] =
+				gtk_spin_button_get_value_as_int(environment->interface->scale_configuration->spins[e_interface_scale_spin_dot_size]);
+			environment->interface->scale_configuration->hooked_chart->data.color[0].R =
+				((float)gtk_range_get_value(GTK_RANGE(environment->interface->scale_configuration->scales[e_interface_scale_scale_line_R]))/255.0);
+			environment->interface->scale_configuration->hooked_chart->data.color[0].G =
+				((float)gtk_range_get_value(GTK_RANGE(environment->interface->scale_configuration->scales[e_interface_scale_scale_line_G]))/255.0);
+			environment->interface->scale_configuration->hooked_chart->data.color[0].B =
+				((float)gtk_range_get_value(GTK_RANGE(environment->interface->scale_configuration->scales[e_interface_scale_scale_line_B]))/255.0);
+			environment->interface->scale_configuration->hooked_chart->background.R =
+				((float)gtk_range_get_value(GTK_RANGE(environment->interface->scale_configuration->scales[e_interface_scale_scale_background_R]))/255.0);
+			environment->interface->scale_configuration->hooked_chart->background.G =
+				((float)gtk_range_get_value(GTK_RANGE(environment->interface->scale_configuration->scales[e_interface_scale_scale_background_G]))/255.0);
+			environment->interface->scale_configuration->hooked_chart->background.B =
+				((float)gtk_range_get_value(GTK_RANGE(environment->interface->scale_configuration->scales[e_interface_scale_scale_background_B]))/255.0);
 			p_callback_hide_on_exit(GTK_WIDGET(environment->interface->scale_configuration->window), environment);
 			f_chart_denormalize(environment->interface->scale_configuration->hooked_chart);
 			f_chart_integerize(environment->interface->scale_configuration->hooked_chart);
@@ -323,6 +339,14 @@ void p_callback_scale_show(GtkWidget *widget, GdkEvent *event, struct s_environm
 	gtk_spin_button_set_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_top], chart->axis_x.range[1]);
 	gtk_spin_button_set_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_x_segments], chart->axis_x.segments);
 	gtk_toggle_button_set_active(environment->interface->scale_configuration->switches[e_interface_scale_switch_informations], chart->show_borders);
+	gtk_spin_button_set_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_line_size], chart->data.line_size[0]);
+	gtk_spin_button_set_value(environment->interface->scale_configuration->spins[e_interface_scale_spin_dot_size], chart->data.dot_size[0]);
+	gtk_range_set_value(GTK_RANGE(environment->interface->scale_configuration->scales[e_interface_scale_scale_line_R]), (chart->data.color[0].R*255.0));
+	gtk_range_set_value(GTK_RANGE(environment->interface->scale_configuration->scales[e_interface_scale_scale_line_G]), (chart->data.color[0].G*255.0));
+	gtk_range_set_value(GTK_RANGE(environment->interface->scale_configuration->scales[e_interface_scale_scale_line_B]), (chart->data.color[0].B*255.0));
+	gtk_range_set_value(GTK_RANGE(environment->interface->scale_configuration->scales[e_interface_scale_scale_background_R]), (chart->background.R*255.0));
+	gtk_range_set_value(GTK_RANGE(environment->interface->scale_configuration->scales[e_interface_scale_scale_background_G]), (chart->background.G*255.0));
+	gtk_range_set_value(GTK_RANGE(environment->interface->scale_configuration->scales[e_interface_scale_scale_background_B]), (chart->background.B*255.0));
 	gtk_widget_show_all(GTK_WIDGET(environment->interface->scale_configuration->window));
 	gtk_window_set_position(environment->interface->scale_configuration->window, GTK_WIN_POS_MOUSE);
 	gtk_window_present(environment->interface->scale_configuration->window);

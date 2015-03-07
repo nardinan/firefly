@@ -55,6 +55,16 @@ const char *interface_labels[] = {
 	"v_x_top",
 	"v_x_bottom",
 	"v_x_segments",
+	"v_style_line_size",
+	"v_style_dot_size",
+	NULL
+}, *interface_scale_scales[] = {
+	"v_style_line_color_R",
+	"v_style_line_color_G",
+	"v_style_line_color_B",
+	"v_style_background_color_R",
+	"v_style_background_color_G",
+	"v_style_background_color_B",
 	NULL
 }, *interface_parameters_spins[] = {
 	"v_skip",
@@ -256,6 +266,8 @@ void p_interface_new_scale(struct s_interface *result, GtkBuilder *scale_interfa
 						interface_scale_switches[index])));
 	for (index = 0; interface_scale_spins[index]; index++)
 		d_assert(result->scale_configuration->spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(scale_interface, interface_scale_spins[index])));
+	for (index = 0; interface_scale_scales[index]; index++)
+		d_assert(result->scale_configuration->scales[index] = GTK_SCALE(gtk_builder_get_object(scale_interface, interface_scale_scales[index])));
 	d_assert(result->scale_configuration->action = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_action")));
 	d_assert(result->scale_configuration->export_csv = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_export_CSV")));
 	d_assert(result->scale_configuration->export_png = GTK_BUTTON(gtk_builder_get_object(scale_interface, "v_export_PNG")));
@@ -501,6 +513,7 @@ void f_interface_lock(struct s_interface *interface, int lock) { d_FP;
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->switches[index]), (!lock));
 	for (index = 0; index < e_interface_spin_NULL; index++)
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[index]), (!lock));
+	gtk_widget_set_sensitive(GTK_WIDGET(interface->spins[e_interface_spin_channel_other]), FALSE);
 	for (index = 0; index < e_interface_combo_NULL; index++)
 		gtk_widget_set_sensitive(GTK_WIDGET(interface->combos[index]), (!lock));
 	for (index = 0; index < e_interface_toggle_action; index++)
