@@ -205,7 +205,7 @@
                       <object class="GtkRadioMenuItem" id="v_test_c">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-			<property name="label" translatable="yes">Test "c" (DPNC/INFN - Hybrid - Before gluing)</property>
+                        <property name="label" translatable="yes">Test "c" (DPNC/INFN - Hybrid - Before gluing)</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_null</property>
                       </object>
@@ -286,7 +286,7 @@
                       <object class="GtkRadioMenuItem" id="v_test_l">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-			<property name="label" translatable="yes">Test "l" (DPNC/INFN - Ladder - Without SSD before gluing)</property>
+                        <property name="label" translatable="yes">Test "l" (DPNC/INFN - Ladder - Without SSD before gluing)</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_null</property>
                       </object>
@@ -295,7 +295,7 @@
                       <object class="GtkRadioMenuItem" id="v_test_m">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-			<property name="label" translatable="yes">Test "m" (DPNC/INFN - Ladder - After bonding)</property>
+                        <property name="label" translatable="yes">Test "m" (DPNC/INFN - Ladder - After bonding)</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_null</property>
                       </object>
@@ -313,7 +313,7 @@
                       <object class="GtkRadioMenuItem" id="v_test_o">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-			<property name="label" translatable="yes">Test "o" (DPNC/INFN - Ladder - Cosmic rays data acquisition)</property>
+                        <property name="label" translatable="yes">Test "o" (DPNC/INFN - Ladder - Cosmic rays data acquisition)</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_null</property>
                       </object>
@@ -340,7 +340,7 @@
                       <object class="GtkRadioMenuItem" id="v_test_r">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-			<property name="label" translatable="yes">Test "r" (DPNC/INFN - Ladder - Before gluing on the plane)</property>
+                        <property name="label" translatable="yes">Test "r" (DPNC/INFN - Ladder - Before gluing on the plane)</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_null</property>
                       </object>
@@ -349,7 +349,7 @@
                       <object class="GtkRadioMenuItem" id="v_test_s">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-			<property name="label" translatable="yes">Test "s" (DPNC/INFN - Ladder - After gluing on the plane)</property>
+                        <property name="label" translatable="yes">Test "s" (DPNC/INFN - Ladder - After gluing on the plane)</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_null</property>
                       </object>
@@ -412,7 +412,7 @@
                       <object class="GtkRadioMenuItem" id="v_test_z">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-			<property name="label" translatable="yes">Test "z" (DPNC/INFN - Ladder - Last test)</property>
+                        <property name="label" translatable="yes">Test "z" (DPNC/INFN - Ladder - Last test)</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_null</property>
                       </object>
@@ -801,8 +801,8 @@
                               <object class="GtkTable" id="v_mode_values_grid">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="n_rows">3</property>
-                                <property name="n_columns">2</property>
+                                <property name="n_rows">2</property>
+                                <property name="n_columns">3</property>
                                 <child>
                                   <object class="GtkSpinButton" id="v_dac">
                                     <property name="visible">True</property>
@@ -816,7 +816,7 @@
                                   </object>
                                   <packing>
                                     <property name="left_attach">1</property>
-                                    <property name="right_attach">2</property>
+                                    <property name="right_attach">3</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -868,24 +868,10 @@
                                     <property name="adjustment">v_channel_other_adjustement</property>
                                   </object>
                                   <packing>
-                                    <property name="left_attach">1</property>
-                                    <property name="right_attach">2</property>
-                                    <property name="top_attach">2</property>
-                                    <property name="bottom_attach">3</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel" id="v_events_label1">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">Channel (other ADC)</property>
-                                    <attributes>
-                                      <attribute name="scale" value="0.80000000000000004"/>
-                                    </attributes>
-                                  </object>
-                                  <packing>
-                                    <property name="top_attach">2</property>
-                                    <property name="bottom_attach">3</property>
+                                    <property name="left_attach">2</property>
+                                    <property name="right_attach">3</property>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
                                   </packing>
                                 </child>
                               </object>
