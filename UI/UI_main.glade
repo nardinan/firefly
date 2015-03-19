@@ -394,7 +394,7 @@
                       <object class="GtkRadioMenuItem" id="v_test_x">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Test "x"</property>
+                        <property name="label" translatable="yes">Test "x" (CERN - Ladder - Beam test, march 2015)</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">v_test_null</property>
                       </object>
