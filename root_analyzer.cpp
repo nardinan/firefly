@@ -29,6 +29,7 @@ TH1F *f_create_histogram(const char *name, const char *labels, int bins_number, 
 	TH1F *result;
 	if ((result = new TH1F(name, labels, bins_number, x_low, x_up))) {
 		result->SetStats(style.show_stats);
+		gStyle->SetOptStat("emro");
 		result->SetLineColor(style.line_color);
 		result->SetLineWidth(style.line_width);
 		result->SetFillColor(style.fill_color);

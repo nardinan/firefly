@@ -17,6 +17,7 @@
  */
 #include "../root_analyzer.h"
 #define d_cuts_steps 5
+#define d_sqrt_mip 7.0711
 typedef struct s_data_cuts {
 	float low, top;
 } s_data_cuts;
@@ -28,11 +29,11 @@ struct s_data_cuts cuts[d_cuts_steps] = {
 	{90.0, 110.0}
 };
 typedef struct s_data_charts {
-	TH1F *n_channels, *common_noise, *signals, *signals_array[5], *signal_over_noise, *strips_gravity, *main_strips_gravity, *eta, *eta_array[5],
-	     *channel_one, *channels_two, *channels_two_major, *channels_two_minor, *signal_one, *signals_two, *signals_two_major, *signals_two_minor,
-	     *etas[d_cuts_steps];
-	TH2F *signal_eta, *signal_gravity, *n_channels_gravity;
-	TH1D *profile, *profile_sg, *profile_nc_g;
+	TH1F *n_channels, *n_clusters, *common_noise, *signals, *signals_MIP, *signals_array[5], *signal_over_noise, *strips_gravity, *main_strips_gravity, 
+	     *eta, *eta_array[5], *channel_one, *channels_two, *channels_two_major, *channels_two_minor, *signal_one, *signals_two, *signals_two_major, 
+	     *signals_two_minor, *etas[d_cuts_steps];
+	TH2F *signal_eta, *signal_gravity, *signal_gravity_MIP, *n_channels_gravity;
+	TH1D *profile, *profile_sg, *profile_sgm, *profile_nc_g;
 } s_data_charts;
 void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 	struct o_stream *stream;
@@ -49,12 +50,15 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 				while ((clusters = f_decompress_event(stream, &event_header))) {
 					printf("\r%80s\r[processing event: %d] %d clusters", "", current_event++, event_header.clusters);
 					fflush(stdout);
+					if (charts->n_clusters)
+						charts->n_clusters->Fill(event_header.clusters);
 					for (index = 0; index < event_header.clusters; index++) {
 						if (charts->signals) {
 							for (strip = 0, value = 0, current_strip = clusters[index].first_strip;
 									strip < clusters[index].header.strips; strip++, current_strip++)
 								value += clusters[index].values[strip];
 							charts->signals->Fill(value);
+							charts->signals_MIP->Fill(sqrt(value)/d_sqrt_mip);
 							if (clusters[index].header.strips > 1)
 								if (clusters[index].header.eta >= 0) {
 									charts->signal_eta->Fill(clusters[index].header.eta, value);
@@ -65,6 +69,7 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 										}
 								}
 							charts->signal_gravity->Fill(clusters[index].header.strips_gravity, value);
+							charts->signal_gravity_MIP->Fill(clusters[index].header.strips_gravity, sqrt(value)/d_sqrt_mip);
 							if ((clusters[index].header.strips >= 1) && (clusters[index].header.strips <= 5))
 								charts->signals_array[clusters[index].header.strips-1]->Fill(value);
 						}
@@ -134,40 +139,46 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 }
 
 void f_export_histograms(struct o_string *output, struct s_data_charts *charts) {
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->n_clusters);
 	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_first, "HIST", "T", charts->n_channels);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->common_noise);
+	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->common_noise);
 	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signals);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "TTTTTT", charts->signals, charts->signals_array[0],
-			charts->signals_array[1], charts->signals_array[2], charts->signals_array[3], charts->signals_array[4]);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signal_one);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signals_two);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signals_two_major);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signals_two_minor);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signal_over_noise);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->channel_one);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->channels_two);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->channels_two_major);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->channels_two_minor);
+	/* placeholder */
+	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "TTTTTT", charts->signals, charts->signals_array[0],
+	//		charts->signals_array[1], charts->signals_array[2], charts->signals_array[3], charts->signals_array[4]);
+	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signal_one);
+	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signals_two);
+	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signals_two_major);
+	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signals_two_minor);
+	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signal_over_noise);
+	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->channel_one);
+	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->channels_two);
+	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->channels_two_major);
+	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->channels_two_minor);
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->strips_gravity);
-	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->main_strips_gravity);
-	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->eta);
-	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->signal_eta);
-	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->profile);
+	//p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->main_strips_gravity);
+	//p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->eta);
+	//p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->signal_eta);
+	//p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->profile);
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->signal_gravity);
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->profile_sg);
+	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->signals_MIP);
+	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->profile_sgm);
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->n_channels_gravity);
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->profile_nc_g);
-	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "TTTTTT", charts->eta, charts->eta_array[0], charts->eta_array[1],
-			charts->eta_array[2], charts->eta_array[3], charts->eta_array[4]);
-	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_last, "HIST", "TTTTTT", charts->eta, charts->etas[0], charts->etas[1],
-			charts->etas[2], charts->etas[3], charts->etas[4]);
+	//p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "TTTTTT", charts->eta, charts->eta_array[0], charts->eta_array[1],
+	//		charts->eta_array[2], charts->eta_array[3], charts->eta_array[4]);
+	//p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_last, "HIST", "TTTTTT", charts->eta, charts->etas[0], charts->etas[1],
+	//		charts->etas[2], charts->etas[3], charts->etas[4]);
 }
 
 int main (int argc, char *argv[]) {
 	struct s_data_charts charts = {
 		d_chart("Number of channel;# Channels;# Entries", 40, 0.0, 40.0),
+		d_chart("Number of clusters per event;# Clusters;# Entries", 50.0, 0, 50.0),
 		d_chart("Common noise;CN;# Entries", 1200, -60.0, 60.0),
 		d_chart("Signal of cluster (foreach event, foreach cluster);Signal;# Entries", 2000, 0.0, 400.0),
+		d_chart("sqrt(Signal)/sqrt(MIP);MIP;# Entries", 80.0, 0.0, 20.0),
 		{
 			d_chart("Signal of clusters with #strips == 1", 2000, 0.0, 400.0),
 			d_chart("Signal of clusters with #strips == 2", 2000, 0.0, 400.0),
@@ -203,7 +214,9 @@ int main (int argc, char *argv[]) {
 		},
 		d_chart_2D("Signal over ETA;ETA;Signal", 100, 0.0, 1.0, 300.0, 0.0, 300.0),
 		d_chart_2D("Signal over gravity;CoG;Signal", d_trb_event_channels, 0.0, d_trb_event_channels, 2000.0, 0.0, 400.0),
+		d_chart_2D("sqrt(Signal)/sqrt(MIP) over gravity;CoG;MIP", d_trb_event_channels, 0.0, d_trb_event_channels, 80.0, 0.0, 40.0),
 		d_chart_2D("Number of channels over gravity;CoG;NoC", d_trb_event_channels, 0.0, d_trb_event_channels, 40.0, 0.0, 40.0),
+		NULL,
 		NULL,
 		NULL,
 		NULL
@@ -236,6 +249,7 @@ int main (int argc, char *argv[]) {
 				f_fill_histograms(compressed, &charts);
 			charts.profile = (TH1D *) charts.signal_eta->ProfileX("Signal over eta (Profile)");
 			charts.profile_sg = (TH1D *) charts.signal_gravity->ProfileX("Signal over gravity (Profile)");
+			charts.profile_sgm = (TH1D *) charts.signal_gravity_MIP->ProfileX("sqrt(Signal)/sqrt(MIP) over gravity (Profile)");
 			charts.profile_nc_g = (TH1D *) charts.n_channels_gravity->ProfileX("Number of channels over gravity (Profile)");
 			range_start = charts.signal_over_noise->GetMean()-5.0*charts.signal_over_noise->GetRMS();
 			range_end = charts.signal_over_noise->GetMean()+10.0*charts.signal_over_noise->GetRMS();
