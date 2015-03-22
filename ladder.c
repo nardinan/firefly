@@ -222,11 +222,11 @@ void p_ladder_read_calibrate(struct s_ladder *ladder) { d_FP;
 								d_common_timeout);
 					}
 					ladder->calibration.reconfigure = d_false;
-				} else if (ladder->calibration.next_gain_calibration < ladder->calibration.size_gain_calibration)
+				} else if (ladder->calibration.next_gain_calibration < ladder->calibration.size_gain_calibration) {
 					memcpy(&(ladder->calibration.gain_calibration_events[ladder->calibration.next_gain_calibration_step]
 								[ladder->calibration.next_gain_calibration++]), &(ladder->last_event),
 							sizeof(struct o_trb_event));
-				else {
+				} else {
 					ladder->calibration.next_gain_calibration = 0;
 					ladder->calibration.next_gain_calibration_step++;
 					ladder->calibration.reconfigure = d_true;

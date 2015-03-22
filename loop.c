@@ -52,8 +52,8 @@ int f_loop_iteration(struct s_environment *environment) {
 
 int f_step_check_device(struct s_environment *environment, time_t current_time) { d_FP;
 	d_object_lock(environment->ladder->lock);
-	if ((environment->ladder->deviced) && (environment->ladder->device))
-		if (!p_trb_check(environment->ladder->device->device, environment->ladder->device->handler)) {
+	if ((environment->ladder->deviced) && (environment->ladder->device)) {
+		if (!p_trb_check(environment->ladder->device->device, environment->ladder->device->handler, environment->ladder->device->stream_in)) {
 			d_release(environment->ladder->device);
 			environment->ladder->deviced = d_false;
 			environment->ladder->evented = d_false;
@@ -65,6 +65,7 @@ int f_step_check_device(struct s_environment *environment, time_t current_time) 
 			d_ladder_safe_assign(environment->ladder->data.lock, environment->ladder->data.next, 0);
 			d_ladder_safe_assign(environment->ladder->calibration.lock, environment->ladder->update_interface, d_true);
 		}
+	}
 	d_object_unlock(environment->ladder->lock);
 	return 0;
 }
