@@ -139,8 +139,8 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 }
 
 void f_export_histograms(struct o_string *output, struct s_data_charts *charts) {
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->n_clusters);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_first, "HIST", "T", charts->n_channels);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_first, "HIST", "T", charts->n_clusters);
+	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->n_channels);
 	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->common_noise);
 	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signals);
 	/* placeholder */
@@ -165,7 +165,7 @@ void f_export_histograms(struct o_string *output, struct s_data_charts *charts) 
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->signals_MIP);
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->profile_sgm);
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->n_channels_gravity);
-	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->profile_nc_g);
+	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_last, NULL, "T", charts->profile_nc_g);
 	//p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "TTTTTT", charts->eta, charts->eta_array[0], charts->eta_array[1],
 	//		charts->eta_array[2], charts->eta_array[3], charts->eta_array[4]);
 	//p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_last, "HIST", "TTTTTT", charts->eta, charts->etas[0], charts->etas[1],
