@@ -25,7 +25,7 @@
 #define d_AMS_ladder_one 2
 #define d_AMS_ladder_two 3
 #define d_AMS_sqrt_mip 5.9161
-int v_correlation = false;
+int v_correlation = false, v_last_root = 0;
 TFile *v_stream;
 TTree *v_branch;
 Event *v_current_event;
@@ -90,29 +90,22 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 					if (v_correlation) {
 						/* retrieve AMS event ID */
 						founded = false;
-						printf("\n>> searching for data\n");
-						for (index = 0; index < v_entries; ++index) {
-							v_branch->GetEntry(index);
+							for (; v_last_root < v_entries; ++v_last_root) {
+							v_branch->GetEntry(v_last_root);
 							if (v_current_event->Evtnum == event_header.number) {
-								printf("\n>> event %d founded in AMS (with index = %d)\n", event_header.number, index);
 								founded = true;
 								break;
 							} else if (v_current_event->Evtnum > event_header.number)
 								break;
 						}
-						printf("\n>> good, founded = %s\n", (founded)?"true":"false");
 						/* --- Porchetta time! */
 						/* --- (brother Illo, please, forgive me) */
 						if (founded) {
 							for (index = 0; index < event_header.clusters; ++index) {
-								printf(">> index: %d\n", index);
 								if (clusters[index].first_strip < d_trb_event_channels) {
-									printf(">> DAMPE ladder 1\n");
 									/* DAMPE #1 */
-									for (strip = 0, value_A = 0; strip < clusters[index].header.strips; strip++) {
-										printf("let me check strip %d/%u\n", strip, clusters[index].header.strips);
+									for (strip = 0, value_A = 0; strip < clusters[index].header.strips; strip++)
 										value_A += clusters[index].values[strip];
-									}
 									for (subindex = 0; subindex < v_current_event->NClusTot; ++subindex)  {
 										if ((ams_cluster = v_current_event->GetCluster(subindex)) && (ams_cluster->side == 1)) {
 											/* AMS #1 */
@@ -259,6 +252,13 @@ void f_export_histograms(struct o_string *output, struct s_data_charts *charts) 
 	if (v_correlation) {
 		p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation);
 		p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_signal);
+		if (v_entries > 0) {
+			p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_signal_AMS[0]);
+			p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_signal_AMS[1]);
+			p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_signal_AMS[2]);
+			p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_signal_AMS[3]);
+		}
+
 	}
 	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "TTTTTT", charts->signals, charts->signals_array[0],
 	//		charts->signals_array[1], charts->signals_array[2], charts->signals_array[3], charts->signals_array[4]);
