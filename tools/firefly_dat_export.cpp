@@ -18,6 +18,7 @@
 #include "../root_analyzer.h"
 #define d_cuts_steps 5
 #define d_sqrt_mip 7.0711
+int v_correlation = false;
 typedef struct s_data_cuts {
 	float low, top;
 } s_data_cuts;
@@ -32,7 +33,7 @@ typedef struct s_data_charts {
 	TH1F *n_channels, *n_clusters, *common_noise, *signals, *signals_MIP, *signals_array[5], *signal_over_noise, *strips_gravity, *main_strips_gravity, 
 	     *eta, *eta_array[5], *channel_one, *channels_two, *channels_two_major, *channels_two_minor, *signal_one, *signals_two, *signals_two_major, 
 	     *signals_two_minor, *etas[d_cuts_steps];
-	TH2F *signal_eta, *signal_gravity, *signal_gravity_MIP, *n_channels_gravity;
+	TH2F *signal_eta, *signal_gravity, *signal_gravity_MIP, *n_channels_gravity, *correlation;
 	TH1D *profile, *profile_sg, *profile_sgm, *profile_nc_g;
 } s_data_charts;
 void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
@@ -52,6 +53,13 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 					fflush(stdout);
 					if (charts->n_clusters)
 						charts->n_clusters->Fill(event_header.clusters);
+					if (v_correlation)
+						for (index = 0; index < event_header.clusters; index++)
+							if (clusters[index].header.strips_gravity < d_trb_event_channels)
+								for (subindex = 0; subindex < event_header.clusters; ++subindex)
+									if (clusters[subindex].header.signal_gravity >= d_trb_event_channels)
+										charts->correlation->Fill(clusters[index].header.strips_gravity, 
+												clusters[subindex].header.strips_gravity);
 					for (index = 0; index < event_header.clusters; index++) {
 						if (charts->signals) {
 							for (strip = 0, value = 0, current_strip = clusters[index].first_strip;
@@ -143,7 +151,9 @@ void f_export_histograms(struct o_string *output, struct s_data_charts *charts) 
 	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->n_channels);
 	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->common_noise);
 	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signals);
-	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->signals_MIP);
+	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->signals_MIP);
+	if (v_correlation)
+		p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->correlation);
 	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "TTTTTT", charts->signals, charts->signals_array[0],
 	//		charts->signals_array[1], charts->signals_array[2], charts->signals_array[3], charts->signals_array[4]);
 	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signal_one);
@@ -216,13 +226,14 @@ int main (int argc, char *argv[]) {
 		d_chart_2D("Signal over gravity;CoG;Signal", d_trb_event_channels, 0.0, d_trb_event_channels, 2000.0, 0.0, 400.0),
 		d_chart_2D("sqrt(Signal)/sqrt(MIP) over gravity;CoG;MIP", d_trb_event_channels, 0.0, d_trb_event_channels, 80.0, 0.0, 40.0),
 		d_chart_2D("Number of channels over gravity;CoG;NoC", d_trb_event_channels, 0.0, d_trb_event_channels, 40.0, 0.0, 40.0),
+		d_chart_2D("Correlation between clusters;CoG #1;CoG #2", d_trb_event_channels, 0.0, d_trb_event_channels, d_trb_event_channels, 0.0, d_trb_event_channels),
 		NULL,
 		NULL,
 		NULL,
 		NULL
 	};
 	struct o_stream *compressed_stream;
-	struct o_string *compressed = NULL, *compressed_buffer = NULL, *compressed_list = NULL, *output = NULL, *output_root = NULL, 
+	struct o_string *compressed = NULL, *compressed_buffer = NULL, *compressed_list = NULL, *compressed_merged = NULL, *output = NULL, *output_root = NULL, 
 			*extension = f_string_new_constant(NULL, ".root");
 	struct s_exception *exception = NULL;
 	int arguments = 0, index;
@@ -231,8 +242,9 @@ int main (int argc, char *argv[]) {
 	d_try {
 		d_compress_argument(arguments, "-c", compressed, d_string_pure, "No compressed file specified (-c)");
 		d_compress_argument(arguments, "-cl", compressed_list, d_string_pure, "No compressed file list specified (-cl)");
+		d_compress_argument(arguments, "-cm", compressed_merged, d_string_pure, "No compressed (multi file) specified (-cm)");
 		d_compress_argument(arguments, "-o", output, d_string_pure, "No output file specified (-o)");
-		if (((compressed) || (compressed_list)) && (output)) {
+		if (((compressed) || (compressed_list) || (compressed_merged)) && (output)) {
 			output_root = d_clone(output, struct o_string);
 			output_root->m_append(output_root, extension);
 			output_file = new TFile(output_root->content, "RECREATE");
@@ -245,8 +257,12 @@ int main (int argc, char *argv[]) {
 					compressed_buffer = compressed;
 				}
 				d_release(compressed_stream);
-			} else
+			} else if (compressed)
 				f_fill_histograms(compressed, &charts);
+			else {
+				v_correlation = true;
+				f_fill_histograms(compressed_merged, &charts);
+			}
 			charts.profile = (TH1D *) charts.signal_eta->ProfileX("Signal over eta (Profile)");
 			charts.profile_sg = (TH1D *) charts.signal_gravity->ProfileX("Signal over gravity (Profile)");
 			charts.profile_sgm = (TH1D *) charts.signal_gravity_MIP->ProfileX("sqrt(Signal)/sqrt(MIP) over gravity (Profile)");
