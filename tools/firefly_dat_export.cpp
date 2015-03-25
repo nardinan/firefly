@@ -33,7 +33,7 @@ typedef struct s_data_charts {
 	TH1F *n_channels, *n_clusters, *common_noise, *signals, *signals_MIP, *signals_array[5], *signal_over_noise, *strips_gravity, *main_strips_gravity, 
 	     *eta, *eta_array[5], *channel_one, *channels_two, *channels_two_major, *channels_two_minor, *signal_one, *signals_two, *signals_two_major, 
 	     *signals_two_minor, *etas[d_cuts_steps];
-	TH2F *signal_eta, *signal_gravity, *signal_gravity_MIP, *n_channels_gravity, *correlation;
+	TH2F *signal_eta, *signal_gravity, *signal_gravity_MIP, *n_channels_gravity, *correlation, *correlation_signal;
 	TH1D *profile, *profile_sg, *profile_sgm, *profile_nc_g;
 } s_data_charts;
 void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
@@ -42,7 +42,7 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 	struct s_singleton_event_header event_header;
 	struct s_singleton_cluster_details *clusters;
 	struct s_exception *exception = NULL;
-	float value;
+	float value, value_A, value_B;
 	int index, subindex, strip, current_strip, current_event = 0;
 	d_try {
 		stream = f_stream_new_file(NULL, data, "rb", 0777);
@@ -55,11 +55,19 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 						charts->n_clusters->Fill(event_header.clusters);
 					if (v_correlation)
 						for (index = 0; index < event_header.clusters; index++)
-							if (clusters[index].first_strip < d_trb_event_channels)
+							if (clusters[index].first_strip < d_trb_event_channels) {
+								for (strip = 0, value_A = 0; strip < clusters[index].header.strips; strip++)
+									value_A += clusters[index].values[strip];
 								for (subindex = 0; subindex < event_header.clusters; ++subindex)
-									if (clusters[subindex].first_strip >= d_trb_event_channels)
+									if (clusters[subindex].first_strip >= d_trb_event_channels) {
 										charts->correlation->Fill(clusters[index].header.strips_gravity, 
 												clusters[subindex].header.strips_gravity);
+										for (strip = 0, value_B = 0; strip < clusters[subindex].header.strips; strip++)
+											value_B += clusters[subindex].values[strip];
+										charts->correlation_signal->Fill(sqrt(value_A)/d_sqrt_mip, 
+												sqrt(value_B)/d_sqrt_mip);
+									}
+							}
 					for (index = 0; index < event_header.clusters; index++) {
 						if (charts->signals) {
 							for (strip = 0, value = 0, current_strip = clusters[index].first_strip;
@@ -152,8 +160,10 @@ void f_export_histograms(struct o_string *output, struct s_data_charts *charts) 
 	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->common_noise);
 	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signals);
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->signals_MIP);
-	if (v_correlation)
+	if (v_correlation) {
 		p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation);
+		p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_signal);
+	}
 	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "TTTTTT", charts->signals, charts->signals_array[0],
 	//		charts->signals_array[1], charts->signals_array[2], charts->signals_array[3], charts->signals_array[4]);
 	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signal_one);
@@ -226,11 +236,12 @@ int main (int argc, char *argv[]) {
 		d_chart_2D("Signal over gravity;CoG;Signal", d_trb_event_channels, 0.0, d_trb_event_channels, 2000.0, 0.0, 400.0),
 		d_chart_2D("sqrt(Signal)/sqrt(MIP) over gravity;CoG;MIP", d_trb_event_channels, 0.0, d_trb_event_channels, 80.0, 0.0, 40.0),
 		d_chart_2D("Number of channels over gravity;CoG;NoC", d_trb_event_channels, 0.0, d_trb_event_channels, 40.0, 0.0, 40.0),
-		d_chart_2D("Correlation between clusters;CoG #1;CoG #2", d_trb_event_channels, 0.0, d_trb_event_channels, d_trb_event_channels, 0.0, d_trb_event_channels),
+		d_chart_2D("Correlation between CoG;CoG #1;CoG #2", d_trb_event_channels, 0.0, d_trb_event_channels, d_trb_event_channels, 0.0, d_trb_event_channels),
+		d_chart_2D("Correlation between signals;Signal #1;Signal #2", 80.0, 0.0, 40.0, 80.0, 0.0, 40.0),
 		NULL,
-		NULL,
-		NULL,
-		NULL
+			NULL,
+			NULL,
+			NULL
 	};
 	struct o_stream *compressed_stream;
 	struct o_string *compressed = NULL, *compressed_buffer = NULL, *compressed_list = NULL, *compressed_merged = NULL, *output = NULL, *output_root = NULL, 
