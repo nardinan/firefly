@@ -16,9 +16,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../root_analyzer.h"
+/* from the Matteo 'Bozzochet' Duranti's API */
+#include "Cluster.hh"
+#include "Event.hh"
+/* end */
 #define d_cuts_steps 5
 #define d_sqrt_mip 7.0711
+#define d_AMS_ladder_one 2
+#define d_AMS_ladder_two 3
+#define d_AMS_sqrt_mip 5.9161
 int v_correlation = false;
+TFile *v_stream;
+TTree *v_branch;
+Event *v_current_event;
+RHClass *v_rhclass;
+Long64_t v_entries;
 typedef struct s_data_cuts {
 	float low, top;
 } s_data_cuts;
@@ -29,13 +41,33 @@ struct s_data_cuts cuts[d_cuts_steps] = {
 	{70.0, 90.0},
 	{90.0, 110.0}
 };
+typedef enum e_correlation_ams {
+	e_correlation_ams_DAMPE1_AMS1 = 0,
+	e_correlation_ams_DAMPE2_AMS1,
+	e_correlation_ams_DAMPE1_AMS2,
+	e_correlation_ams_DAMPE2_AMS2,
+	e_correlation_ams_NULL
+} e_correlation_ams;
 typedef struct s_data_charts {
 	TH1F *n_channels, *n_clusters, *common_noise, *signals, *signals_MIP, *signals_array[5], *signal_over_noise, *strips_gravity, *main_strips_gravity, 
 	     *eta, *eta_array[5], *channel_one, *channels_two, *channels_two_major, *channels_two_minor, *signal_one, *signals_two, *signals_two_major, 
 	     *signals_two_minor, *etas[d_cuts_steps];
-	TH2F *signal_eta, *signal_gravity, *signal_gravity_MIP, *n_channels_gravity, *correlation, *correlation_signal;
+	TH2F *signal_eta, *signal_gravity, *signal_gravity_MIP, *n_channels_gravity, *correlation, *correlation_signal, 
+	     *correlation_signal_AMS[e_correlation_ams_NULL];
 	TH1D *profile, *profile_sg, *profile_sgm, *profile_nc_g;
 } s_data_charts;
+void f_load_ams(struct o_string *data) {
+	v_stream = new TFile(data->content);
+	if (v_stream->IsOpen())
+		if ((v_branch = (TTree *)(v_stream->Get("t4"))))
+			if ((v_entries = v_branch->GetEntries()) > 0) {
+				v_current_event = new Event();
+				v_branch->SetBranchAddress("cluster_branch", &v_current_event);
+				v_branch->GetEntry(0);
+				v_rhclass = (RHClass *)v_branch->GetUserInfo()->At(0);
+			}
+}
+
 void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 	struct o_stream *stream;
 	struct s_singleton_file_header file_header;
@@ -44,6 +76,8 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 	struct s_exception *exception = NULL;
 	float value, value_A, value_B;
 	int index, subindex, strip, current_strip, current_event = 0;
+	bool founded; 
+	Cluster *ams_cluster;
 	d_try {
 		stream = f_stream_new_file(NULL, data, "rb", 0777);
 		if ((stream->m_read_raw(stream, (unsigned char *)&(file_header), sizeof(struct s_singleton_file_header)))) {
@@ -53,13 +87,74 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 					fflush(stdout);
 					if (charts->n_clusters)
 						charts->n_clusters->Fill(event_header.clusters);
-					if (v_correlation)
+					if (v_correlation) {
+						/* retrieve AMS event ID */
+						founded = false;
+						printf("\n>> searching for data\n");
+						for (index = 0; index < v_entries; ++index) {
+							v_branch->GetEntry(index);
+							if (v_current_event->Evtnum == event_header.number) {
+								printf("\n>> event %d founded in AMS (with index = %d)\n", event_header.number, index);
+								founded = true;
+								break;
+							} else if (v_current_event->Evtnum > event_header.number)
+								break;
+						}
+						printf("\n>> good, founded = %s\n", (founded)?"true":"false");
+						/* --- Porchetta time! */
+						/* --- (brother Illo, please, forgive me) */
+						if (founded) {
+							for (index = 0; index < event_header.clusters; ++index) {
+								printf(">> index: %d\n", index);
+								if (clusters[index].first_strip < d_trb_event_channels) {
+									printf(">> DAMPE ladder 1\n");
+									/* DAMPE #1 */
+									for (strip = 0, value_A = 0; strip < clusters[index].header.strips; strip++) {
+										printf("let me check strip %d/%u\n", strip, clusters[index].header.strips);
+										value_A += clusters[index].values[strip];
+									}
+									for (subindex = 0; subindex < v_current_event->NClusTot; ++subindex)  {
+										if ((ams_cluster = v_current_event->GetCluster(subindex)) && (ams_cluster->side == 1)) {
+											/* AMS #1 */
+											if (ams_cluster->ladder == d_AMS_ladder_one)
+												charts->correlation_signal_AMS[e_correlation_ams_DAMPE1_AMS1]->
+													Fill(sqrt(value_A)/d_sqrt_mip, 
+															sqrt(ams_cluster->GetTotSig())/d_AMS_sqrt_mip);
+											/* AMS #2 */
+											if (ams_cluster->ladder == d_AMS_ladder_two)
+												charts->correlation_signal_AMS[e_correlation_ams_DAMPE1_AMS2]->
+													Fill(sqrt(value_A)/d_sqrt_mip, 
+															sqrt(ams_cluster->GetTotSig())/d_AMS_sqrt_mip);
+										}
+									}
+								} else if (clusters[index].first_strip >= d_trb_event_channels) {
+									/* DAMPE #2 */
+									for (strip = 0, value_B = 0; strip < clusters[index].header.strips; strip++)
+										value_B += clusters[index].values[strip];
+									for (subindex = 0; subindex < v_current_event->NClusTot; ++subindex) 
+										if ((ams_cluster = v_current_event->GetCluster(subindex)) && (ams_cluster->side == 1)) {
+											/* AMS #1 */
+											if (ams_cluster->ladder == d_AMS_ladder_one)
+												charts->correlation_signal_AMS[e_correlation_ams_DAMPE2_AMS1]->
+													Fill(sqrt(value_B)/d_sqrt_mip, 
+															sqrt(ams_cluster->GetTotSig())/d_AMS_sqrt_mip);
+											/* AMS #2 */
+											if (ams_cluster->ladder == d_AMS_ladder_two)
+												charts->correlation_signal_AMS[e_correlation_ams_DAMPE2_AMS2]->
+													Fill(sqrt(value_B)/d_sqrt_mip, 
+															sqrt(ams_cluster->GetTotSig())/d_AMS_sqrt_mip);
+										}
+								}
+							}
+						}
 						for (index = 0; index < event_header.clusters; index++)
 							if (clusters[index].first_strip < d_trb_event_channels) {
+								/* cluster DAMPE 1 */
 								for (strip = 0, value_A = 0; strip < clusters[index].header.strips; strip++)
 									value_A += clusters[index].values[strip];
 								for (subindex = 0; subindex < event_header.clusters; ++subindex)
 									if (clusters[subindex].first_strip >= d_trb_event_channels) {
+										/* cluster DAMPE 2 */
 										charts->correlation->Fill(clusters[index].header.strips_gravity, 
 												clusters[subindex].header.strips_gravity);
 										for (strip = 0, value_B = 0; strip < clusters[subindex].header.strips; strip++)
@@ -68,6 +163,7 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 												sqrt(value_B)/d_sqrt_mip);
 									}
 							}
+					}
 					for (index = 0; index < event_header.clusters; index++) {
 						if (charts->signals) {
 							for (strip = 0, value = 0, current_strip = clusters[index].first_strip;
@@ -236,16 +332,23 @@ int main (int argc, char *argv[]) {
 		d_chart_2D("Signal over gravity;CoG;Signal", d_trb_event_channels, 0.0, d_trb_event_channels, 2000.0, 0.0, 400.0),
 		d_chart_2D("sqrt(Signal)/sqrt(MIP) over gravity;CoG;MIP", d_trb_event_channels, 0.0, d_trb_event_channels, 80.0, 0.0, 40.0),
 		d_chart_2D("Number of channels over gravity;CoG;NoC", d_trb_event_channels, 0.0, d_trb_event_channels, 40.0, 0.0, 40.0),
-		d_chart_2D("Correlation between CoG;CoG #1;CoG #2", d_trb_event_channels, 0.0, d_trb_event_channels, d_trb_event_channels, 0.0, d_trb_event_channels),
+		d_chart_2D("Correlation between CoG;CoG #1;CoG #2", d_trb_event_channels, 0.0, d_trb_event_channels, d_trb_event_channels, 0.0, 
+				d_trb_event_channels),
 		d_chart_2D("Correlation between signals;Signal #1;Signal #2", 80.0, 0.0, 40.0, 80.0, 0.0, 40.0),
+		{
+			d_chart_2D("Correlation between signals (dampe #1 - AMS #1);Signal #1;Signal #2", 80.0, 0.0, 40.0, 80.0, 0.0, 40.0),
+			d_chart_2D("Correlation between signals (dampe #2 - AMS #1);Signal #1;Signal #2", 80.0, 0.0, 40.0, 80.0, 0.0, 40.0),
+			d_chart_2D("Correlation between signals (dampe #1 - AMS #2);Signal #1;Signal #2", 80.0, 0.0, 40.0, 80.0, 0.0, 40.0),
+			d_chart_2D("Correlation between signals (dampe #2 - AMS #2);Signal #1;Signal #2", 80.0, 0.0, 40.0, 80.0, 0.0, 40.0)
+		},
 		NULL,
-			NULL,
-			NULL,
-			NULL
+		NULL,
+		NULL,
+		NULL
 	};
 	struct o_stream *compressed_stream;
 	struct o_string *compressed = NULL, *compressed_buffer = NULL, *compressed_list = NULL, *compressed_merged = NULL, *output = NULL, *output_root = NULL, 
-			*extension = f_string_new_constant(NULL, ".root");
+			*extension = f_string_new_constant(NULL, ".root"), *compressed_ams;
 	struct s_exception *exception = NULL;
 	int arguments = 0, index;
 	float range_start, range_end;
@@ -255,12 +358,17 @@ int main (int argc, char *argv[]) {
 		d_compress_argument(arguments, "-cl", compressed_list, d_string_pure, "No compressed file list specified (-cl)");
 		d_compress_argument(arguments, "-cm", compressed_merged, d_string_pure, "No compressed (multi file) specified (-cm)");
 		d_compress_argument(arguments, "-o", output, d_string_pure, "No output file specified (-o)");
+		d_compress_argument(arguments, "-porchetta", compressed_ams, d_string_pure, "No AMS compressed file specified (-porchetta)");
 		if (((compressed) || (compressed_list) || (compressed_merged)) && (output)) {
 			output_root = d_clone(output, struct o_string);
 			output_root->m_append(output_root, extension);
 			output_file = new TFile(output_root->content, "RECREATE");
 			d_release(output_root);
 			output_file->cd();
+			if (compressed_ams) {
+				f_load_ams(compressed_ams);
+				printf("AMS file with %lld events\n", v_entries);
+			}
 			if (compressed_list) {
 				compressed_stream = f_stream_new_file(NULL, compressed_list, "r", 0777);
 				while ((compressed = compressed_stream->m_read_line(compressed_stream, compressed_buffer, d_string_buffer_size))) {

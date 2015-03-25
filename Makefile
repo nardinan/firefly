@@ -1,7 +1,8 @@
+classes = tools/Cluster.hh tools/Event.hh
 objects = chart.o interface.o compression.o ladder.o analyzer.o environment.o loop.o firefly.o dev-functions.o ow-functions.o rs232_device.o
 objects_temperature = dev-functions.o ow-functions.o firefly_temperature.o
 objects_compressor = compression.o firefly_compress.o
-objects_analyzer = compression.o root_analyzer.o firefly_dat_export.o
+objects_analyzer = compression.o root_analyzer.o firefly_dat_export.o rootElibdict.o Cluster.o Event.o
 objects_calibration_export = compression.o root_analyzer.o firefly_cal_export.o
 objects_cn_export = compression.o root_analyzer.o firefly_cn_export.o
 objects_ttree = compression.o firefly_ttree.o
@@ -9,7 +10,7 @@ cc = gcc -g
 cpp = g++ -g
 cflags = -Wall -I/usr/local/include `libusb-config --cflags` `pkg-config --cflags gtk+-2.0` `pkg-config --cflags fftw3` -Wno-variadic-macros -Wno-missing-braces -Wno-pointer-sign -c -pedantic
 cflags_analyzer = $(cflags) `root-config --cflags` -Wno-long-long
-lflags = -Wall
+lflags = -Wall -fPIC
 liblink = -L../serenity -L/usr/lib64 -lm `libusb-config --libs` `pkg-config --libs gtk+-2.0` `pkg-config --libs fftw3` -L/usr/lib -lpthread -lserenity_ground -lserenity_structures -lserenity_crypto -lserenity_infn
 liblink_analyzer = $(liblink) `root-config --libs`
 exec = firefly.bin
@@ -47,6 +48,19 @@ cn_export: $(objects_cn_export)
 
 ttree: $(objects_ttree)
 	$(cpp) $(lflags) $(objects_ttree) -o $(exec_ttree) $(liblink_analyzer)
+
+rootElibdict.cxx: $(classes) tools/LinkDef.hh
+	@echo Creating ROOT dictionary
+	@rootcint6 -f $@ -c $^
+
+rootElibdict.o: rootElibdict.cxx
+	$(cpp) $(cflags_analyzer) rootElibdict.cxx
+
+Cluster.o: tools/Cluster.cxx tools/Cluster.hh
+	$(cpp) $(cflags_analyzer) tools/Cluster.cxx
+
+Event.o: tools/Event.cxx tools/Event.hh tools/Cluster.hh
+	$(cpp) $(cflags_analyzer) tools/Event.cxx
 
 chart.o: components/chart.c components/chart.h
 	$(cc) $(cflags) components/chart.c
@@ -111,6 +125,7 @@ clean:
 	rm -f *.fli
 	rm -f *.root
 	rm -f AutoDict_vector*
+	rm -f rootElibdict.*
 	rm -f *.log
 	rm -f $(exec)
 	rm -f $(exec_temperature)

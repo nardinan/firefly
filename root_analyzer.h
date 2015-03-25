@@ -19,6 +19,9 @@
 #define firefly_root_analyzer_h
 #include <TCanvas.h>
 #include <TSystem.h>
+#include <TApplication.h>
+#include <TPad.h>
+#include <TTree.h>
 #include <TH1F.h>
 #include <TH2F.h>
 #include <TGraph.h>
@@ -26,6 +29,7 @@
 #include <TFile.h>
 #include <TLegend.h>
 #include <TPavesText.h>
+#include <TROOT.h>
 extern "C" {
 #include <serenity/ground/ground.h>
 #include <serenity/structures/structures.h>
