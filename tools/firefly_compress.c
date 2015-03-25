@@ -1,30 +1,45 @@
 #include "../compression.h"
+int v_cut_tA = 0, v_cut_TA = d_trb_event_channels, v_cut_tB = 0, v_cut_TB = d_trb_event_channels;
 void p_merge_compression(struct o_stream *merge_A, struct o_stream *merge_B, struct o_stream *output_stream) {
 	struct s_singleton_event_header event_header_A, event_header_B;
 	struct s_singleton_cluster_details *clusters_A, *clusters_B = NULL;
-	int again = d_true, clusters_in_A, clusters_in_B, index, merged = 0;
+	int again = d_true, clusters_in_A, clusters_in_B, index, merged = 0, real_clusters_number, real_bytes_to_next;
 	if ((clusters_A = f_decompress_event(merge_A, &event_header_A)) && (clusters_B = f_decompress_event(merge_B, &event_header_B))) {
 		while (again) {
 			again = d_false;
 			if (event_header_A.number == event_header_B.number) {
 				clusters_in_A = event_header_A.clusters;
 				clusters_in_B = event_header_B.clusters;
-				event_header_A.bytes_to_next += event_header_B.bytes_to_next;
-				event_header_A.clusters += event_header_B.clusters;
+				real_clusters_number = 0;
+				real_bytes_to_next = 0;
+				for (index = 0; index < clusters_in_A; index++)
+					if ((clusters_A[index].header.strips_gravity >= v_cut_tA) && (clusters_A[index].header.strips_gravity <= v_cut_TA)) {
+						real_clusters_number++;
+						real_bytes_to_next += sizeof(clusters_A[index]);
+					}
+				for (index = 0; index < clusters_in_B; index++)
+					if ((clusters_B[index].header.strips_gravity >= v_cut_tB) && (clusters_B[index].header.strips_gravity <= v_cut_TB)) {
+						real_clusters_number++;
+						real_bytes_to_next += sizeof(clusters_B[index]);
+					}
+				event_header_A.clusters = real_clusters_number;
+				event_header_A.bytes_to_next = real_bytes_to_next;
 				output_stream->m_write(output_stream, sizeof(struct s_singleton_event_header), &event_header_A);
 				for (index = 0; index < clusters_in_A; index++)
-					output_stream->m_write(output_stream, sizeof(struct s_singleton_cluster_header)+
-							(sizeof(float)*(clusters_A[index].header.strips+1))+sizeof(unsigned int), &(clusters_A[index]));
-				for (index = 0; index < clusters_in_B; index++) {
-					clusters_B[index].first_strip += d_trb_event_channels;
-					output_stream->m_write(output_stream, sizeof(struct s_singleton_cluster_header)+
-							(sizeof(float)*(clusters_B[index].header.strips+1))+sizeof(unsigned int), &(clusters_B[index]));
-				}
+					if ((clusters_A[index].header.strips_gravity >= v_cut_tA) && (clusters_A[index].header.strips_gravity <= v_cut_TA))
+						output_stream->m_write(output_stream, sizeof(struct s_singleton_cluster_header)+
+								(sizeof(float)*(clusters_A[index].header.strips+1))+sizeof(unsigned int), &(clusters_A[index]));
+				for (index = 0; index < clusters_in_B; index++)
+					if ((clusters_B[index].header.strips_gravity >= v_cut_tB) && (clusters_B[index].header.strips_gravity <= v_cut_TB)) {
+						clusters_B[index].first_strip += d_trb_event_channels;
+						output_stream->m_write(output_stream, sizeof(struct s_singleton_cluster_header)+
+								(sizeof(float)*(clusters_B[index].header.strips+1))+sizeof(unsigned int), &(clusters_B[index]));
+					}
 				d_free(clusters_A);
 				d_free(clusters_B);
-				fprintf(stdout, "\r%80s", "");
-				fprintf(stdout, "\r[merged events: %d (last %d == %d, total %d clusters)]", ++merged, event_header_A.number,
-						event_header_B.number, (clusters_in_A+clusters_in_B));
+				fprintf(stdout, "\r%80s\r[merged events: %d (last %d == %d, total REAL %d clusters | discarded %d)]", " ", ++merged,
+						event_header_A.number, event_header_B.number, real_clusters_number,
+						((clusters_in_A+clusters_in_B)-real_clusters_number));
 				fflush(stdout);
 				clusters_B = NULL;
 				if ((clusters_A = f_decompress_event(merge_A, &event_header_A)) && (clusters_B = f_decompress_event(merge_B, &event_header_B)))
@@ -111,6 +126,10 @@ int main (int argc, char *argv[]) {
 	d_try {
 		d_compress_argument(arguments, "-mA", merge_A, d_string_pure, "No merge file A specified (-mA)");
 		d_compress_argument(arguments, "-mB", merge_B, d_string_pure, "No merge file B specified (-mB)");
+		d_compress_argument(arguments, "-tA", v_cut_tA, atoi, "No cut for file A specified (-tA)");
+		d_compress_argument(arguments, "-TA", v_cut_TA, atoi, "No cut for file A specified (-TA)");
+		d_compress_argument(arguments, "-tB", v_cut_tB, atoi, "No cut for file B specified (-tB)");
+		d_compress_argument(arguments, "-TB", v_cut_TB, atoi, "No cut for file B specified (-TB)");
 		d_compress_argument(arguments, "-c", calibration, d_string_pure, "No calibration file specified (-c)");
 		d_compress_argument(arguments, "-d", data, d_string_pure, "No data file specified (-d)");
 		d_compress_argument(arguments, "-o", output, d_string_pure, "No output file specified (-o)");
