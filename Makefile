@@ -125,7 +125,7 @@ clean:
 	rm -f *.fli
 	rm -f *.root
 	rm -f AutoDict_vector*
-	rm -f rootElibdict.*
+	rm -f rootElibdict*
 	rm -f *.log
 	rm -f $(exec)
 	rm -f $(exec_temperature)
