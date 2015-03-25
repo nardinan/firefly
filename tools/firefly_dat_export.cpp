@@ -55,9 +55,9 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 						charts->n_clusters->Fill(event_header.clusters);
 					if (v_correlation)
 						for (index = 0; index < event_header.clusters; index++)
-							if (clusters[index].header.strips_gravity < d_trb_event_channels)
+							if (clusters[index].first_strip < d_trb_event_channels)
 								for (subindex = 0; subindex < event_header.clusters; ++subindex)
-									if (clusters[subindex].header.signal_gravity >= d_trb_event_channels)
+									if (clusters[subindex].first_strip >= d_trb_event_channels)
 										charts->correlation->Fill(clusters[index].header.strips_gravity, 
 												clusters[subindex].header.strips_gravity);
 					for (index = 0; index < event_header.clusters; index++) {
@@ -153,7 +153,7 @@ void f_export_histograms(struct o_string *output, struct s_data_charts *charts) 
 	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signals);
 	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->signals_MIP);
 	if (v_correlation)
-		p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->correlation);
+		p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation);
 	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "TTTTTT", charts->signals, charts->signals_array[0],
 	//		charts->signals_array[1], charts->signals_array[2], charts->signals_array[3], charts->signals_array[4]);
 	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signal_one);

@@ -26,6 +26,7 @@ void p_merge_compression(struct o_stream *merge_A, struct o_stream *merge_B, str
 				fprintf(stdout, "\r[merged events: %d (last %d == %d, total %d clusters)]", ++merged, event_header_A.number,
 						event_header_B.number, (clusters_in_A+clusters_in_B));
 				fflush(stdout);
+				clusters_B = NULL;
 				if ((clusters_A = f_decompress_event(merge_A, &event_header_A)) && (clusters_B = f_decompress_event(merge_B, &event_header_B)))
 					again = d_true;
 			} else if (event_header_A.number > event_header_B.number) {
