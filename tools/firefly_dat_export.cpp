@@ -348,7 +348,7 @@ int main (int argc, char *argv[]) {
 	};
 	struct o_stream *compressed_stream;
 	struct o_string *compressed = NULL, *compressed_buffer = NULL, *compressed_list = NULL, *compressed_merged = NULL, *output = NULL, *output_root = NULL, 
-			*extension = f_string_new_constant(NULL, ".root"), *compressed_ams;
+			*extension = f_string_new_constant(NULL, ".root"), *compressed_ams = NULL;
 	struct s_exception *exception = NULL;
 	int arguments = 0, index;
 	float range_start, range_end;
