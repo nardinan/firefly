@@ -59,7 +59,8 @@ TH2F *f_create_2D_histogram(const char *name, const char *labels, int bins_numbe
 	return result;
 }
 
-void p_export_histograms_singleton(struct o_string *output, int log_y, int grid_x, enum e_pdf_pages page, const char *draw, const char *format, ...) {
+void p_export_histograms_singleton(struct o_string *output, int log_y, int log_z, int grid_x, enum e_pdf_pages page, const char *draw, 
+		const char *format, ...) {
 	TCanvas *canvas;
 	va_list list;
 	struct o_string *real_output;
@@ -94,6 +95,8 @@ void p_export_histograms_singleton(struct o_string *output, int log_y, int grid_
 		}
 		if (log_y)
 			canvas->SetLogy();
+		if (log_z)
+			canvas->SetLogz();
 		if (length > 1)
 			if (!d_multiple_chart)
 				legend = new TLegend(0.05, 0.95-((float)length*0.02), 0.3, 0.95);

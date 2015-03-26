@@ -69,7 +69,7 @@ void f_fill_histograms(struct o_string *data, struct s_calibration_charts *chart
 void f_export_histograms(struct o_string *output, struct s_calibration_charts *charts) {
 	v_chart_split_x = 2;
 	v_chart_split_y = 3;
-	p_export_histograms_singleton(output, d_false, d_trb_event_vas, e_pdf_page_middle, "HIST", "TTTTPP", charts->pedestal, charts->sigma_raw,
+	p_export_histograms_singleton(output, d_false, d_false, d_trb_event_vas, e_pdf_page_middle, "HIST", "TTTTPP", charts->pedestal, charts->sigma_raw,
 			charts->sigma, charts->gain, charts->paves_left, charts->paves_right);
 }
 

@@ -25,7 +25,9 @@
 #define d_AMS_ladder_one 2
 #define d_AMS_ladder_two 3
 #define d_AMS_sqrt_mip 5.9161
-int v_correlation = false, v_last_root = 0;
+#define d_AMS_signal_cut 4.0
+#define d_AMS_channels 640
+int v_correlation = false, v_last_root = 0, v_shift_dampe = 0, v_shift_ams = 0;
 TFile *v_stream;
 TTree *v_branch;
 Event *v_current_event;
@@ -46,6 +48,7 @@ typedef enum e_correlation_ams {
 	e_correlation_ams_DAMPE2_AMS1,
 	e_correlation_ams_DAMPE1_AMS2,
 	e_correlation_ams_DAMPE2_AMS2,
+	e_correlation_ams_AMS1_AMS2,
 	e_correlation_ams_NULL
 } e_correlation_ams;
 typedef struct s_data_charts {
@@ -53,7 +56,7 @@ typedef struct s_data_charts {
 	     *eta, *eta_array[5], *channel_one, *channels_two, *channels_two_major, *channels_two_minor, *signal_one, *signals_two, *signals_two_major, 
 	     *signals_two_minor, *etas[d_cuts_steps];
 	TH2F *signal_eta, *signal_gravity, *signal_gravity_MIP, *n_channels_gravity, *correlation, *correlation_signal, 
-	     *correlation_signal_AMS[e_correlation_ams_NULL];
+	     *correlation_signal_AMS[e_correlation_ams_NULL], *correlation_ams;
 	TH1D *profile, *profile_sg, *profile_sgm, *profile_nc_g;
 } s_data_charts;
 void f_load_ams(struct o_string *data) {
@@ -77,7 +80,7 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 	float value, value_A, value_B;
 	int index, subindex, strip, current_strip, current_event = 0;
 	bool founded; 
-	Cluster *ams_cluster;
+	Cluster *ams_cluster, *ams_subcluster;
 	d_try {
 		stream = f_stream_new_file(NULL, data, "rb", 0777);
 		if ((stream->m_read_raw(stream, (unsigned char *)&(file_header), sizeof(struct s_singleton_file_header)))) {
@@ -90,42 +93,69 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 					if (v_correlation) {
 						/* retrieve AMS event ID */
 						founded = false;
+						if (((int)event_header.number-v_shift_dampe) >= 0)
 							for (; v_last_root < v_entries; ++v_last_root) {
-							v_branch->GetEntry(v_last_root);
-							if (v_current_event->Evtnum == event_header.number) {
-								founded = true;
-								break;
-							} else if (v_current_event->Evtnum > event_header.number)
-								break;
-						}
+								v_branch->GetEntry(v_last_root);
+								if ((v_current_event->Evtnum-v_shift_ams) > 0) {
+									if ((v_current_event->Evtnum-v_shift_ams) == ((int)event_header.number-v_shift_dampe)) {
+										founded = true;
+										break;
+									} else if ((v_current_event->Evtnum-v_shift_ams) > ((int)event_header.number-v_shift_dampe))
+										break;
+								}
+							}
 						/* --- Porchetta time! */
 						/* --- (brother Illo, please, forgive me) */
 						if (founded) {
+							for (index = 0; index < v_current_event->NClusTot; ++index)
+								if ((ams_cluster = v_current_event->GetCluster(index)) && (ams_cluster->side == 1) &&
+										((sqrt(ams_cluster->GetTotSig())/d_AMS_sqrt_mip) > d_AMS_signal_cut)) {
+									/* AMS #1 */
+									if (ams_cluster->ladder == d_AMS_ladder_one)
+										for (subindex = 0; subindex < v_current_event->NClusTot; ++subindex)
+											if ((ams_subcluster = v_current_event->GetCluster(subindex)) &&
+													(ams_subcluster->side == 1) &&
+													((sqrt(ams_subcluster->GetTotSig())/d_AMS_sqrt_mip) > d_AMS_signal_cut)) {
+												/* AMS #2 */
+												if (ams_subcluster->ladder == d_AMS_ladder_two) 
+													charts->correlation_signal_AMS[e_correlation_ams_AMS1_AMS2]->Fill(
+															(sqrt(ams_cluster->GetTotSig())/d_AMS_sqrt_mip),
+															(sqrt(ams_subcluster->GetTotSig())/d_AMS_sqrt_mip));
+											}
+								}
 							for (index = 0; index < event_header.clusters; ++index) {
 								if (clusters[index].first_strip < d_trb_event_channels) {
 									/* DAMPE #1 */
 									for (strip = 0, value_A = 0; strip < clusters[index].header.strips; strip++)
 										value_A += clusters[index].values[strip];
-									for (subindex = 0; subindex < v_current_event->NClusTot; ++subindex)  {
-										if ((ams_cluster = v_current_event->GetCluster(subindex)) && (ams_cluster->side == 1)) {
-											/* AMS #1 */
-											if (ams_cluster->ladder == d_AMS_ladder_one)
-												charts->correlation_signal_AMS[e_correlation_ams_DAMPE1_AMS1]->
-													Fill(sqrt(value_A)/d_sqrt_mip, 
-															sqrt(ams_cluster->GetTotSig())/d_AMS_sqrt_mip);
-											/* AMS #2 */
-											if (ams_cluster->ladder == d_AMS_ladder_two)
-												charts->correlation_signal_AMS[e_correlation_ams_DAMPE1_AMS2]->
-													Fill(sqrt(value_A)/d_sqrt_mip, 
-															sqrt(ams_cluster->GetTotSig())/d_AMS_sqrt_mip);
+									for (subindex = 0; subindex < v_current_event->NClusTot; ++subindex) 
+										if (((ams_cluster = v_current_event->GetCluster(subindex))) && 
+												((sqrt(ams_cluster->GetTotSig())/d_AMS_sqrt_mip) > d_AMS_signal_cut)) {
+											if (ams_cluster->side == 0) {
+												/* AMS #1 */
+												if (ams_cluster->ladder == d_AMS_ladder_one)
+													charts->correlation_ams->Fill(clusters[index].header.strips_gravity,
+															ams_cluster->GetCoG());
+											} else if (ams_cluster->side == 1) {
+												/* AMS #1 */
+												if (ams_cluster->ladder == d_AMS_ladder_one)
+													charts->correlation_signal_AMS[e_correlation_ams_DAMPE1_AMS1]->
+														Fill(sqrt(value_A)/d_sqrt_mip, 
+																sqrt(ams_cluster->GetTotSig())/d_AMS_sqrt_mip);
+												/* AMS #2 */
+												if (ams_cluster->ladder == d_AMS_ladder_two)
+													charts->correlation_signal_AMS[e_correlation_ams_DAMPE1_AMS2]->
+														Fill(sqrt(value_A)/d_sqrt_mip, 
+																sqrt(ams_cluster->GetTotSig())/d_AMS_sqrt_mip);
+											}
 										}
-									}
 								} else if (clusters[index].first_strip >= d_trb_event_channels) {
 									/* DAMPE #2 */
 									for (strip = 0, value_B = 0; strip < clusters[index].header.strips; strip++)
 										value_B += clusters[index].values[strip];
 									for (subindex = 0; subindex < v_current_event->NClusTot; ++subindex) 
-										if ((ams_cluster = v_current_event->GetCluster(subindex)) && (ams_cluster->side == 1)) {
+										if ((ams_cluster = v_current_event->GetCluster(subindex)) && (ams_cluster->side == 1) &&
+												((sqrt(ams_cluster->GetTotSig())/d_AMS_sqrt_mip) > d_AMS_signal_cut)) {
 											/* AMS #1 */
 											if (ams_cluster->ladder == d_AMS_ladder_one)
 												charts->correlation_signal_AMS[e_correlation_ams_DAMPE2_AMS1]->
@@ -244,19 +274,21 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 }
 
 void f_export_histograms(struct o_string *output, struct s_data_charts *charts) {
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_first, "HIST", "T", charts->n_clusters);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->n_channels);
+	p_export_histograms_singleton(output, d_true, d_false, d_false, e_pdf_page_first, "HIST", "T", charts->n_clusters);
+	p_export_histograms_singleton(output, d_true, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->n_channels);
 	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->common_noise);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->signals);
-	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->signals_MIP);
+	p_export_histograms_singleton(output, d_true, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->signals);
+	p_export_histograms_singleton(output, d_false, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->signals_MIP);
 	if (v_correlation) {
-		p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation);
-		p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_signal);
+		p_export_histograms_singleton(output, d_false, d_true, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation);
+		p_export_histograms_singleton(output, d_false, d_true, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_signal);
 		if (v_entries > 0) {
-			p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_signal_AMS[0]);
-			p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_signal_AMS[1]);
-			p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_signal_AMS[2]);
-			p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_signal_AMS[3]);
+			p_export_histograms_singleton(output, d_false, d_true, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_ams);
+			p_export_histograms_singleton(output, d_false, d_true, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_signal_AMS[0]);
+			p_export_histograms_singleton(output, d_false, d_true, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_signal_AMS[1]);
+			p_export_histograms_singleton(output, d_false, d_true, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_signal_AMS[2]);
+			p_export_histograms_singleton(output, d_false, d_true, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_signal_AMS[3]);
+			p_export_histograms_singleton(output, d_false, d_true, d_false, e_pdf_page_middle, "COLZ", "T", charts->correlation_signal_AMS[4]);
 		}
 
 	}
@@ -271,17 +303,17 @@ void f_export_histograms(struct o_string *output, struct s_data_charts *charts) 
 	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->channels_two);
 	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->channels_two_major);
 	//p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->channels_two_minor);
-	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->strips_gravity);
+	p_export_histograms_singleton(output, d_false, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->strips_gravity);
 	//p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->main_strips_gravity);
 	//p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->eta);
 	//p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->signal_eta);
 	//p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->profile);
-	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->signal_gravity);
-	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->profile_sg);
-	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->signal_gravity_MIP);
-	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->profile_sgm);
-	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->n_channels_gravity);
-	p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_last, NULL, "T", charts->profile_nc_g);
+	p_export_histograms_singleton(output, d_false, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->signal_gravity);
+	p_export_histograms_singleton(output, d_false, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->profile_sg);
+	p_export_histograms_singleton(output, d_false, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->signal_gravity_MIP);
+	p_export_histograms_singleton(output, d_false, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->profile_sgm);
+	p_export_histograms_singleton(output, d_false, d_false, d_false, e_pdf_page_middle, NULL, "T", charts->n_channels_gravity);
+	p_export_histograms_singleton(output, d_false, d_false, d_false, e_pdf_page_last, NULL, "T", charts->profile_nc_g);
 	//p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_middle, "HIST", "TTTTTT", charts->eta, charts->eta_array[0], charts->eta_array[1],
 	//		charts->eta_array[2], charts->eta_array[3], charts->eta_array[4]);
 	//p_export_histograms_singleton(output, d_false, d_false, e_pdf_page_last, "HIST", "TTTTTT", charts->eta, charts->etas[0], charts->etas[1],
@@ -336,11 +368,14 @@ int main (int argc, char *argv[]) {
 				d_trb_event_channels),
 		d_chart_2D("Correlation between signals;Signal #1;Signal #2", 80.0, 0.0, 40.0, 80.0, 0.0, 40.0),
 		{
-			d_chart_2D("Correlation between signals (dampe #1 - AMS #1);Signal #1;Signal #2", 80.0, 0.0, 40.0, 80.0, 0.0, 40.0),
-			d_chart_2D("Correlation between signals (dampe #2 - AMS #1);Signal #1;Signal #2", 80.0, 0.0, 40.0, 80.0, 0.0, 40.0),
-			d_chart_2D("Correlation between signals (dampe #1 - AMS #2);Signal #1;Signal #2", 80.0, 0.0, 40.0, 80.0, 0.0, 40.0),
-			d_chart_2D("Correlation between signals (dampe #2 - AMS #2);Signal #1;Signal #2", 80.0, 0.0, 40.0, 80.0, 0.0, 40.0)
+			d_chart_2D("Correlation between signals (dampe #1 - AMS #1);Signal dampe #1;Signal AMS #1", 80.0, 0.0, 40.0, 80.0, 0.0, 40.0),
+			d_chart_2D("Correlation between signals (dampe #2 - AMS #1);Signal dampe #2;Signal AMS #1", 80.0, 0.0, 40.0, 80.0, 0.0, 40.0),
+			d_chart_2D("Correlation between signals (dampe #1 - AMS #2);Signal dampe #1;Signal AMS #2", 80.0, 0.0, 40.0, 80.0, 0.0, 40.0),
+			d_chart_2D("Correlation between signals (dampe #2 - AMS #2);Signal dampe #2;Signal AMS #2", 80.0, 0.0, 40.0, 80.0, 0.0, 40.0),
+			d_chart_2D("Correlation between signals (AMS #1 - AMS #2); Signal AMS #1; Signal AMS #2", 80.0, 0.0, 40.0, 80.0, 0.0, 40.0)
 		},
+		d_chart_2D("Correlation between CoG (dampe #1 - AMS #1);CoG dampe #1;CoG AMS #1", d_trb_event_channels, 0.0, d_trb_event_channels,
+				d_AMS_channels, 0.0, d_AMS_channels),
 		NULL,
 		NULL,
 		NULL,
@@ -359,6 +394,8 @@ int main (int argc, char *argv[]) {
 		d_compress_argument(arguments, "-cm", compressed_merged, d_string_pure, "No compressed (multi file) specified (-cm)");
 		d_compress_argument(arguments, "-o", output, d_string_pure, "No output file specified (-o)");
 		d_compress_argument(arguments, "-porchetta", compressed_ams, d_string_pure, "No AMS compressed file specified (-porchetta)");
+		d_compress_argument(arguments, "-shift", v_shift_dampe, atoi, "No Dampe event shift factor specified (ex: -shift 3 -> the third Dampe event is the first one)");
+		d_compress_argument(arguments, "-shift_ams", v_shift_ams, atoi, "No AMS event shift factor specified (ex: -shift_ams 3 -> the third AMS event is the first one)");
 		if (((compressed) || (compressed_list) || (compressed_merged)) && (output)) {
 			output_root = d_clone(output, struct o_string);
 			output_root->m_append(output_root, extension);

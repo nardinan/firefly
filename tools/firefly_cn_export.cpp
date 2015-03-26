@@ -48,12 +48,12 @@ void f_fill_histograms(struct o_string *data, struct s_common_noise_charts *char
 }
 
 void f_export_histograms(struct o_string *output, struct s_common_noise_charts *charts) {
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_first, "HIST", "T", charts->CN[0]);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->CN[1]);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->CN[2]);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->CN[3]);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_middle, "HIST", "T", charts->CN[4]);
-	p_export_histograms_singleton(output, d_true, d_false, e_pdf_page_last, "HIST", "T", charts->CN[5]); 
+	p_export_histograms_singleton(output, d_true, d_false, d_false, e_pdf_page_first, "HIST", "T", charts->CN[0]);
+	p_export_histograms_singleton(output, d_true, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->CN[1]);
+	p_export_histograms_singleton(output, d_true, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->CN[2]);
+	p_export_histograms_singleton(output, d_true, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->CN[3]);
+	p_export_histograms_singleton(output, d_true, d_false, d_false, e_pdf_page_middle, "HIST", "T", charts->CN[4]);
+	p_export_histograms_singleton(output, d_true, d_false, d_false, e_pdf_page_last, "HIST", "T", charts->CN[5]); 
 }
 
 int main (int argc, char *argv[]) {
