@@ -194,7 +194,7 @@ void p_analyzer_spectrum(size_t elements, float *input, float *output) { d_FP;
 }
 
 void p_analyzer_thread_data(struct s_ladder *ladder) { d_FP;
-	int index, next, size, computed, channel, channel_on_event, not_first[d_trb_event_channels] = {d_false}, adc, noise;
+	int index, next, size, computed, channel, channel_on_event, not_first[d_trb_event_channels] = {d_false}, adc;
 	float value, value_no_pedestal;
 	d_ladder_safe_assign(ladder->data.lock, computed, ladder->data.computed);
 	if (!computed) {
@@ -222,7 +222,7 @@ void p_analyzer_thread_data(struct s_ladder *ladder) { d_FP;
 						memset(ladder->data.spectrum_signal[adc], 0, sizeof(float)*d_common_data_spectrum);
 					}
 					ladder->data.buckets_size = next;
-					for (index = 0, noise = 0; index < next; index++) {
+					for (index = 0; index < next; index++) {
 						p_trb_event_cn(ladder->data.events[index].values, ladder->sigma_k, ladder->calibration.pedestal,
 								ladder->calibration.sigma, ladder->calibration.flags, ladder->data.cn_bucket[index]);
 						for (channel = 0; channel < d_trb_event_channels; channel++) {

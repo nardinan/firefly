@@ -127,7 +127,7 @@ typedef struct s_ladder {
 	enum e_ladder_commands command;
 	enum e_trb_mode running_mode;
 	time_t starting_time, finish_time;
-	long long last_readed_time;
+	long last_readed_time;
 	unsigned int last_readed_events, readed_events, damaged_events, event_size, listening_channel, location_pointer, skip, to_skip, percent_occupancy,
 		     action_pointer, occupancy_bucket, gain_calibration_bucket, gain_calibration_steps, gain_calibration_dac_bottom, gain_calibration_dac_top;
 	unsigned char last_readed_kind, last_readed_code;

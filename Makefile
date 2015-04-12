@@ -8,7 +8,7 @@ objects_cn_export = compression.o root_analyzer.o firefly_cn_export.o
 objects_ttree = compression.o firefly_ttree.o
 cc = gcc -g
 cpp = g++ -g
-cflags = -Wall -I/usr/local/include `libusb-config --cflags` `pkg-config --cflags gtk+-2.0` `pkg-config --cflags fftw3` -Wno-variadic-macros -Wno-missing-braces -Wno-pointer-sign -c -pedantic
+cflags = -Wall -I/usr/local/include -std=gnu99 `libusb-config --cflags` `pkg-config --cflags gtk+-2.0` `pkg-config --cflags fftw3` -Wno-variadic-macros -Wno-missing-braces -Wno-pointer-sign -Wno-sign-compare -c -pedantic
 cflags_analyzer = $(cflags) `root-config --cflags` -Wno-long-long
 lflags = -Wall -fPIC
 liblink = -L../serenity -L/usr/lib64 -lm `libusb-config --libs` `pkg-config --libs gtk+-2.0` `pkg-config --libs fftw3` -L/usr/lib -lpthread -lserenity_ground -lserenity_structures -lserenity_crypto -lserenity_infn
@@ -51,7 +51,7 @@ ttree: $(objects_ttree)
 
 rootElibdict.cxx: $(classes) tools/LinkDef.hh
 	@echo Creating ROOT dictionary
-	@rootcint6 -f $@ -c $^
+	@rootcint -f $@ -c $^
 
 rootElibdict.o: rootElibdict.cxx
 	$(cpp) $(cflags_analyzer) rootElibdict.cxx

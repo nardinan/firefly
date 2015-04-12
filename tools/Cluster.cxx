@@ -2,7 +2,7 @@
 #include <cmath>
 #include <string.h>
 
-ClassImp(Cluster);
+ClassImp(Cluster)
 
 
 Cluster::Cluster(){

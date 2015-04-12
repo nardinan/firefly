@@ -1,7 +1,7 @@
 #include "Event.hh"
 #include "Cluster.hh"
 
-ClassImp(Event);
+ClassImp(Event)
 
 Event::Event(int irawtdrnum){
 
@@ -94,7 +94,7 @@ int Event::NGoldenClus(int lad, int side){
 //-------------------------------------------------------------------------------------
 
 
-ClassImp(RHClass);
+ClassImp(RHClass)
 
 RHClass::RHClass(){
   Run=0;
