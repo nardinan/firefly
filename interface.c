@@ -358,7 +358,7 @@ struct s_interface *f_interface_new(struct s_interface *supplied, GtkBuilder *ma
 		d_assert(result->bucket_spins[index] = GTK_SPIN_BUTTON(gtk_builder_get_object(main_interface, interface_bucket_spins[index])));
 	gtk_spin_button_set_value(result->spins[e_interface_spin_dac], 10.0);
 	gtk_spin_button_set_value(result->spins[e_interface_spin_channel], 0.0);
-	gtk_spin_button_set_value(result->spins[e_interface_spin_channel_other], 192.0);
+	gtk_spin_button_set_value(result->spins[e_interface_spin_channel_other], (d_trb_event_channels_half - 1));
 	gtk_spin_button_set_value(result->spins[e_interface_spin_delay], 6.6);
 	gtk_spin_button_set_value(result->bucket_spins[e_interface_bucket_spin_data], d_common_data_events_default);
 	gtk_spin_button_set_value(result->bucket_spins[e_interface_bucket_spin_calibration], d_common_calibration_events_default);

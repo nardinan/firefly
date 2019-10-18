@@ -253,12 +253,12 @@ void f_fill_histograms(struct o_string *data, struct s_data_charts *charts) {
 							charts->main_strips_gravity->Fill(clusters[index].header.main_strips_gravity);
 						if (charts->eta)
 							if (clusters[index].header.strips > 1)
-								if (charts->eta >= 0) {
+								//if (charts->eta >= 0) {
 									charts->eta->Fill(clusters[index].header.eta);
 									if ((clusters[index].header.strips >= 1) && (clusters[index].header.strips <= 5))
 										charts->eta_array[clusters[index].header.strips-1]->
 											Fill(clusters[index].header.eta);
-								}
+								//}
 					}
 					d_free(clusters);
 				}

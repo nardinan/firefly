@@ -8,8 +8,16 @@ objects_cn_export = compression.o root_analyzer.o firefly_cn_export.o
 objects_ttree = compression.o firefly_ttree.o
 cc = gcc -g
 cpp = g++ -g
-cflags = -Wall -I/usr/local/include -std=gnu99 `libusb-config --cflags` `pkg-config --cflags gtk+-2.0` `pkg-config --cflags fftw3` -Wno-variadic-macros -Wno-missing-braces -Wno-pointer-sign -Wno-sign-compare -c -pedantic
-cflags_analyzer = $(cflags) `root-config --cflags` -Wno-long-long
+default_cflags = -Wall -I/usr/local/include -std=gnu99 `libusb-config --cflags` `pkg-config --cflags gtk+-2.0` `pkg-config --cflags fftw3` -Wno-variadic-macros -Wno-missing-braces -Wno-pointer-sign -Wno-sign-compare -c -pedantic
+default_cppflags = -Wall -I/usr/local/include `libusb-config --cflags` `pkg-config --cflags gtk+-2.0` `pkg-config --cflags fftw3` -Wno-variadic-macros -Wno-missing-braces -Wno-pointer-sign -Wno-sign-compare -c -pedantic
+ifdef SUPPORT_TRB_0x1313
+	cflags = $(default_cflags) -Dd_version_0x1313="enabled"
+	cppflags = $(default_cppflags) -Dd_version_0x1313="enabled"
+else
+	cflags = $(default_cflags)
+	cppflags = $(default_cppflags)
+endif
+cflags_analyzer = $(cppflags) `root-config --cflags` -Wno-long-long
 lflags = -Wall -fPIC
 liblink = -L../serenity -L/usr/lib64 -lm `libusb-config --libs` `pkg-config --libs gtk+-2.0` `pkg-config --libs fftw3` -L/usr/lib -lpthread -lserenity_ground -lserenity_structures -lserenity_crypto -lserenity_infn
 liblink_analyzer = $(liblink) `root-config --libs`

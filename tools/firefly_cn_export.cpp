@@ -30,7 +30,7 @@ void f_fill_histograms(struct o_string *data, struct s_common_noise_charts *char
 		stream = f_stream_new_file(NULL, data, "r", 0777);
 		while ((readed_buffer = stream->m_read_line(stream, buffer, d_string_buffer_size))) {
 			if ((elements = readed_buffer->m_split(readed_buffer, ','))) {
-				if (elements->filled == 6)
+				if (elements->filled == d_trb_event_vas)
 					for (index = 0; index < d_trb_event_vas; index++) {
 						CN[index] = d_array_cast(atof, elements, singleton, index, NAN);
 						if (isnan(CN[index]) == 0)

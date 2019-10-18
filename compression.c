@@ -187,8 +187,13 @@ int f_compress_event(struct o_trb_event *event, struct o_stream *stream, struct 
 	struct o_string *singleton;
 	p_trb_event_cn(event->values, sigma_k, pedestal, sigma, flags, common_noise);
 	if (cn_stream) {
+#ifdef d_version_0x1313
+    singleton = d_string(d_string_buffer_size, "%.03f,%.03f,%.03f,%.03f,%.03f,%.03f,%.03f,%.03f,%.03f,%.03f\n", common_noise[0], common_noise[1], 
+        common_noise[2], common_noise[3], common_noise[4], common_noise[5], common_noise[6], common_noise[7], common_noise[8], common_noise[9]);
+#else
 		singleton = d_string(d_string_buffer_size, "%.03f,%.03f,%.03f,%.03f,%.03f,%.03f\n", common_noise[0], common_noise[1], common_noise[2],
 				common_noise[3], common_noise[4], common_noise[5]);
+#endif
 		cn_stream->m_write_string(cn_stream, singleton);
 		d_release(singleton);
 	}
