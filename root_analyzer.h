@@ -40,13 +40,13 @@ extern "C" {
 #define d_chart(nam,bks,min,max) f_create_histogram(nam,nam,bks,min,max,common_style)
 #define d_chart_2D(nam,bksx,minx,maxx,bksy,miny,maxy) f_create_2D_histogram(nam,nam,bksx,minx,maxx,bksy,miny,maxy,common_style)
 typedef struct s_chart_style {
-	double range_x_begin, range_x_end, range_y_begin, range_y_end;
-	int show_stats, fill_color, fill_style, line_color, line_width;
+  double range_x_begin, range_x_end, range_y_begin, range_y_end;
+  int show_stats, fill_color, fill_style, line_color, line_width;
 } s_chart_style;
 typedef enum e_pdf_pages {
-	e_pdf_page_first,
-	e_pdf_page_last,
-	e_pdf_page_middle
+  e_pdf_page_first,
+  e_pdf_page_last,
+  e_pdf_page_middle
 } e_pdf_pages;
 extern struct s_chart_style common_style;
 extern int v_chart_split_x, v_chart_split_y;
@@ -54,7 +54,7 @@ extern char v_canvas_title[d_string_buffer_size];
 #define d_multiple_chart ((v_chart_split_x > 1) || (v_chart_split_y > 1))
 extern TH1F *f_create_histogram(const char *name, const char *labels, int bins_number, float x_low, float x_up, struct s_chart_style style);
 extern TH2F *f_create_2D_histogram(const char *name, const char *labels, int bins_number_x, float x_low, float x_up, int bins_number_y, float y_low,
-		float y_yp, struct s_chart_style style);
+    float y_yp, struct s_chart_style style);
 extern void p_export_histograms_singleton(struct o_string *output, int log_y, int log_z, int grid_x, enum e_pdf_pages page, const char *draw,
-		const char *format, ...);
+    const char *format, ...);
 #endif

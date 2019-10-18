@@ -34,43 +34,43 @@
 #define d_chart_font_height 12.0
 #define d_same_sign(a,b) (((a)>=0)^((b)<0))
 typedef enum e_chart_kinds {
-	e_chart_kind_signal = 0,
-	e_chart_kind_histogram,
-	e_chart_kind_envelope
+  e_chart_kind_signal = 0,
+  e_chart_kind_histogram,
+  e_chart_kind_envelope
 } e_chart_kinds;
 typedef struct s_chart_value {
-	float x, y, w;
-	struct {
-		float x, y, w;
-		int done;
-	} normalized;
+  float x, y, w;
+  struct {
+    float x, y, w;
+    int done;
+  } normalized;
 } s_chart_value;
 typedef struct s_chart_color {
-	float R, G, B;
+  float R, G, B;
 } s_chart_color;
 typedef struct s_chart_axis {
-	unsigned int segments;
-	int show_negative, show_positive, show_grid, logarithmic;
-	float range[2], minimum_distance, segments_length, offset, size;
-	struct s_chart_color color;
+  unsigned int segments;
+  int show_negative, show_positive, show_grid, logarithmic;
+  float range[2], minimum_distance, segments_length, offset, size;
+  struct s_chart_color color;
 } s_chart_axis;
 typedef struct s_chart {
-	GtkWidget *plane;
-	cairo_t *cairo_brush;
-	int head[d_chart_max_nested], last_width, last_height, show_borders, border_x, border_y, bins[d_chart_max_nested];
-	enum e_chart_kinds kind[d_chart_max_nested];
-	struct {
-		float x_axis, y_axis;
-	} normalized;
-	struct s_chart_axis axis_x, axis_y;
-	struct s_chart_color background;
-	struct {
-		float dot_size[d_chart_max_nested], line_size[d_chart_max_nested];
-		struct s_chart_color color[d_chart_max_nested];
-	} data;
-	struct s_chart_value values[d_chart_max_nested][d_chart_bucket];
-	float total[d_chart_max_nested], total_square[d_chart_max_nested], elements[d_chart_max_nested];
-	char message[d_chart_max_message_rows][d_chart_max_message];
+  GtkWidget *plane;
+  cairo_t *cairo_brush;
+  int head[d_chart_max_nested], last_width, last_height, show_borders, border_x, border_y, bins[d_chart_max_nested];
+  enum e_chart_kinds kind[d_chart_max_nested];
+  struct {
+    float x_axis, y_axis;
+  } normalized;
+  struct s_chart_axis axis_x, axis_y;
+  struct s_chart_color background;
+  struct {
+    float dot_size[d_chart_max_nested], line_size[d_chart_max_nested];
+    struct s_chart_color color[d_chart_max_nested];
+  } data;
+  struct s_chart_value values[d_chart_max_nested][d_chart_bucket];
+  float total[d_chart_max_nested], total_square[d_chart_max_nested], elements[d_chart_max_nested];
+  char message[d_chart_max_message_rows][d_chart_max_message];
 } s_chart;
 extern struct s_chart *f_chart_new(struct s_chart *supplied);
 extern void p_chart_style_float(struct o_dictionary *dictionary, const char *key, const char postfix, float *value);

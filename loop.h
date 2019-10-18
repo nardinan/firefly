@@ -21,10 +21,10 @@
 #include "environment.h"
 typedef int (t_callback_function)(struct s_environment *, time_t);
 typedef struct s_loop_call {
-	char *description;
-	long long last_execution;
-	time_t timeout;
-	t_callback_function *function;
+  char *description;
+  long long last_execution;
+  time_t timeout;
+  t_callback_function *function;
 } s_loop_call;
 extern struct s_loop_call steps[];
 int f_loop_iteration(struct s_environment *environment);

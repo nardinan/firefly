@@ -25,63 +25,63 @@
 #define d_compress_tag 0xface
 #define d_compress_endian 0xbeef
 #define d_compress_argument(cnt,key,res,op,msg)\
-	do{\
-		int _index;\
-		if(((_index=f_get_parameter((key),argc,argv))!=d_parameter_invalid)&&((_index+1)<argc)){\
-			(res)=op(argv[_index+1]);\
-			(cnt)++;\
-		}else\
-		d_log(e_log_level_ever,msg,NULL);\
-	}while(0);
+  do{\
+    int _index;\
+    if(((_index=f_get_parameter((key),argc,argv))!=d_parameter_invalid)&&((_index+1)<argc)){\
+      (res)=op(argv[_index+1]);\
+      (cnt)++;\
+    }else\
+    d_log(e_log_level_ever,msg,NULL);\
+  }while(0);
 #pragma pack(push, 1)
 typedef struct s_singleton_file_header {
-	unsigned short endian_check;
-	float high_treshold, low_treshold;
-	float pedestal[d_trb_event_channels], sigma[d_trb_event_channels];
+  unsigned short endian_check;
+  float high_treshold, low_treshold;
+  float pedestal[d_trb_event_channels], sigma[d_trb_event_channels];
 } s_singleton_file_header;
 typedef struct s_singleton_event_header {
-	unsigned short event_check;
-	time_t timestamp;
-	unsigned int number, clusters, bytes_to_next;
+  unsigned short event_check;
+  time_t timestamp;
+  unsigned int number, clusters, bytes_to_next;
 } s_singleton_header;
 typedef struct s_singleton_cluster_header {
-	unsigned int strips;
-	float signal_over_noise, strips_gravity, main_strips_gravity, eta;
+  unsigned int strips;
+  float signal_over_noise, strips_gravity, main_strips_gravity, eta;
 } s_singleton_cluster_header;
 typedef struct s_singleton_cluster_details {
-	struct s_singleton_cluster_header header;
-	unsigned int first_strip;
-	float values[d_trb_event_channels+1];
+  struct s_singleton_cluster_header header;
+  unsigned int first_strip;
+  float values[d_trb_event_channels+1];
 } s_singleton_cluster_details;
 typedef struct s_singleton_calibration_details {
-	char name[d_string_buffer_size], serials[2][d_string_buffer_size], date[d_string_buffer_size], bias[d_string_buffer_size],
-	     leakage[d_string_buffer_size];
-	float temperatures[2], sigma_k, hold_delay;
+  char name[d_string_buffer_size], serials[2][d_string_buffer_size], date[d_string_buffer_size], bias[d_string_buffer_size],
+  leakage[d_string_buffer_size];
+  float temperatures[2], sigma_k, hold_delay;
 } s_singleton_calibration_details;
 #pragma pack(pop)
 typedef enum e_calibration_details {
-	e_calibration_detail_name = 0,
-	e_calibration_detail_serial,
-	e_calibration_detail_date,
-	e_calibration_detail_temperature_1,
-	e_calibration_detail_temperature_2,
-	e_calibration_detail_sigma_k,
-	e_calibration_detail_hold_delay,
-	e_calibration_detail_bias_voltage,
-	e_calibration_detail_leakage_current,
-	e_calibration_detail_none
+  e_calibration_detail_name = 0,
+  e_calibration_detail_serial,
+  e_calibration_detail_date,
+  e_calibration_detail_temperature_1,
+  e_calibration_detail_temperature_2,
+  e_calibration_detail_sigma_k,
+  e_calibration_detail_hold_delay,
+  e_calibration_detail_bias_voltage,
+  e_calibration_detail_leakage_current,
+  e_calibration_detail_none
 } e_calibration_details;
 #define d_value(key,str,enm,val) ((d_strcmp((key)->content,(str))==0)?(val):(enm))
 extern unsigned int min_strip, max_strip, min_strips, max_strips;
 extern float max_common_noise, min_signal_over_noise;
 extern unsigned int f_get_parameter(const char *flag, int argc, char **argv);
 extern void f_read_calibration(struct o_stream *stream, float *pedestal, float *sigma_raw, float *sigma, int *flag, float *gain,
-		struct s_singleton_calibration_details *details);
+    struct s_singleton_calibration_details *details);
 extern void p_compress_event_cluster(struct s_singleton_cluster_details *cluster, unsigned int first_channel, unsigned int last_channel, float *sigma,
-		float *signal, float *common_noise);
+    float *signal, float *common_noise);
 extern int f_compress_event(struct o_trb_event *event, struct o_stream *stream, struct o_stream *cn_stream, time_t timestamp, unsigned int number,
-		float high_treshold, float low_treshold, float sigma_k, float *pedestal, float *sigma, int *flags);
+    float high_treshold, float low_treshold, float sigma_k, float *pedestal, float *sigma, int *flags);
 extern struct s_singleton_cluster_details *f_decompress_event(struct o_stream *stream, struct s_singleton_event_header *header);
 extern void f_compress_data(struct o_string *input_path, struct o_string *output_path, struct o_string *cn_output_path, float high_treshold,
-		float low_treshold, float sigma_k, float *pedestal, float *sigma, int *flags);
+    float low_treshold, float sigma_k, float *pedestal, float *sigma, int *flags);
 #endif

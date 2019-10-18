@@ -21,25 +21,25 @@
 #define d_environment_ladders 1
 #define d_environment_discard_firs_events 128
 typedef enum e_environment_iterations {
-	e_environment_iteration_update = 0,
-	e_environment_iteration_interface_update,
-	e_environment_iteration_analyze_update,
-	e_environment_iteration_read_update,
-	e_environment_iteration_chart_update,
-	e_environment_iteration_NULL
+  e_environment_iteration_update = 0,
+  e_environment_iteration_interface_update,
+  e_environment_iteration_analyze_update,
+  e_environment_iteration_read_update,
+  e_environment_iteration_chart_update,
+  e_environment_iteration_NULL
 } e_environment_iterations;
 typedef struct s_environment {
-	struct o_object *lock;
-	struct o_trbs *searcher;
-	struct s_interface *interface;
-	struct s_ladder *ladder; /* ladders_bucket[] */
+  struct o_object *lock;
+  struct o_trbs *searcher;
+  struct s_interface *interface;
+  struct s_ladder *ladder; /* ladders_bucket[] */
 } s_environment;
 typedef struct s_environment_parameters {
-	struct s_environment *environment;
-	void *attachment;
+  struct s_environment *environment;
+  void *attachment;
 } s_environment_parameters;
 extern struct s_environment *f_environment_new(struct s_environment *supplied, const char *buider_main_path, const char *buider_scale_path,
-		const char *builder_parameters_path, const char *builder_informations_path, const char *builder_jobs_path);
+    const char *builder_parameters_path, const char *builder_informations_path, const char *builder_jobs_path);
 extern int p_callback_incoming_trb(struct o_trb *device, void *v_environment);
 extern int p_callback_incoming_device(struct usb_device *device, struct usb_dev_handle *handler, void *v_environment);
 extern void p_callback_exit(GtkWidget *widget, struct s_environment *environment);
