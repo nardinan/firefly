@@ -547,6 +547,12 @@ void p_ladder_plot_data(struct s_ladder *ladder, struct s_chart **charts) { d_FP
         f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_4], 0, ladder->data.cn_bucket[index][3]);
         f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_5], 0, ladder->data.cn_bucket[index][4]);
         f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_6], 0, ladder->data.cn_bucket[index][5]);
+#ifdef d_version_0x1313
+        f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_7], 0, ladder->data.cn_bucket[index][6]);
+        f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_8], 0, ladder->data.cn_bucket[index][7]);
+        f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_9], 0, ladder->data.cn_bucket[index][8]);
+        f_chart_append_histogram(charts[e_interface_alignment_histogram_cn_10], 0, ladder->data.cn_bucket[index][9]);
+#endif
       }
       f_chart_append_signal(charts[e_interface_alignment_fft_adc_1], 0, 0, 0);
       f_chart_append_signal(charts[e_interface_alignment_fft_adc_2], 0, 0, 0);

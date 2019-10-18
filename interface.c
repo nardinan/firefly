@@ -163,6 +163,10 @@ const char *interface_labels[] = {
   "v_data_cn_4_alignment",
   "v_data_cn_5_alignment",
   "v_data_cn_6_alignment",
+  "v_data_cn_7_alignment",
+  "v_data_cn_8_alignment",
+  "v_data_cn_9_alignment",
+  "v_data_cn_10_alignment",
   "v_fft_adc_1_alignment",
   "v_fft_adc_2_alignment",
   "v_fft_signal_adc_1_alignment",
@@ -186,6 +190,10 @@ const char *interface_labels[] = {
   "styles/histogram_sigma_raw.keys",
   "styles/histogram_sigma.keys",
   "styles/histogram_gain.keys",
+  "styles/histogram_cn.keys",
+  "styles/histogram_cn.keys",
+  "styles/histogram_cn.keys",
+  "styles/histogram_cn.keys",
   "styles/histogram_cn.keys",
   "styles/histogram_cn.keys",
   "styles/histogram_cn.keys",
@@ -220,6 +228,10 @@ const char *interface_labels[] = {
   "common_noise_va4",
   "common_noise_va5",
   "common_noise_va6",
+  "common_noise_va7",
+  "common_noise_va8",
+  "common_noise_va9",
+  "common_noise_va10",
   "fourier_transform_adc_1",
   "fourier_transform_adc_2",
   "fourier_transform_signal_adc_1",
@@ -573,6 +585,11 @@ void f_interface_clean_common_noise(struct s_chart **charts) {
   f_chart_flush(charts[e_interface_alignment_histogram_cn_4]);
   f_chart_flush(charts[e_interface_alignment_histogram_cn_5]);
   f_chart_flush(charts[e_interface_alignment_histogram_cn_6]);
+  f_chart_flush(charts[e_interface_alignment_histogram_cn_7]);
+  f_chart_flush(charts[e_interface_alignment_histogram_cn_8]);
+  f_chart_flush(charts[e_interface_alignment_histogram_cn_9]);
+  f_chart_flush(charts[e_interface_alignment_histogram_cn_10]);
+  f
 }
 
 void f_interface_clean_fourier(struct s_chart **charts) {
