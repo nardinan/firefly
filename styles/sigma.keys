@@ -1,10 +1,10 @@
-segments_x=6
+segments_x=#VAS
 show_negative_x=1
 show_positive_x=1
 show_grid_x=1
 logarithmic_x=0
 range_bottom_x=0.000000
-range_top_x=384.000000
+range_top_x=#CHANNELS
 minimum_distance_x=30.000000
 offset_x=4.000000
 size_x=1.000000

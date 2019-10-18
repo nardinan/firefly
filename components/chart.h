@@ -19,6 +19,7 @@
 #define firefly_chart_h
 #include <serenity/ground/ground.h>
 #include <serenity/structures/structures.h>
+#include <serenity/structures/infn/infn.h>
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <math.h>

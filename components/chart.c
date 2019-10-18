@@ -31,19 +31,59 @@ struct s_chart *f_chart_new(struct s_chart *supplied) {
 }
 
 void p_chart_style_float(struct o_dictionary *dictionary, const char *key, const char postfix, float *value) {
+  struct s_scoped_entry {
+    char *keyword;
+    float value;
+  } scoped_entries[] = {
+    {"#ACS", d_trb_event_adcs},
+    {"#VAS", d_trb_event_vas},
+    {"#CHANNELS_ON_VA", d_trb_event_channels_on_va},
+    {"#CHANNELS", d_trb_event_channels},
+    {NULL}
+  };
 	char string_key_raw[d_string_buffer_size];
 	snprintf(string_key_raw, d_string_buffer_size, "%s_%c", key, postfix);
 	struct o_string string_key = d_string_constant(string_key_raw), *string_value;
-	if ((string_value = d_dictionary_get_string(dictionary, &string_key)))
-		*value = atof(string_value->content);
+	int index;
+	if ((string_value = d_dictionary_get_string(dictionary, &string_key))) {
+    if (string_value->content[0] == '#') {
+	    index = 0;
+	    while (scoped_entries[index].keyword) {
+        if (strncmp(string_value->content, scoped_entries[index].keyword, strlen(scoped_entries[index].keyword)) == 0)
+          *value = scoped_entries[index].value;
+        ++index;
+	    }
+	  } else
+	    *value = atof(string_value->content);
+  }
 }
 
 void p_chart_style_int(struct o_dictionary *dictionary, const char *key, const char postfix, int *value) {
+  struct s_scoped_entry {
+    char *keyword;
+    int value;
+  } scoped_entries[] = {
+    {"#ACS", d_trb_event_adcs},
+    {"#VAS", d_trb_event_vas},
+    {"#CHANNELS_ON_VA", d_trb_event_channels_on_va},
+    {"#CHANNELS", d_trb_event_channels},
+    {NULL}
+  };
 	char string_key_raw[d_string_buffer_size];
 	snprintf(string_key_raw, d_string_buffer_size, "%s_%c", key, postfix);
 	struct o_string string_key = d_string_constant(string_key_raw), *string_value;
-	if ((string_value = d_dictionary_get_string(dictionary, &string_key)))
-		*value = atoi(string_value->content);
+	int index;
+	if ((string_value = d_dictionary_get_string(dictionary, &string_key))) {
+	  if (string_value->content[0] == '#') {
+	    index = 0;
+	    while (scoped_entries[index].keyword) {
+        if (strncmp(string_value->content, scoped_entries[index].keyword, strlen(scoped_entries[index].keyword)) == 0)
+          *value = scoped_entries[index].value;
+        ++index;
+	    }
+	  } else
+	    *value = atoi(string_value->content);
+  }
 }
 
 void p_chart_style_axis(struct o_dictionary *dictionary, const char postfix, struct s_chart_axis *axis) {
@@ -251,7 +291,7 @@ void p_chart_redraw_axis_x(cairo_t *cr, struct s_chart *chart, float full_h, flo
 	cairo_set_source_rgb(cr, chart->axis_x.color.R, chart->axis_x.color.G, chart->axis_x.color.B);
 	cairo_set_line_width(cr, chart->axis_x.size);
 	if (!d_same_sign(chart->axis_y.range[0], chart->axis_y.range[1]))
-		x_axis_position = height-((abs(chart->axis_y.range[0])*height)/full_h);
+		x_axis_position = height-((fabsf(chart->axis_y.range[0])*height)/full_h);
 	chart->normalized.x_axis = x_axis_position;
 	cairo_move_to(cr, 0.0, x_axis_position);
 	cairo_line_to(cr, width, x_axis_position);
@@ -306,7 +346,7 @@ void p_chart_redraw_axis_y(cairo_t *cr, struct s_chart *chart, float full_h, flo
 	cairo_set_source_rgb(cr, chart->axis_y.color.R, chart->axis_y.color.G, chart->axis_y.color.B);
 	cairo_set_line_width(cr, chart->axis_y.size);
 	if (!d_same_sign(chart->axis_x.range[0], chart->axis_x.range[1]))
-		y_axis_position = (abs(chart->axis_x.range[0])*width)/full_w;
+		y_axis_position = (fabsf(chart->axis_x.range[0])*width)/full_w;
 	chart->normalized.y_axis = y_axis_position;
 	cairo_move_to(cr, y_axis_position, 0.0);
 	cairo_line_to(cr, y_axis_position, height);
