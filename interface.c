@@ -589,7 +589,6 @@ void f_interface_clean_common_noise(struct s_chart **charts) {
   f_chart_flush(charts[e_interface_alignment_histogram_cn_8]);
   f_chart_flush(charts[e_interface_alignment_histogram_cn_9]);
   f_chart_flush(charts[e_interface_alignment_histogram_cn_10]);
-  f
 }
 
 void f_interface_clean_fourier(struct s_chart **charts) {
